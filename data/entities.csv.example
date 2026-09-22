@@ -1,0 +1,2 @@
+lei,name,country,notes
+,,,"Find LEIs with: python -m data_acquisition.gleif_client \"Bank Name\" - confirm by hand before adding a row. Delete this comment row and the .example suffix once populated."

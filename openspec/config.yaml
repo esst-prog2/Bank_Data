@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Project: European bank financial data reconciliation (university coursework).
+  Tech stack: Python, pandas, Playwright (for the P3DH scraper).
+
+  Product language:
+  - Write OpenSpec proposals and specs in user-facing product behavior language:
+    what the package returns given an input, not how it's implemented internally.
+  - A requirement should describe the observable contract (e.g. "returns a
+    DataFrame row with X" or "flags Y as non-comparable"), not the scraping or
+    HTTP mechanics behind it. Put those in design.md.
+  - Data comparability is the central risk of this project (see README section 5):
+    every requirement that returns a value should say what happens when that
+    value cannot be established as comparable, or is genuinely missing from the
+    source, rather than leaving those cases implicit.
+
+  Scope discipline:
+  - v1 covers a handful of pilot banks, not full EU coverage (see README section 3,
+    "Not this term"). Do not silently expand scope in a spec or proposal without a
+    corresponding planning-log entry.
+
+rules:
+  specs:
+    - Every requirement that returns a financial/regulatory value must specify
+      what happens when the source data is missing vs. when it is non-comparable
+      vs. when retrieval/processing fails — these are three distinct outcomes,
+      never collapse them.
+    - Include the standardized-concept mapping and source reporting item as part
+      of the observable contract, not an implementation detail.
+  tasks:
+    - Call out which data source(s) a task depends on (P3DH scraper, Transparency
+      Exercise archive, ESEF filings, GLEIF) so brittle/unverified sources
+      (currently the P3DH scraper) are visible in the plan.
+  design:
+    - Document known data-source risks and gaps inline (see DATA_SOURCES_NOTES.md)
+      rather than assuming a source is stable.

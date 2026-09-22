@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+data/raw/
+data/state/
+data/entities.csv
+data/modules.txt
+node_modules/
+.DS_Store
