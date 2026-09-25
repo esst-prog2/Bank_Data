@@ -138,3 +138,12 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   ESAP, archiving) and committed + pushed everything to `bankdata` (see the
   commit this line ships in). Decided by user ("do every step you proposed"),
   carried out by agent.
+- 2026-09-25: Published a static snapshot of the reconciliation output
+  (`docs/review.html`) to the `bankdata` repo and enabled GitHub Pages on it
+  (source: `main` branch, `/docs` path, via the GitHub API — repo is public,
+  so Pages works on the free tier) so it's reachable at
+  `https://esst-prog2.github.io/Bank_Data/review.html` without needing the
+  private Claude artifact link. Documented the route in README.md's "The
+  demo" section and AGENTS.md's repo layout. It's a snapshot, not a live app —
+  regenerating it means re-running the export and copying the file by hand.
+  Decided by user ("do both"), carried out by agent.

@@ -1,0 +1,1180 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Reconciliation Output Review</title>
+<meta name="description" content="Review output of data_acquisition.reconcile.get_financial_data() for Erste Group Bank AG across the EBA Stress Test 2025 and its own ESEF financial statements.">
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --card-bg: #ffffff;
+
+    --s-actual: #2a78d6;
+    --s-restated: #eb6834;
+    --s-baseline: #1baf7a;
+    --s-adverse: #eda100;
+    --s-esef: #e87ba4;
+
+    --good: #0ca30c;
+    --warning: #b8790f;
+    --good-bg: rgba(12,163,12,0.10);
+    --warning-bg: rgba(250,178,25,0.16);
+
+    --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --plane: #0d0d0d;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.10);
+      --card-bg: #202020;
+
+      --s-actual: #3987e5;
+      --s-restated: #d95926;
+      --s-baseline: #199e70;
+      --s-adverse: #c98500;
+      --s-esef: #d55181;
+
+      --good: #0ca30c;
+      --warning: #fab219;
+      --good-bg: rgba(12,163,12,0.16);
+      --warning-bg: rgba(250,178,25,0.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --ink-1: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --card-bg: #202020;
+
+    --s-actual: #3987e5;
+    --s-restated: #d95926;
+    --s-baseline: #199e70;
+    --s-adverse: #c98500;
+    --s-esef: #d55181;
+
+    --good: #0ca30c;
+    --warning: #fab219;
+    --good-bg: rgba(12,163,12,0.16);
+    --warning-bg: rgba(250,178,25,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--plane);
+    color: var(--ink-1);
+    font-family: var(--font-ui);
+    margin: 0;
+    padding-inline: 16px;
+    padding-block: 20px 48px;
+  }
+  main { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+  header.page { display: flex; flex-direction: column; gap: 4px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  .subhead { color: var(--ink-2); font-size: 14px; max-width: 68ch; line-height: 1.5; margin: 0; }
+
+  section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
+  .pad { padding: 18px 20px; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .kpi { background: var(--card-bg); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .kpi .label { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi .value { font-size: 15px; font-weight: 600; }
+  .kpi .value.mono { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; line-height: 1.5; }
+
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .section-note { font-size: 12.5px; color: var(--ink-2); margin: 0 0 14px; line-height: 1.5; }
+
+  .tab-groups { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
+  .tab-group { display: flex; flex-direction: column; gap: 6px; }
+  .tab-group-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-muted); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab {
+    font-family: var(--font-ui); font-size: 12.5px; color: var(--ink-2);
+    background: transparent; border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  .tab:hover { background: var(--grid); }
+  .tab[aria-selected="true"] { background: var(--ink-1); color: var(--surface-1); border-color: var(--ink-1); }
+
+  .chart-wrap { position: relative; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .legend-swatch { width: 14px; height: 2px; border-radius: 1px; flex: none; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; background: var(--ink-1); color: var(--surface-1);
+    font-size: 12px; padding: 8px 10px; border-radius: 6px; line-height: 1.5; opacity: 0; transition: opacity 0.08s;
+    transform: translate(-50%, -100%); white-space: nowrap; z-index: 5;
+  }
+  .tooltip .tt-period { font-family: var(--font-mono); color: var(--ink-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+  .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
+  .tooltip .tt-key { width: 10px; height: 2px; border-radius: 1px; flex: none; }
+  .tooltip .tt-val { font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 10px; }
+
+  .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  input[type="search"] {
+    font-family: var(--font-ui); font-size: 13px; padding: 7px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--ink-1); min-width: 200px;
+  }
+  .count-note { font-size: 12px; color: var(--ink-muted); margin-left: auto; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 860px; }
+  thead th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted);
+    padding: 9px 12px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap;
+    background: var(--surface-1); position: sticky; top: 0;
+  }
+  thead th:hover { color: var(--ink-1); }
+  thead th .arrow { opacity: 0.5; margin-left: 3px; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--grid); }
+  td.mono, .mono { font-family: var(--font-mono); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  td.origin { color: var(--ink-2); font-size: 11.5px; max-width: 300px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .badge.prov-actual { background: color-mix(in srgb, var(--s-actual) 14%, transparent); color: var(--s-actual); }
+  .badge.prov-restated { background: color-mix(in srgb, var(--s-restated) 16%, transparent); color: var(--s-restated); }
+  .badge.prov-baseline { background: color-mix(in srgb, var(--s-baseline) 14%, transparent); color: var(--s-baseline); }
+  .badge.prov-adverse { background: color-mix(in srgb, var(--s-adverse) 18%, transparent); color: var(--s-adverse); }
+  .badge.prov-esef { background: color-mix(in srgb, var(--s-esef) 20%, transparent); color: var(--s-esef); }
+  .badge.status-ok { background: var(--good-bg); color: var(--good); }
+  .badge.status-missing { background: var(--warning-bg); color: var(--warning); }
+  .badge .dot.d-ok { background: var(--good); }
+  .badge .dot.d-warn { background: var(--warning); }
+  .src-pill {
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); background: var(--grid);
+    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+  }
+
+  .edge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .edge-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .edge-card h3 { font-size: 12.5px; margin: 0; }
+  .edge-card .req { font-size: 11px; color: var(--ink-muted); margin: -6px 0 0; }
+  pre.code {
+    font-family: var(--font-mono); font-size: 11.5px; background: var(--plane); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--ink-2);
+  }
+  pre.result {
+    font-family: var(--font-mono); font-size: 11.5px; margin: 0; white-space: pre-wrap; word-break: break-word;
+  }
+  pre.result.err { color: var(--s-adverse); }
+  pre.result.ok { color: var(--good); }
+
+  footer.page { font-size: 12px; color: var(--ink-muted); line-height: 1.6; padding-top: 4px; }
+  footer.page code { font-family: var(--font-mono); background: var(--grid); padding: 1px 5px; border-radius: 4px; }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 19px; }
+    td.origin { max-width: 170px; }
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<main>
+  <header class="page">
+    <div class="eyebrow">add-mvp-v1 &middot; data_acquisition.reconcile</div>
+    <h1>Reconciliation output review</h1>
+    <p class="subhead">
+      Live output of <code class="mono">get_financial_data()</code> for one pilot bank, now pulling
+      from <strong>two independent sources</strong>: the EBA EU-wide Stress Test 2025 (regulatory) and
+      the bank's own ESEF-tagged annual report (balance sheet &amp; income statement, via
+      <code class="mono">filings.xbrl.org</code>) &mdash; plus the edge cases the package is designed to
+      surface rather than hide.
+    </p>
+  </header>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <section class="pad">
+    <h2 id="chartTitle">CET1 ratio (%)</h2>
+    <p class="section-note" id="chartNote"></p>
+    <div class="tab-groups" id="tabGroups"></div>
+    <div class="chart-wrap">
+      <svg class="chart" id="chart" viewBox="0 0 880 320" role="img" aria-labelledby="chartTitle"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="pad">
+    <h2>All returned rows</h2>
+    <p class="section-note">
+      Every row <code class="mono">get_financial_data()</code> returned for this bank across 7
+      standardized concepts and 2 sources &mdash; the package's actual DataFrame schema, one row per
+      period &times; concept &times; source.
+    </p>
+    <div class="controls">
+      <input type="search" id="search" placeholder="Filter by concept, period, source&hellip;">
+      <span class="count-note" id="rowCount"></span>
+    </div>
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th data-key="period">Period<span class="arrow"></span></th>
+            <th data-key="concept">Standardized concept<span class="arrow"></span></th>
+            <th data-key="source">Source<span class="arrow"></span></th>
+            <th data-key="item">Source item<span class="arrow"></span></th>
+            <th data-key="scenario_label">Provenance<span class="arrow"></span></th>
+            <th data-key="value" style="text-align:right">Value<span class="arrow"></span></th>
+            <th data-key="status">Status<span class="arrow"></span></th>
+            <th data-key="origin">Origin reference<span class="arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="pad">
+    <h2>Edge cases the package is designed to surface</h2>
+    <p class="section-note">Same function, three requests it's expected to handle explicitly rather than silently.</p>
+    <div class="edge-grid" id="edgeGrid"></div>
+  </section>
+
+  <footer class="page" id="pageFooter"></footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = {
+"bank_name": "Erste Group Bank AG",
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"sources": {
+"eba_stress_test": "EBA EU-wide Stress Test 2025 (data_acquisition.eba_exercises, exercise=stress_test)",
+"esef": "ESEF FY2024 filing via filings.xbrl.org (data_acquisition.esef_client)"
+},
+"generated": "2026-09-25",
+"concept_labels": {
+"cet1_ratio": "CET1 ratio (%)",
+"cet1_capital": "CET1 capital (EUR m)",
+"total_risk_exposure_amount": "Total risk exposure amount (EUR m)",
+"net_interest_income": "Net interest income (EUR m)",
+"profit_or_loss_for_the_year": "Profit or loss for the year (EUR m)",
+"total_assets": "Total assets (EUR m)",
+"total_equity": "Total equity (EUR m)"
+},
+"concept_statement": {
+"cet1_ratio": "Regulatory (stress test)",
+"cet1_capital": "Regulatory (stress test)",
+"total_risk_exposure_amount": "Regulatory (stress test)",
+"net_interest_income": "Income statement",
+"profit_or_loss_for_the_year": "Income statement",
+"total_assets": "Balance sheet",
+"total_equity": "Balance sheet"
+},
+"rows": [
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 23995.67254328,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "restated_actual",
+"scenario_label": "Restated",
+"value": 24131.77121678,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 11"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 25253.197509054,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 21552.5765554318,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 27061.4342497508,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 21448.2684042435,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 27815.2184934092,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 20724.8204388645,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 0.15260468543714,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "restated_actual",
+"scenario_label": "Restated",
+"value": 0.16060953646411,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 11"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 0.16526339405676,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 0.13284129691581,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 0.17656340771153,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 0.12980355587642,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 0.18155202175309,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 0.12493470594914,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531008, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 7540.51430122999,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 8335.0945153477,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 6799.71211915622,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 8678.95348996256,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 7056.51024031718,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 8691.92577802279,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "net_interest_income",
+"item": "2531001",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 7003.23223290703,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "net_interest_income",
+"item": "ifrs-full:InterestRevenueExpense",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 7528.0,
+"status": "ok",
+"origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:InterestRevenueExpense"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 3913.58012002,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 3678.67898687921,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": -1218.61779837138,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 3508.3440199999,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 353.069678238746,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 3304.65453493226,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "profit_or_loss_for_the_year",
+"item": "2531004",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 288.254997296973,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531004, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "profit_or_loss_for_the_year",
+"item": "ifrs-full:ProfitLoss",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 3945.0,
+"status": "ok",
+"origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_assets",
+"item": "ifrs-full:Assets",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 353736.0,
+"status": "ok",
+"origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:Assets"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_equity",
+"item": "ifrs-full:Equity",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 30767.0,
+"status": "ok",
+"origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 157240.732645547,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "restated_actual",
+"scenario_label": "Restated",
+"value": 150251.172801135,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 11"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 152805.75382822,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 162243.04531662,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 153267.512224067,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 165236.370139685,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 153207.97986616,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 165885.214051741,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+}
+],
+"missing_example": {
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "209912",
+"concept": "cet1_ratio",
+"item": "2531008",
+"source": "eba_stress_test",
+"status": "missing_from_source",
+"origin": "EBA EU-wide Stress Test 2025, item 2531008"
+}
+};
+
+  var SCENARIO_COLOR = {
+    "Actual": "var(--s-actual)",
+    "Restated": "var(--s-restated)",
+    "Baseline": "var(--s-baseline)",
+    "Adverse": "var(--s-adverse)",
+    "ESEF actual": "var(--s-esef)"
+  };
+  var SCENARIO_ORDER = ["Actual", "Restated", "Baseline", "Adverse", "ESEF actual"];
+  var PROV_BADGE_CLASS = {
+    "Actual": "prov-actual", "Restated": "prov-restated", "Baseline": "prov-baseline",
+    "Adverse": "prov-adverse", "ESEF actual": "prov-esef"
+  };
+  var SOURCE_LABEL = { eba_stress_test: "Stress Test", esef: "ESEF" };
+  var STATEMENT_GROUP = {
+    cet1_ratio: "Regulatory (stress test)", cet1_capital: "Regulatory (stress test)",
+    total_risk_exposure_amount: "Regulatory (stress test)",
+    net_interest_income: "Income statement", profit_or_loss_for_the_year: "Income statement",
+    total_assets: "Balance sheet", total_equity: "Balance sheet"
+  };
+  var GROUP_ORDER = ["Regulatory (stress test)", "Income statement", "Balance sheet"];
+
+  function fmtValue(concept, value) {
+    if (value === null || value === undefined) return "—";
+    if (concept === "cet1_ratio") return (value * 100).toFixed(1) + "%";
+    return value.toLocaleString(undefined, { maximumFractionDigits: 0 }) + " m";
+  }
+
+  // ---------- KPI row ----------
+  (function renderKpis() {
+    var okRows = DATA.rows.filter(function (r) { return r.status === "ok"; });
+    var periods = Array.from(new Set(DATA.rows.map(function (r) { return r.period; })));
+    var sourceLabels = Object.keys(DATA.sources).map(function (k) { return SOURCE_LABEL[k] || k; });
+    var kpis = [
+      { label: "Bank", value: DATA.bank_name },
+      { label: "LEI", value: DATA.bank_lei, mono: true },
+      { label: "Sources", value: sourceLabels.join(" + ") },
+      { label: "Concepts returned", value: Object.keys(DATA.concept_labels).length },
+      { label: "Rows returned", value: DATA.rows.length + " (" + okRows.length + " ok)" },
+      { label: "Periods covered", value: periods.length }
+    ];
+    var root = document.getElementById("kpiRow");
+    kpis.forEach(function (k) {
+      var cell = document.createElement("div");
+      cell.className = "kpi";
+      var l = document.createElement("div"); l.className = "label"; l.textContent = k.label;
+      var v = document.createElement("div"); v.className = "value" + (k.mono ? " mono" : ""); v.textContent = k.value;
+      cell.appendChild(l); cell.appendChild(v);
+      root.appendChild(cell);
+    });
+  })();
+
+  // ---------- Chart ----------
+  var svgNS = "http://www.w3.org/2000/svg";
+  var chartEl = document.getElementById("chart");
+  var tooltipEl = document.getElementById("tooltip");
+  var legendEl = document.getElementById("legend");
+  var chartTitleEl = document.getElementById("chartTitle");
+  var chartNoteEl = document.getElementById("chartNote");
+
+  var PAD = { l: 60, r: 24, t: 16, b: 32 };
+  var W = 880, H = 320;
+  var PLOT_W = W - PAD.l - PAD.r, PLOT_H = H - PAD.t - PAD.b;
+
+  function el(tag, attrs) {
+    var e = document.createElementNS(svgNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function renderChart(concept) {
+    chartTitleEl.textContent = DATA.concept_labels[concept];
+    var rows = DATA.rows.filter(function (r) { return r.concept === concept && r.status === "ok"; });
+    var sourcesHere = Array.from(new Set(rows.map(function (r) { return SOURCE_LABEL[r.source] || r.source; })));
+    chartNoteEl.textContent = sourcesHere.length > 1
+      ? "Reported by " + sourcesHere.join(" and ") + " independently — shown as separate series, never combined."
+      : "Reported by " + sourcesHere[0] + " only — no equivalent line in the other source.";
+
+    var periods = Array.from(new Set(rows.map(function (r) { return r.period; }))).sort();
+    var xFor = {};
+    periods.forEach(function (p, i) {
+      xFor[p] = PAD.l + (periods.length === 1 ? PLOT_W / 2 : (PLOT_W * i) / (periods.length - 1));
+    });
+
+    var values = rows.map(function (r) { return r.value; });
+    var vMin = Math.min.apply(null, values), vMax = Math.max.apply(null, values);
+    if (vMin === vMax) { vMin -= Math.abs(vMin) * 0.1 || 1; vMax += Math.abs(vMax) * 0.1 || 1; }
+    var span = vMax - vMin;
+    var yMin = vMin - span * 0.15, yMax = vMax + span * 0.15;
+    function yFor(v) { return PAD.t + PLOT_H - ((v - yMin) / (yMax - yMin)) * PLOT_H; }
+
+    while (chartEl.firstChild) chartEl.removeChild(chartEl.firstChild);
+    chartEl.setAttribute("viewBox", "0 0 " + W + " " + H);
+
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++) {
+      var v = yMin + ((yMax - yMin) * t) / ticks;
+      var y = yFor(v);
+      chartEl.appendChild(el("line", { x1: PAD.l, x2: W - PAD.r, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 1 }));
+      var lbl = el("text", { x: PAD.l - 10, y: y + 4, "text-anchor": "end", "font-size": 10.5, fill: "var(--ink-muted)", "font-family": "var(--font-mono)" });
+      lbl.textContent = fmtValue(concept, v);
+      chartEl.appendChild(lbl);
+    }
+    chartEl.appendChild(el("line", { x1: PAD.l, x2: W - PAD.r, y1: PAD.t + PLOT_H, y2: PAD.t + PLOT_H, stroke: "var(--axis)", "stroke-width": 1 }));
+
+    periods.forEach(function (p) {
+      var lbl = el("text", { x: xFor[p], y: H - 8, "text-anchor": "middle", "font-size": 10.5, fill: "var(--ink-muted)", "font-family": "var(--font-mono)" });
+      lbl.textContent = p.slice(0, 4);
+      chartEl.appendChild(lbl);
+    });
+
+    var bySeries = {};
+    rows.forEach(function (r) {
+      (bySeries[r.scenario_label] = bySeries[r.scenario_label] || []).push(r);
+    });
+
+    // Actual / ESEF actual can share the same x (same period) - nudge apart so
+    // their dots don't sit exactly on top of each other.
+    var sameXNudge = { "Actual": -5, "Restated": 0, "ESEF actual": 5 };
+
+    SCENARIO_ORDER.forEach(function (label) {
+      var pts = bySeries[label];
+      if (!pts || !pts.length) return;
+      pts.sort(function (a, b) { return a.period.localeCompare(b.period); });
+      var color = SCENARIO_COLOR[label];
+      var nudge = sameXNudge[label] || 0;
+
+      if (pts.length > 1) {
+        var d = pts.map(function (p, i) {
+          return (i === 0 ? "M" : "L") + (xFor[p.period] + nudge) + " " + yFor(p.value);
+        }).join(" ");
+        chartEl.appendChild(el("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      }
+      pts.forEach(function (p) {
+        chartEl.appendChild(el("circle", { cx: xFor[p.period] + nudge, cy: yFor(p.value), r: 6, fill: "var(--surface-1)" }));
+        chartEl.appendChild(el("circle", { cx: xFor[p.period] + nudge, cy: yFor(p.value), r: 4, fill: color }));
+      });
+      var last = pts[pts.length - 1];
+      var lx = xFor[last.period] + nudge, ly = yFor(last.value);
+      var anchor = (lx > W - PAD.r - 80) ? "end" : "start";
+      var dx = anchor === "end" ? -10 : 10;
+      var txt = el("text", { x: lx + dx, y: ly + 4, "text-anchor": anchor, "font-size": 11.5, "font-weight": 600, fill: color });
+      txt.textContent = label;
+      chartEl.appendChild(txt);
+    });
+
+    var hitW = PLOT_W / Math.max(periods.length, 1);
+    periods.forEach(function (p, i) {
+      var hit = el("rect", {
+        x: PAD.l + i * hitW - hitW / 2 + (i === 0 ? hitW / 2 : 0),
+        y: PAD.t, width: hitW, height: PLOT_H, fill: "transparent"
+      });
+      hit.addEventListener("pointerenter", function () { showTip(p, xFor[p]); });
+      hit.addEventListener("pointermove", function () { showTip(p, xFor[p]); });
+      hit.addEventListener("pointerleave", hideTip);
+      chartEl.appendChild(hit);
+    });
+
+    var crosshair = el("line", { y1: PAD.t, y2: PAD.t + PLOT_H, stroke: "var(--axis)", "stroke-width": 1, opacity: 0, "stroke-dasharray": "3,3" });
+    chartEl.appendChild(crosshair);
+
+    function showTip(period, x) {
+      crosshair.setAttribute("x1", x); crosshair.setAttribute("x2", x); crosshair.setAttribute("opacity", 1);
+      var here = rows.filter(function (r) { return r.period === period; });
+      while (tooltipEl.firstChild) tooltipEl.removeChild(tooltipEl.firstChild);
+      var head = document.createElement("div"); head.className = "tt-period"; head.textContent = period;
+      tooltipEl.appendChild(head);
+      here.sort(function (a, b) { return SCENARIO_ORDER.indexOf(a.scenario_label) - SCENARIO_ORDER.indexOf(b.scenario_label); });
+      here.forEach(function (r) {
+        var row = document.createElement("div"); row.className = "tt-row";
+        var key = document.createElement("span"); key.className = "tt-key";
+        key.style.background = getComputedStyle(document.documentElement).getPropertyValue(
+          "--s-" + (r.scenario_label === "Actual" ? "actual" : r.scenario_label === "Restated" ? "restated" :
+            r.scenario_label === "Baseline" ? "baseline" : r.scenario_label === "Adverse" ? "adverse" : "esef")
+        );
+        var name = document.createElement("span"); name.textContent = r.scenario_label;
+        var val = document.createElement("span"); val.className = "tt-val"; val.textContent = fmtValue(concept, r.value);
+        row.appendChild(key); row.appendChild(name); row.appendChild(val);
+        tooltipEl.appendChild(row);
+      });
+      var pct = x / W * 100;
+      tooltipEl.style.left = pct + "%";
+      tooltipEl.style.top = "0px";
+      tooltipEl.style.opacity = 1;
+    }
+    function hideTip() { tooltipEl.style.opacity = 0; crosshair.setAttribute("opacity", 0); }
+
+    while (legendEl.firstChild) legendEl.removeChild(legendEl.firstChild);
+    SCENARIO_ORDER.forEach(function (label) {
+      if (!bySeries[label]) return;
+      var item = document.createElement("div"); item.className = "legend-item";
+      var sw = document.createElement("span"); sw.className = "legend-swatch";
+      sw.style.background = SCENARIO_COLOR[label];
+      var txt = document.createElement("span"); txt.textContent = label;
+      item.appendChild(sw); item.appendChild(txt);
+      legendEl.appendChild(item);
+    });
+  }
+
+  // ---------- Tabs, grouped by statement ----------
+  var tabGroupsEl = document.getElementById("tabGroups");
+  var currentConcept = "cet1_ratio";
+  var allTabs = [];
+  GROUP_ORDER.forEach(function (group) {
+    var keysInGroup = Object.keys(DATA.concept_labels).filter(function (k) { return STATEMENT_GROUP[k] === group; });
+    if (!keysInGroup.length) return;
+    var wrap = document.createElement("div"); wrap.className = "tab-group";
+    var label = document.createElement("div"); label.className = "tab-group-label"; label.textContent = group;
+    var tabs = document.createElement("div"); tabs.className = "tabs"; tabs.setAttribute("role", "tablist");
+    keysInGroup.forEach(function (key) {
+      var btn = document.createElement("button");
+      btn.className = "tab"; btn.type = "button"; btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", key === currentConcept ? "true" : "false");
+      btn.textContent = DATA.concept_labels[key];
+      btn.addEventListener("click", function () {
+        currentConcept = key;
+        allTabs.forEach(function (b) { b.setAttribute("aria-selected", b === btn ? "true" : "false"); });
+        renderChart(key);
+      });
+      tabs.appendChild(btn);
+      allTabs.push(btn);
+    });
+    wrap.appendChild(label); wrap.appendChild(tabs);
+    tabGroupsEl.appendChild(wrap);
+  });
+  renderChart(currentConcept);
+
+  // ---------- Table ----------
+  var tbody = document.getElementById("tbody");
+  var searchEl = document.getElementById("search");
+  var rowCountEl = document.getElementById("rowCount");
+  var sortKey = "period", sortDir = 1;
+
+  function statusBadge(status) {
+    var span = document.createElement("span");
+    if (status === "ok") {
+      span.className = "badge status-ok";
+      var dot = document.createElement("span"); dot.className = "dot d-ok"; span.appendChild(dot);
+      span.appendChild(document.createTextNode("ok"));
+    } else {
+      span.className = "badge status-missing";
+      var dot2 = document.createElement("span"); dot2.className = "dot d-warn"; span.appendChild(dot2);
+      span.appendChild(document.createTextNode("missing_from_source"));
+    }
+    return span;
+  }
+
+  function provBadge(label) {
+    var span = document.createElement("span");
+    span.className = "badge " + (PROV_BADGE_CLASS[label] || "");
+    span.textContent = label;
+    return span;
+  }
+
+  function sourcePill(source) {
+    var span = document.createElement("span");
+    span.className = "src-pill";
+    span.textContent = SOURCE_LABEL[source] || source;
+    return span;
+  }
+
+  function renderTable() {
+    var q = searchEl.value.trim().toLowerCase();
+    var rows = DATA.rows.filter(function (r) {
+      if (!q) return true;
+      return (r.concept + " " + r.period + " " + r.scenario_label + " " + r.status + " " + r.item + " " + r.source).toLowerCase().indexOf(q) !== -1;
+    });
+    rows = rows.slice().sort(function (a, b) {
+      var av = a[sortKey], bv = b[sortKey];
+      if (av === bv) return 0;
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
+      return (av > bv ? 1 : -1) * sortDir;
+    });
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr");
+
+      var tdPeriod = document.createElement("td"); tdPeriod.className = "mono"; tdPeriod.textContent = r.period;
+      var tdConcept = document.createElement("td"); tdConcept.textContent = DATA.concept_labels[r.concept] || r.concept;
+      var tdSource = document.createElement("td"); tdSource.appendChild(sourcePill(r.source));
+      var tdItem = document.createElement("td"); tdItem.className = "mono"; tdItem.textContent = r.item;
+      var tdProv = document.createElement("td"); tdProv.appendChild(provBadge(r.scenario_label));
+      var tdValue = document.createElement("td"); tdValue.className = "num mono"; tdValue.textContent = fmtValue(r.concept, r.value);
+      var tdStatus = document.createElement("td"); tdStatus.appendChild(statusBadge(r.status));
+      var tdOrigin = document.createElement("td"); tdOrigin.className = "origin"; tdOrigin.textContent = r.origin;
+
+      [tdPeriod, tdConcept, tdSource, tdItem, tdProv, tdValue, tdStatus, tdOrigin].forEach(function (td) { tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+    rowCountEl.textContent = rows.length + " of " + DATA.rows.length + " rows";
+  }
+
+  document.querySelectorAll("#dataTable thead th").forEach(function (th) {
+    th.addEventListener("click", function () {
+      var key = th.getAttribute("data-key");
+      if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+      document.querySelectorAll("#dataTable thead th .arrow").forEach(function (a) { a.textContent = ""; });
+      th.querySelector(".arrow").textContent = sortDir === 1 ? "↑" : "↓";
+      renderTable();
+    });
+  });
+  searchEl.addEventListener("input", renderTable);
+  renderTable();
+
+  // ---------- Edge cases ----------
+  var edgeGrid = document.getElementById("edgeGrid");
+  var cases = [
+    {
+      title: "Value genuinely absent from source",
+      req: "spec: “Variable genuinely absent from source”",
+      code: 'get_financial_data(LEI, ["cet1_ratio"], period="209912")',
+      resultLines: [
+        "status: " + DATA.missing_example.status,
+        "value:  —",
+        "origin: " + DATA.missing_example.origin
+      ]
+    },
+    {
+      title: "Unsupported variable requested",
+      req: "spec: “Unsupported bank or variable requested”",
+      code: 'get_financial_data(LEI, ["quantum_flux_capacitor_ratio"])',
+      resultClass: "err",
+      resultLines: ["UnsupportedVariableError:", "not in v1 coverage: ['quantum_flux_capacitor_ratio']"]
+    },
+    {
+      title: "Retrieval / processing failure",
+      req: "spec: “Retrieval or processing failure”",
+      code: "get_financial_data(LEI, [\"cet1_ratio\"], csv_path=<missing file>)",
+      resultClass: "err",
+      resultLines: ["DataSourceError:", "...does_not_exist.csv not found — run", "`python -m data_acquisition.eba_exercises", "stress_test 2025` first."]
+    }
+  ];
+  cases.forEach(function (c) {
+    var card = document.createElement("div"); card.className = "edge-card";
+    var h3 = document.createElement("h3"); h3.textContent = c.title;
+    var req = document.createElement("p"); req.className = "req"; req.textContent = c.req;
+    var code = document.createElement("pre"); code.className = "code"; code.textContent = c.code;
+    var result = document.createElement("pre"); result.className = "result " + (c.resultClass || "");
+    result.textContent = c.resultLines.join("\n");
+    card.appendChild(h3); card.appendChild(req); card.appendChild(code); card.appendChild(result);
+    edgeGrid.appendChild(card);
+  });
+
+  // ---------- Footer ----------
+  (function renderFooter() {
+    var f = document.getElementById("pageFooter");
+    var p1 = document.createElement("div");
+    p1.textContent = "Sources: " + Object.values(DATA.sources).join("  •  ");
+    var p2 = document.createElement("div");
+    p2.innerHTML = "Code: <code>data_acquisition/reconcile.py</code>, <code>eba_exercises.py</code>, <code>esef_client.py</code>. " +
+      "P3DH is still open — see AGENTS.md. Generated " + DATA.generated + ".";
+    f.appendChild(p1); f.appendChild(p2);
+  })();
+})();
+</script>
+
+</body></html>

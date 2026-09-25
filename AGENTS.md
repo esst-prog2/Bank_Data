@@ -77,6 +77,11 @@ data/
     raw/                - downloaded files land here, organized by source
     state/download_log.json - what's already been fetched, keyed by lei|wave|module
 openspec/            - spec-driven development: specs/ (current behavior), changes/ (proposals)
+docs/
+    review.html      - static snapshot of the MVP's output for the pilot bank; served via GitHub
+                       Pages at https://esst-prog2.github.io/Bank_Data/review.html (Pages source:
+                       main branch, /docs) - regenerate by hand from reconcile.py's output, this
+                       is a snapshot, not a live app
 DATA_SOURCES_NOTES.md  - full research trail: what was checked, what's confirmed, what's still open
 requirements.txt
 ```

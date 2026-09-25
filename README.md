@@ -4,6 +4,8 @@
 
 I install the Python package and run a function for two European banks and a selected reporting period. It returns a table containing financial-statement and regulatory metrics for that bank and period, including the underlying source item for each figure. I can inspect the mapping to see which XBRL/ESEF or regulatory reporting item produced each value, what standardized concept it represents, and whether it is a reported actual or a scenario-projected figure (e.g. from an EU-wide stress test). Every figure carries enough metadata to check it against the publication it came from; the package does not attempt to reconcile figures across different accounting standards or reporting frameworks into a single comparable value — if the same concept is reported by more than one source, it returns each one tagged by its provenance rather than picking or combining them. I can then use the returned data directly in Python to calculate a metric such as RWA density.
 
+A reviewable snapshot of this output for the MVP's pilot bank (Erste Group Bank AG, EBA Stress Test 2025 + its own ESEF filing) is published at <https://esst-prog2.github.io/Bank_Data/review.html> (source: `docs/review.html`).
+
 2. The shape
 in          a bank identifier, reporting period, and requested financial or
             regulatory concepts
