@@ -175,8 +175,19 @@ def download_full_database(exercise: str, year: int, out_dir: Path | None = None
     written = []
     for file_url in discover_full_database_files(exercise, year):
         dest = out_dir / file_url.rsplit("/", 1)[-1]
-        resp = requests.get(file_url, timeout=120, stream=True)
-        resp.raise_for_status()
+        try:
+            resp = requests.get(
+                file_url,
+                timeout=120,
+                stream=True,
+                headers={"User-Agent": "Mozilla/5.0 (research script)"},
+            )
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            # EBA's asset server 403s some direct file URLs even with a browser-like
+            # User-Agent; skip that file rather than aborting the whole download.
+            print(f"skipping {file_url}: {exc}")
+            continue
         with dest.open("wb") as f:
             for chunk in resp.iter_content(chunk_size=1 << 20):
                 f.write(chunk)

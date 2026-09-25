@@ -151,6 +151,83 @@ be solid; the four slicer selectors are the part most likely to need a fix.
   the same list or two different ones (`fetch_module()` currently assumes they're the same,
   flagged with a comment) - the first `--headed` run will answer both.
 
+## Update 2026-09-22: EBA P3DH team replied directly - three questions answered
+
+Emailed P3DH@eba.europa.eu on 2026-09-19 asking three direct questions (bulk/API access,
+a complete institution list, and whether the ITS T+4/6/8 calendar is reliable). Got a real
+reply from the "EBA P3DH Team" on 2026-09-22. Recording the substance here since it changes
+how much weight to put on assumptions already baked into this project:
+
+1. **Bulk download / API access.** "Discussions regarding the possible implementation of a
+   bulk download solution and/or API access are currently ongoing. However, at this stage,
+   we cannot commit to the introduction of such functionality or provide any timeline for
+   its availability." For now: "accessing and downloading the data through the available
+   EDAP/P3DH functionalities" (i.e. the dashboard) is the only sanctioned path. This upgrades
+   `edap_scraper.py` from "fallback until the real API ships" to "the access method,
+   indefinitely" - there's an open internal discussion, not a committed near-term
+   alternative. Worth re-emailing again in a few months to check status, but not worth
+   designing around an assumption it'll land soon.
+
+2. **Complete list of in-scope institutions.** "At present, the institutions visible in the
+   Data Hub are those that have already published Pillar 3 disclosures through the
+   platform. We are not in a position to provide a separate or complete list of institutions
+   beyond what is publicly available in the Data Hub." So there is no better entity-discovery
+   source than the Hub itself - confirms the EBA Transparency Exercise participant list
+   (`eba_exercises.build_entities_csv()`) remains the best available seed, but it's a proxy,
+   not the ground truth: P3DH onboarding is still rolling out (e.g. SNCI onboarding hasn't
+   even piloted yet as of this writing), so "in the 2025 Transparency Exercise" and "live on
+   P3DH now" are not guaranteed to be the same set in either direction. Once
+   `edap_scraper.py` is verified (task 1.1), its own Entity slicer is the actual ground
+   truth for "who's live on P3DH" and `entities.csv` should be cross-checked against it,
+   not assumed correct because it came from an EBA source.
+
+3. **Is the ITS T+4/6/8 calendar reliable?** "The timelines set out in the ITS... should be
+   understood as an EBA expectation rather than a strict legal publication requirement." In
+   other words, `waves.py`'s calendar is a scheduling heuristic ("don't bother checking
+   before this date"), not a guarantee data will actually appear by then. Checked
+   `run_update.py` directly: right now a wave that hasn't published yet falls into the same
+   generic `except Exception` branch as a genuine scraper break, and both get recorded as
+   `status: "failed"` in `download_log.json` with no way to tell them apart. Given EBA just
+   confirmed late waves will be routine rather than exceptional, that conflation needs
+   fixing - a late-but-expected wave and an actually-broken scraper are different problems
+   requiring different responses, and burying the second inside a pile of the first is a
+   real risk to notice a real break.
+
+   EBA pointed to FAQ B1 on the P3DH page for more detail on timing. An automated fetch of
+   that page produced numbers that didn't fully match this project's own records, and was
+   flagged here as unverified (2026-09-22, earlier same day) - correctly, as it turned out:
+   the user read the FAQ by hand and supplied the real text below, published 2026-05-22.
+
+   **FAQ B1** (transitional-period submissions): "Once the onboarding process is completed
+   and the institution is under conditions to submit the information to the EBA, the reports
+   for the past reference dates covered by the transitional arrangements shall be submitted
+   to the EBA for publication in the data hub. While no limit date is set for this
+   submission, reports already made public by the institution are expected to be submitted
+   without undue delay and reports not yet published should follow the timeline envisaged
+   for the steady state."
+
+   **FAQ B2** (steady-state submissions): required information is due "on the same day on
+   which institutions publish their financial statements... or as soon as possible
+   thereafter"; Article 450 (remuneration) information is due "no later than two months
+   after" the institution's own financial-statement publication date. "While no mandatory or
+   indicative limit dates for submission are put in place," the ITS final report's
+   expectations are:
+   - Year-end reports (December reference date): end-June; remuneration info: end-August.
+   - Year-end reports (reference date **other than** December): reference date + 6 months;
+     remuneration info: reference date + 8 months.
+   - Quarterly reports: reference date + 4 months.
+   - Semi-annual reports: reference date + 4 months.
+
+   This confirms `waves.py`'s existing `_DEADLINE_MONTHS` table (quarterly=4,
+   semi_annual=4, year_end=6, year_end_remuneration=8) is correct for December-referenced
+   waves. It also surfaces a gap: `waves.py`'s `_reference_dates_since()` only tags `month
+   == 12` dates as `YEAR_END`/`YEAR_END_REMUNERATION` - it has no path for a bank whose
+   fiscal year-end reference date isn't December, even though FAQ B2 explicitly covers that
+   case ("reference date + 6/8 months" instead of the fixed end-June/end-August shortcut).
+   Likely a non-issue for v1's pilot banks (EU banks overwhelmingly report on a calendar
+   fiscal year), but worth confirming rather than assuming - see the new task in
+   `add-mvp-v1`'s tasks.md.
+
 ## Sources checked
 
 - https://www.eba.europa.eu/publications-and-media/press-releases/eba-pillar-3-data-hub-goes-live
@@ -162,3 +239,7 @@ be solid; the four slicer selectors are the part most likely to need a fix.
 - https://www.eba.europa.eu/eu-wide-transparency-exercise-0 (full link listing fetched directly)
 - https://www.eba.europa.eu/eu-wide-stress-test-2025 (full link listing fetched directly)
 - ECB Supervisory Banking Statistics (SUP dataset): https://data.ecb.europa.eu/data/datasets/SUP/data-information - checked and excluded, aggregated across all significant institutions only, no per-bank figures (confidentiality)
+- Direct email reply from P3DH@eba.europa.eu ("EBA P3DH Team"), received 2026-09-22, in
+  response to a question sent 2026-09-19
+- https://www.eba.europa.eu/risk-and-data-analysis/pillar-3-data-hub, FAQ B1 and B2
+  (published 2026-05-22) - read directly by the user, see 2026-09-22 entry above

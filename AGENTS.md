@@ -28,11 +28,15 @@ up or in progress:
 
 - **EBA Pillar 3 Data Hub (P3DH)** - live regulatory disclosures, launched Jan 2026. No
   public bulk API found (confirmed by direct inspection - it's an anonymous-access Power BI
-  embed). Emailed P3DH@eba.europa.eu asking about bulk/API access; no response yet as of
-  2026-09-19. Building a Playwright-based UI scraper as the fallback in the meantime -
-  see `data_acquisition/edap_scraper.py` and its docstring for exactly what's verified vs.
-  not. `data_acquisition/waves.py` encodes the real EBA publication calendar (T+4/6/8 months
-  per Article 4 of the ITS) so updates only chase genuinely new reference dates.
+  embed). Emailed P3DH@eba.europa.eu asking about bulk/API access; EBA replied 2026-09-22:
+  bulk download/API access is "currently ongoing" discussion internally, with no commitment
+  or timeline either way. Treat the Playwright UI scraper as the access method for the
+  foreseeable future, not a stopgap - see `data_acquisition/edap_scraper.py` and its
+  docstring for exactly what's verified vs. not. `data_acquisition/waves.py` encodes the
+  EBA publication calendar (T+4/6/8 months per Article 4 of the ITS), but EBA also confirmed
+  this is "an EBA expectation rather than a strict legal publication requirement" - so a
+  wave being past its expected date is a normal, expected outcome, not a failure (see
+  DATA_SOURCES_NOTES.md's 2026-09-22 entry).
 - **EBA EU-wide Transparency Exercise** - real, confirmed bulk CSV, LEI-tagged, 2013-2025.
   Discontinued from June 2025 (EBA points to P3DH going forward) - frozen archive, good for
   reproducible test fixtures, not for anything ongoing. `data_acquisition/eba_exercises.py`.
@@ -41,9 +45,14 @@ up or in progress:
   Pillar 3/ESEF by default; this is a real instance of the README's own comparability risk.
   Same module as Transparency (`eba_exercises.py`, `exercise="stress_test"`).
 - **ESEF financial-statement filings** - no single EU-wide repository yet (ESAP not live).
-  Plan: `filings.xbrl.org`'s JSON:API for countries it covers well (France, Italy, Spain,
-  Netherlands), direct company IR pages as fallback. NOT YET BUILT - next thing to tackle
-  once P3DH scraping is stable, or in parallel if picked up separately.
+  `data_acquisition/esef_client.py` queries `filings.xbrl.org`'s JSON:API for one entity's
+  own filings at a time - confirmed working 2026-09-25 for Erste Group Bank AG (Austria),
+  which the earlier "well covered" guess (France, Italy, Spain, Netherlands) hadn't listed;
+  that guess was from documentation, not a direct check. Still can't discover "everyone
+  reporting in country X" the way `eba_exercises.py` can for EBA's exercises, and only
+  handles a calendar (Dec 31) fiscal year-end (same assumption as `waves.py`, see task 1.5) -
+  extend both together if a pilot bank needs otherwise. Germany and Ireland remain flagged as
+  known gaps in DATA_SOURCES_NOTES.md's original entry, unconfirmed either way.
 - **GLEIF** - used only to enrich/validate an LEI you already have (legal name, country,
   status), never to discover which banks are in scope. `data_acquisition/gleif_client.py`.
 - **Excluded**: ECB Supervisory Banking Statistics (SUP dataset) - checked directly,
@@ -59,6 +68,8 @@ data_acquisition/
     gleif_client.py     - GLEIF API wrapper (validation/enrichment only)
     edap_downloader.py  - swappable interface run_update.py calls; currently delegates to edap_scraper
     edap_scraper.py     - Playwright scraper for P3DH's Data Points Report (UNVERIFIED, see its docstring)
+    esef_client.py      - ESEF filings via filings.xbrl.org's JSON:API (one entity/fiscal-year at a time)
+    reconcile.py        - the package surface: get_financial_data() - concept mapping, provenance, DataFrame schema
     run_update.py       - the script to schedule; idempotent, state-tracked in data/state/download_log.json
 data/
     entities.csv        - tracked banks (lei, name, country, notes) - not committed empty, see .example
@@ -92,7 +103,7 @@ requirements.txt
    point (see DATA_SOURCES_NOTES.md's original entry for details and known coverage gaps -
    Germany and Ireland aren't reliably indexed there).
 6. Only once real data is flowing from at least one source: start on the actual reconciliation
-   logic (source-item -> standardized-concept mapping, comparability checks) - the README
+   logic (source-item -> standardized-concept mapping, provenance tagging) - the README
    calls this out as the main technical risk, so it deserves real data to test against rather
    than being designed against assumptions.
 7. See `openspec/changes/add-mvp-v1/` for the current MVP change proposal, derived from

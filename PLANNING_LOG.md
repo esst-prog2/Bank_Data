@@ -36,3 +36,105 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   whole repo to `github.com/esst-prog2/Bank_Data` (this project's actual submission
   repo, separate from `Advanced_Programming_Marton_Nagy`) for the first time — prior
   work here had never been committed. Decided by user, carried out by agent.
+- 2026-09-22: Narrowed the comparability requirement to falsifiability: every
+  returned figure is tagged with source and provenance metadata (reported
+  actual vs. scenario-projected) so it can be checked against the publication
+  it came from, instead of the package attempting to establish cross-source
+  economic equivalence. Within-bank traceability across a bank's own periods
+  and sources now explicitly takes priority over comparability with an
+  arbitrary third party; reconciling figures across accounting standards is
+  now an explicit non-goal (README.md section 3 "Not this term"). When more
+  than one wired-up source reports the same concept, the package returns each
+  source's figure tagged by provenance rather than combining them. Updated
+  README.md, `add-mvp-v1`'s proposal.md, specs/data-retrieval/spec.md
+  (replaced the old "Flag non-comparable figures" requirement), and tasks.md
+  (3.2, 4.3) to match. Decided by user.
+- 2026-09-22: EBA's P3DH team replied directly to the 2026-09-19 email: no
+  bulk/API access is committed or timelined (discussion is "ongoing"); there
+  is no institution list beyond what's already visible in the Data Hub; and
+  the ITS T+4/6/8 publication calendar is "an EBA expectation rather than a
+  strict legal publication requirement," not a guarantee. Recorded in full in
+  DATA_SOURCES_NOTES.md. Reworded AGENTS.md's P3DH bullet to drop "fallback in
+  the meantime" framing, and added two tasks to `add-mvp-v1` (1.2's
+  entities.csv cross-check, new task 1.4 distinguishing
+  not-yet-published from genuine failure in run_update.py's state tracking).
+  Learned from EBA, captured by agent.
+- 2026-09-22: Decided to keep tasks 1.4 (not-yet-published vs. failed state)
+  and 1.5 (non-December fiscal year-end gap in waves.py) inside `add-mvp-v1`
+  rather than splitting them into a separate change — both are hardening of
+  the existing "Data sources" prerequisite section, not new spec requirements
+  or scope. Decided by agent, per user's delegation ("go on with it as you
+  see fit").
+- 2026-09-22: User read EBA P3DH FAQ B1/B2 directly and supplied the real
+  text, superseding the earlier flagged-as-unverified automated fetch of the
+  same page. Confirms `waves.py`'s existing T+4/6/8 deadline table is correct
+  for December-referenced waves, and surfaces a real gap: FAQ B2 also
+  specifies deadlines for year-end reports with a non-December reference
+  date, which `waves.py` doesn't currently generate at all (new task 1.5).
+  Corrected DATA_SOURCES_NOTES.md's 2026-09-22 entry with the verified quotes.
+  Learned from user.
+- 2026-09-22: Wrote `add-mvp-v1/design.md` (concept-mapping approach, provenance
+  mechanism, DataFrame schema, missing/not-yet-published/failed distinction),
+  closing out `isPlanningComplete: false`. Decided by agent from prior-session
+  discussion, validated with `openspec validate --strict`.
+- 2026-09-25: Homework MVP due 2026-09-26 20:00 forced a scope cut for this
+  session: implement the package surface and reconciliation logic against only
+  `eba_exercises.py` (exercise="stress_test", 2025), skip P3DH/Playwright
+  (tasks 1.1, 1.3, 1.4, 1.5 — unverified scraper, no display/browser
+  confirmed usable in time) and ESEF (not started) entirely for this pass.
+  Decided by user (confirmed via explicit yes/no prompt), so the deferred
+  tasks are a deliberate, recorded skip, not silent scope-narrowing.
+- 2026-09-25: Fixed a real bug found by actually running `eba_exercises.py`:
+  `download_full_database()` sent no `User-Agent` header on its file-download
+  request (unlike `_get_html()`), which EBA's asset server 403'd; also made it
+  skip a failing file instead of aborting the whole run. Decided by agent
+  (bug fix within existing behavior, not a scope change).
+- 2026-09-25: Discovered the 2025 Transparency Exercise landing page
+  (`eu-wide-transparency-exercise-0`) doesn't link individual per-bank result
+  PDFs the way `_PARTICIPANT_LINK_RE`/`discover_participants()` expects —
+  returns 0 participants, unlike every other year. `data/entities.csv` was
+  populated from the Stress Test 2025 participant list instead (64 real,
+  LEI-tagged banks); the Transparency-2025 participant-discovery gap is not
+  fixed and stays open (see task 1.2's note in tasks.md). Found by agent
+  while executing task 1.2.
+- 2026-09-25: Revised design.md decision 2 after running the Stress Test 2025
+  data for real: its own `Scenario` column (confirmed via that download's
+  `Metadata_TR.xlsx`) shows `exercise="stress_test"` is not uniformly
+  `scenario_projection` — scenario 1 is a reported actual, 2/3 are
+  baseline/adverse projections, and 11 is a restatement of the actual. This
+  single already-verified source now demonstrates the reconciliation logic's
+  core provenance-tagging requirement (task 4.3) without needing a second
+  source wired up. Found by agent while implementing `reconcile.py`.
+- 2026-09-25: Implemented `data_acquisition/reconcile.py` (task 2.1/2.2's
+  package surface, 3.1/3.2/3.3's concept map, provenance tagging, and
+  missing-vs-failed distinction) and `tests/test_reconcile.py` (tasks
+  4.1-4.3), covering 5 standardized concepts for Erste Group Bank AG
+  (PQOH26KWDF7CG10L6792) from the Stress Test 2025 data. Task 4.4 (archive)
+  deliberately not done — tasks 1.1/1.3/1.4/1.5 and the second-source
+  requirement remain open past this session's deadline-driven scope. Decided
+  and implemented by agent per the 2026-09-25 scope-cut decision above.
+- 2026-09-25: User asked to add Erste Group's ESEF (balance sheet + income
+  statement) figures to the reviewable output, reopening AGENTS.md's "Start
+  the ESEF side" step. Checked `filings.xbrl.org`'s JSON:API directly rather
+  than assuming the earlier "France/Italy/Spain/Netherlands only" guess
+  applied here — Erste Group's Austrian filings are indexed there after all
+  (7 filings, FY2018-FY2025). Built `data_acquisition/esef_client.py` against
+  the real API and the real FY2024 xBRL-JSON facts file, and extended
+  `reconcile.CONCEPT_MAP` with total_assets/total_equity (ESEF-only) plus
+  ESEF's own net_interest_income/profit_or_loss_for_the_year tags alongside
+  the stress test's — the same standardized concept now genuinely comes from
+  two independent reported-actual sources (IFRS consolidated vs. supervisory
+  reporting scope), which differ slightly (e.g. net interest income:
+  EUR 7,540.5m stress-test vs. EUR 7,528m ESEF for the same FY2024) rather
+  than agreeing exactly — a real instance of "don't combine, tag distinctly,"
+  not a manufactured one. Decided by user, implemented by agent.
+- 2026-09-25: Audited the repo against this week's assignment brief. Found two
+  gaps: no "later levels" list existed yet (required, in the proposal or this
+  log), and none of this session's MVP work was committed/pushed — the
+  submission remote (`bankdata` → github.com/esst-prog2/Bank_Data) was still
+  at the pre-MVP scaffold commit. Added a "Later levels" section to
+  `add-mvp-v1/proposal.md` (P3DH wiring, non-December fiscal years, expanding
+  pilot banks, the Transparency-2025 discovery gap, broader ESEF coverage,
+  ESAP, archiving) and committed + pushed everything to `bankdata` (see the
+  commit this line ships in). Decided by user ("do every step you proposed"),
+  carried out by agent.

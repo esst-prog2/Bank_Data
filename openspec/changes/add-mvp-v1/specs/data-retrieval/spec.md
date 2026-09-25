@@ -33,17 +33,39 @@ the package.
 - **THEN** it raises or reports the failure explicitly rather than returning it
   as missing or silently omitting it
 
-### Requirement: Flag non-comparable figures instead of combining them
-The package SHALL NOT silently combine two reported figures into a common
-metric when they cannot be established as economically comparable.
+### Requirement: Every returned figure is falsifiable against its source
+The package SHALL tag every returned figure with enough source and
+provenance metadata — including whether it is a reported actual or a
+scenario-projected figure (e.g. an EU-wide stress test) — that the figure
+can be checked against the original publication it came from. The package
+SHALL NOT attempt to establish or assert economic equivalence between
+figures from different accounting standards, consolidation scopes, or
+reporting frameworks. Within-bank traceability across that bank's own
+periods and sources takes priority over normalizing figures for comparison
+against other banks or external standards.
 
-#### Scenario: Two figures cannot be established as economically equivalent
-- **GIVEN** two reported figures relevant to the same requested concept that
-  cannot be established as economically equivalent (e.g. a scenario-projected
-  stress-test figure vs. a reported actual)
-- **WHEN** the package would otherwise combine them into a single value
-- **THEN** it instead reports them as non-comparable, together with the reason
-  where available, and does not combine them
+#### Scenario: Reported actual vs. scenario-projected figure for the same concept
+- **GIVEN** two figures for the same standardized concept and bank, one from
+  a reported-actuals source (Pillar 3 / ESEF) and one from a stress-test
+  scenario projection
+- **WHEN** the package returns both
+- **THEN** each is tagged with its provenance (reported_actual /
+  scenario_projection) and neither is combined into a single value or
+  presented as interchangeable
+
+#### Scenario: Figure traceable to its origin
+- **GIVEN** any returned figure
+- **WHEN** its correctness is checked
+- **THEN** the package's output identifies the exact source publication,
+  exercise (if applicable), and reporting item the figure came from,
+  sufficient to verify it independently against that source
+
+#### Scenario: Multiple sources report the same concept
+- **GIVEN** a bank/period/concept for which more than one wired-up source
+  reports a figure
+- **WHEN** the package returns results for that request
+- **THEN** it returns each source's figure tagged by its provenance, rather
+  than reconciling them into a single authoritative value
 
 ### Requirement: Coverage is a defined, non-exhaustive set
 The package SHALL support a defined set of pilot banks and a defined set of
