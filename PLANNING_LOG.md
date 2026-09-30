@@ -147,3 +147,42 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   demo" section and AGENTS.md's repo layout. It's a snapshot, not a live app —
   regenerating it means re-running the export and copying the file by hand.
   Decided by user ("do both"), carried out by agent.
+- 2026-09-30: Started branch `hw4-spike` for the assignment's spike exercise.
+  The question, taken from GitHub issue #4 ("Your spike: why do your two
+  sources disagree on Erste?"): for Erste Group Bank AG FY2024, how large is
+  each gap between the stress-test source and the ESEF source, and why —
+  checked against Erste's own 2024 Annual Report and Pillar 3 disclosure.
+  What counts as an answer: four deltas (net interest income, profit or loss
+  for the year, CET1 ratio actual-vs-restated, total risk exposure amount
+  actual-vs-restated) each with a named cause, plus one RWA density figure
+  (TREA / total assets) with its numerator's source justified — or, failing
+  that, a written statement that RWA density cannot be computed across these
+  two sources and why. Evidence required: a committed comparison table with
+  page or section references into Erste's own published reports. Question
+  and answer criteria taken directly from the issue, not decided by agent or
+  user beyond accepting the issue as given.
+- 2026-09-30: Spike answer (full comparison table, citations, and reasoning in
+  `spike/comparison.md`; reproducible via `spike/compare_sources.py`). Four
+  deltas for Erste FY2024, `eba_stress_test` vs. the reference source, each
+  with a named and sourced cause: net interest income +12.51 EUR million
+  (+0.17%) and profit or loss for the year -31.42 EUR million (-0.80%), both
+  caused by the prudential-vs-IFRS scope-of-consolidation difference Erste's
+  own Pillar 3 report documents (pp.26-27); CET1 capital +136.07 EUR million
+  (+0.57%, restated vs. actual) and total risk exposure amount -6,989.53 EUR
+  million (-4.45%, restated vs. actual), both caused by the EBA 2025 stress
+  test's CRR3 restatement of the 31 Dec 2024 starting point (per its
+  methodological note) - Erste's own Pillar 3 "Key metrics" table (p.29)
+  matches the stress test's "actual" scenario almost exactly and does not
+  match "restated" at all, which is itself the finding: restated is a
+  forward-looking regulatory recast, not a data correction. RWA density =
+  44.5% (TREA actual 157,240.73 / ESEF total assets 353,736.00), with the
+  restated TREA (giving 42.5%) rejected as the numerator because it would mix
+  a CRR3-recast figure with a never-recast IFRS denominator. Decided by
+  agent, verified against Erste's own published Annual Report 2024 and
+  Disclosure Report 2024 (both downloaded 2026-09-30, URLs in
+  spike/comparison.md) and the EBA's 2025 stress test methodological note.
+- 2026-09-30: Changed `tests/test_reconcile.py`'s cross-source tolerance from
+  an unexplained `< 100` (EUR million) absolute cutoff to a `< 2%` relative
+  one, justified by the spike's finding that the real gap (0.17%) is a
+  structural scope-of-consolidation effect, not an arbitrary margin. Decided
+  by agent per the spike issue's own critique of that assertion.

@@ -119,8 +119,13 @@ def test_two_independent_sources_report_same_concept_untagged_as_one(_source_ava
     assert (df["provenance"] == "reported_actual").all()
     values = df.set_index("source")["value"]
     assert values["eba_stress_test"] != values["esef"]
-    # both plausible for the same real bank/year, neither fabricated to agree
-    assert abs(values["eba_stress_test"] - values["esef"]) < 100
+    # both plausible for the same real bank/year, neither fabricated to agree.
+    # 2% relative tolerance, not an arbitrary absolute one: spike/comparison.md
+    # traces this gap to Erste's own documented prudential-vs-IFRS scope-of-
+    # consolidation difference (Pillar 3 report pp.26-27), which is a structural
+    # small-single-digit-percent effect - the observed gap is 0.17%.
+    relative_gap = abs(values["eba_stress_test"] - values["esef"]) / values["esef"]
+    assert relative_gap < 0.02
 
 
 def test_esef_only_concept_has_no_stress_test_row(_esef_available):

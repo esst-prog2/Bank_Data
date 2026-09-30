@@ -99,6 +99,19 @@ EBA itself attaches to the row, never the figure's magnitude or label, so
 Requirement 3's falsifiability contract stays cheap. See
 `data_acquisition/reconcile.py`'s `_SCENARIO_PROVENANCE` table.
 
+**Note added 2026-09-30 (spike, see `spike/comparison.md`):** `restated_actual`
+does not mean "a corrected actual." For Erste FY2024, the stress test's
+`restated_actual` (scenario 11) figures for CET1 capital and TREA do not match
+Erste's own Pillar 3 disclosure, while `reported_actual` (scenario 1) matches
+almost exactly. Per the EBA's 2025 stress test methodological note, `restated`
+is the 31 Dec 2024 starting point recast under CRR3 (in force from 1 Jan 2025,
+after the reference date) for the exercise's own 3-year projection — a
+forward-looking regulatory recast, not a data-quality correction of the
+actual. The provenance tag correctly flags the two values as distinct and
+non-combinable; it just doesn't say why they differ, which callers wanting
+that should get from a source's own methodology note rather than assuming
+"restated" implies "more accurate."
+
 ### 3. Returned DataFrame schema
 
 One row per `(bank, period, standardized_concept, source)` combination:
