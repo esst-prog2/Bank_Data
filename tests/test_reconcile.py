@@ -120,10 +120,10 @@ def test_two_independent_sources_report_same_concept_untagged_as_one(_source_ava
     values = df.set_index("source")["value"]
     assert values["eba_stress_test"] != values["esef"]
     # both plausible for the same real bank/year, neither fabricated to agree.
-    # 2% relative tolerance, not an arbitrary absolute one: spike/comparison.md
-    # traces this gap to Erste's own documented prudential-vs-IFRS scope-of-
-    # consolidation difference (Pillar 3 report pp.26-27), which is a structural
-    # small-single-digit-percent effect - the observed gap is 0.17%.
+    # 2% relative tolerance, not an arbitrary absolute one: based on the measured
+    # gap for this bank/period (0.17%), with headroom. spike/comparison.md's Cause 1
+    # section has the full story, including that "scope of consolidation" is a named
+    # but NOT verified explanation for this specific gap - don't cite it as settled.
     relative_gap = abs(values["eba_stress_test"] - values["esef"]) / values["esef"]
     assert relative_gap < 0.02
 

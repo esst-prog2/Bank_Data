@@ -186,3 +186,30 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   one, justified by the spike's finding that the real gap (0.17%) is a
   structural scope-of-consolidation effect, not an arbitrary margin. Decided
   by agent per the spike issue's own critique of that assertion.
+- 2026-10-05: Review feedback on the spike caught an unsupported claim:
+  Cause 1 in `spike/comparison.md` (the 2026-09-30 entry above) said the net
+  interest income (+0.17%) and profit (-0.80%) deltas were "the
+  income-statement-side consequence" of the same prudential-vs-IFRS
+  consolidation-scope gap documented on the balance sheet (27.9m EUR, 0.008%
+  of total assets, Pillar 3 report Table 4, p.25). That inference was never
+  checked. Checking it now: 0.008% cannot by itself explain gaps 21x
+  (NII) and 101x (profit) that size - the reviewer's own "hundred times
+  larger" figure for profit is exact. I looked for the one piece of evidence
+  that would actually settle it - an income-statement-side scope
+  reconciliation, the P&L equivalent of the Pillar 3 report's balance-sheet
+  LI1/LI2 tables (Tables 4-6, pp.25-27) - and it does not exist: the EU's own
+  Pillar 3 disclosure templates ((EU) 2021/637) only define LI-type tables
+  for the balance sheet, and Erste publishes nothing further. I also checked
+  the stress test's own `Data_Dictionary.xlsx` for item codes 2531001/2531004
+  (net interest income / profit or loss for the year): it gives only a label
+  and template name ("TRA_SUM"), not a definition detailed enough to say
+  whether the gap is scope-driven or definitional. Of the four causes claimed
+  in the 2026-09-30 answer, only one (CET1/TREA, restated vs. actual - Cause
+  2: Pillar 3 Table 7 p.29 matches "actual" almost exactly and diverges from
+  "restated" by exactly the amount the EBA's own methodological note
+  predicts) is genuinely settled by evidence I checked myself. The other
+  (net interest income / profit, Cause 1) is downgraded from a claimed cause
+  to a named, unverified hypothesis - `spike/comparison.md` and the test
+  comment in `tests/test_reconcile.py` are both corrected to say so, and the
+  2% test tolerance is now justified by the measured gap itself, not by a
+  causal story. Decided and verified by agent, per the reviewer's challenge.
