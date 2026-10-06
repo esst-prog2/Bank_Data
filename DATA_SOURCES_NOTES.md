@@ -243,3 +243,176 @@ how much weight to put on assumptions already baked into this project:
   response to a question sent 2026-09-19
 - https://www.eba.europa.eu/risk-and-data-analysis/pillar-3-data-hub, FAQ B1 and B2
   (published 2026-05-22) - read directly by the user, see 2026-09-22 entry above
+
+## Update 2026-10-06: pilot sample trimmed via S&P's top-50 European banks list
+
+Moving from the spike back to the main MVP work (task 1.2's "trim to pilot banks" step,
+AGENTS.md "Immediate next steps" #2), the user supplied S&P Global Market Intelligence's
+"Europe's 50 largest banks by assets" (2026 edition) as the trimming criterion, including
+headquarters country and total assets for all 50 - the article itself
+(spglobal.com/.../europes-50-largest-banks-by-assets-2026) returns HTTP 403 (paywalled);
+secondary sources (consultancy.eu, wall-street.ro, borsaefinanza.it) only reproduce the
+top ~10-20 names, not the full table, so the user's pasted table is the only complete,
+citable version of this list used here.
+
+**Step 1 - exclude by jurisdiction, not by lookup.** 13 of the 50 are headquartered outside
+the EU/EEA: UK (HSBC, Barclays, Lloyds, NatWest, Standard Chartered, Nationwide - 6),
+Switzerland (UBS, Raiffeisen Gruppe Switzerland, Zurcher Kantonalbank - 3), Russia (Sberbank,
+VTB, Gazprombank - 3), Turkiye (Ziraat Bankasi - 1). None of EBA's programmes (Transparency
+Exercise, Stress Test, P3DH) cover non-EU/EEA institutions, so these are excluded by the
+scope of EBA's remit, not by any missing-data check - no lookup was needed to rule them out.
+
+**Step 2 - cross-check the remaining 37 against the existing 64-bank Stress Test 2025
+sample.** `data/entities.csv` already had 64 real, LEI-tagged banks from the Stress Test
+2025 participant list (2026-09-25 entry above), but with a blank `name` column - it was
+populated LEI-first and never resolved to legal names. Resolving all 64 via GLEIF
+(`lei-records/{lei}`) first, then matching the S&P names against that known-good list by
+hand, turned out to be far more reliable than searching GLEIF by the S&P bank names directly:
+GLEIF's `filter[entity.legalName]` is near-exact and missed obvious matches (e.g. "BNP
+Paribas SA" vs. GLEIF's registered "BNP PARIBAS"), and its `filter[fulltext]` fallback
+returned irrelevant top hits (e.g. "BNP Paribas SA" surfaced "PUBLICIS GROUPE SA" as the top
+fulltext result for one query) - fuzzy search over ~2.7M global LEI records is not reliable
+enough to trust unattended, consistent with `gleif_client.py`'s own docstring warning not to
+trust a single top match blindly.
+
+**Result: all 37 EU/EEA banks from S&P's top 50 already resolve to an entity in the existing
+64-bank list** - the Stress Test 2025 sample (EBA's "representative" sample, ~75-80% of EU
+banking assets by design) turns out to already be a superset of S&P's top-50-by-assets EU/EEA
+subset. No new entity discovery was needed; the actual work was annotation, not expansion.
+
+**Found along the way: a real bug in EBA's own published data, not in this project's code.**
+Two of the 64 LEIs didn't resolve at GLEIF at all (404) - both French: `FR9695005MSX1OYEMGDF`
+(labelled "Groupe BPCE" in the source row) and `FR969500TJ5KRTCJQWXH` (labelled "Groupe Credit
+Agricole"). Grepping `data/raw/stress_test/2025/TRA_OTH.csv` directly confirmed these strings
+are exactly what EBA's own bulk file contains (not introduced by `eba_exercises.py`'s
+parsing) - e.g. `"FR","FR9695005MSX1OYEMGDF","Groupe BPCE","202412","2531004","1","","3606.22..."`.
+Both corrupted values are 20 characters, the correct length for an LEI, which is why no
+earlier length check caught them. GLEIF fulltext search for "BPCE" and "Credit Agricole"
+found the real LEIs - `9695005MSX1OYEMGDF46` (legal name "BPCE") and `969500TJ5KRTCJQWXH05`
+(legal name "CREDIT AGRICOLE SA") - and the pattern is now obvious once seen: EBA's stored
+value is the 2-letter country code prepended to the first 18 characters of the real LEI, with
+the real LEI's last 2 (check-digit) characters silently dropped. Checked the rest of the
+64-LEI universe for the same signature (LEI starting with its own row's country code) - no
+other instances. Both rows in `entities.csv` were corrected directly to the real LEIs, with
+the investigation recorded in each row's own `notes` field rather than filed away separately,
+so anyone re-deriving `entities.csv` later (e.g. by re-running `build_entities_csv()`) would
+hit the same two 404s and should know to re-apply this fix rather than silently losing two of
+the largest banks in the sample. Not reported to EBA; worth doing if this project continues
+past the course.
+
+**Schema change:** `data/entities.csv` gained an `sp50_2026_rank` column (blank where a bank
+isn't in the S&P list) and `data_acquisition/entities.py`'s `Entity` dataclass gained the
+matching field. `name` is now filled in for all 64 rows (GLEIF legal names), where it was
+blank before. `python -m data_acquisition.entities` and the full test suite were re-run after
+the change (64/64 validate against GLEIF; 8/8 tests pass) - the schema change is additive
+(new field has a default), so nothing downstream broke.
+
+Sources checked (this update):
+- S&P Global Market Intelligence, "Europe's 50 largest banks by assets" (2026 edition) -
+  full ranked table (rank, company, HQ country, accounting principle, total assets $B)
+  supplied directly by the user; the source URL itself 403s on direct fetch.
+- https://api.gleif.org/api/v1/lei-records (record lookup for all 64 existing entities.csv
+  LEIs, plus fulltext/legalName search for the 37 S&P EU/EEA bank names and, separately, for
+  "BPCE" and "Credit Agricole" to resolve the two corrupted LEIs)
+- `data/raw/stress_test/2025/TRA_OTH.csv` (direct grep, to confirm the two corrupted LEI
+  strings originate in EBA's own published file, not in this project's parsing)
+
+## Update 2026-10-06: P3DH scraper verified end to end (task 1.1 closed out)
+
+The 2026-09-19 entry above concluded this session's network egress was blocked to both
+`edap-public.eba.europa.eu` and `app.powerbi.com`, so `edap_scraper.py` was written as an
+unverified skeleton. Re-checked today before starting this work: both hosts now return
+HTTP 200 from this session (`requests.get` succeeded directly). Whatever blocked it in
+September is no longer in effect - installed Playwright + Chromium
+(`pip install playwright && python -m playwright install chromium`) and drove the real
+page headlessly.
+
+**Phase 1 - page structure.** `https://edap-public.eba.europa.eu/Report/index/MTE2` has
+exactly 2 frames: the EDAP page itself and one `app.powerbi.com/reportEmbed` iframe
+(~950KB of rendered markup). A screenshot showed 4 visible filter dropdowns ("Ref Date",
+"Entity Name", "Module Name", "Template") plus a "Go to report" action - a materially
+different flow than the original skeleton assumed (which expected the filters and an
+export button on the same view).
+
+**Phase 2 - real selectors.** Each filter is a Power BI slicer,
+`div.slicer-dropdown-menu[role="combobox"]`. Their `aria-label`s (confirmed by reading the
+rendered DOM directly) are the INTERNAL field names, not the visible header text:
+`ReferenceDate` ("Ref Date"), `ENT_NAM` ("Entity Name"), `ModuleName` ("Module Name"),
+`Template` ("Template") - the original skeleton's guessed field names ("Entity", "Entity
+Module", "Reference Date") were wrong for 3 of 4. Clicking a trigger opens a popup
+(`id` from the trigger's own `aria-controls`) containing a scoped search input and
+`[role="option"]` items - but the option list is virtualized, showing only ~8 items until
+you type in the popup's own search box. Pressing Escape does NOT close the popup (a stale
+popup's options polluted the next field's option count when tested) - re-clicking the same
+trigger toggles it closed instead (confirmed via `aria-expanded` flipping to `"false"`).
+
+**Phase 3 - search behavior, and the two open design.md questions answered.**
+`.fill()` on the search input does not trigger Power BI's own filtering (identical,
+unfiltered list came back regardless of the query); `.type(value, delay=...)` (real
+per-character keystrokes) does. With that fixed: searching Entity for "Erste" returned 5
+real matches ("Erste Group Bank AG" among them); searching Entity for Erste's actual LEI
+(`PQOH26KWDF7CG10L6792`) returned zero - **Entity is selected by display/legal name, not
+LEI**, settling design.md's first open question. Searching Template for "KM1" returned
+exactly one match, "K_61.00 - EU KM1 - Key metrics template" - confirming the naming
+convention and that this exact template (used in the spike's Cause 2 section) is
+selectable on P3DH. Separately, Module (~8 broad categories: "Common disclosures",
+"Financial disclosures", etc.) and Template (one row per specific EBA code) are
+confirmed-different lists, and Power BI cross-filters them - selecting the EU KM1 template
+narrowed Module's own option list down to just "Common disclosures" - settling design.md's
+second open question.
+
+**Phase 4 - a genuine data gap, not a code bug.** P3DH's own available Reference Dates,
+queried directly from the slicer's option list, are 30/06/2025, 30/09/2025, 31/10/2025,
+31/12/2025, 31/03/2026, 30/06/2026 - nothing earlier. P3DH launched January 2026 and
+apparently did not backfill historical periods. This means P3DH **cannot** reproduce or
+extend the spike's Erste FY2024 (31/12/2024) comparison in `spike/comparison.md` - that
+period predates P3DH's own data entirely. Once wired into `reconcile.py`, P3DH is a third,
+*later-period* source, not a cross-check for figures already reconciled there.
+
+**Phase 5 - full end-to-end export, the actual control found by trial.** The skeleton's
+assumed export control (`#exportFileButton`/`#exportFileButtonContainer`, same-origin page
+chrome) does exist in the DOM (confirmed present, count 2) but stays invisible on this
+specific report. After setting all filters and clicking the "Page navigation" / "Go to
+report" control (`[aria-label*="Page navigation"]`), the actual report page renders a real
+data table - the correct control is the table VISUAL's own "more options" menu
+(`.vcMenuBtn`, found by testing selector candidates against the live DOM), which opens a
+`role="menuitem"` list including "Export data". Clicking it opens Power BI's standard
+"Which data do you want to export?" dialog (radio choices: current layout / summarized /
+underlying - underlying disabled, "The report author turned this option off"); clicking its
+"Export" button triggers a real browser download.
+
+**Verified twice, independently, via the actual shipped `edap_scraper.py` CLI** (not just
+ad-hoc inline scripts): `python -m data_acquisition.edap_scraper "Erste Group Bank AG"
+"31/12/2025" "K_61.00 - EU KM1 - Key metrics template"` -> a real 198-row, 14-column .xlsx
+(`Entity Code, Entity Name, Country, Module Name, ModuleCode, Cell, Template, Row, Row
+Name, Column, Column Name, Sheet, FactValue` - one row per data point, long format, similar
+shape to the stress test's own `TRA_OTH.csv`). Sanity-checked the actual figures: CET1
+capital (row "1. Common Equity Tier 1 (CET1) capital", column "a. T" = current period) =
+EUR 28,523,937,380.03 for 31/12/2025, up from the spike's Dec-2024 actual of EUR 23,995.67m
+- a plausible ~19% year-on-year increase, not a red flag.
+
+**A real simplification found along the way:** a live export with only Entity + Template +
+Reference Date set (Module left completely unfiltered) produced the same data as one with
+Module also explicitly set (same row count, same byte size to within export-timestamp
+noise) - confirming Module doesn't need to be tracked as an independent input at all.
+`edap_scraper.DataPointQuery` has no `module` field as a result; `edap_downloader.py`'s
+`fetch_module()` keeps that parameter name only for compatibility with `run_update.py`'s
+existing per-(entity, wave, module) loop shape, but treats its value as the exact P3DH
+Template text, not a short code - `data/modules.txt`'s own format changed to match (one
+exact Template option string per line, not "CODIS"/"FINDIS"-style codes). Renaming the
+parameter and the file throughout the codebase was deliberately deferred rather than done
+in the same pass as the scraper verification - noted as follow-up, not done silently.
+
+**What's still open after this**: `data/modules.txt` has one verified entry (EU KM1) for
+one bank; task 1.3 needs the rest of the pilot banks' actual submitted templates. The
+not-yet-published-vs-failed distinction (task 1.4) and non-December fiscal year-ends (task
+1.5) are unaffected by any of this and remain open. `run_update.py` itself has not been run
+for a full real pass yet (only `edap_scraper`/`edap_downloader` were exercised directly).
+
+Sources checked (this update):
+- Live inspection of `https://edap-public.eba.europa.eu/Report/index/MTE2` and its embedded
+  `app.powerbi.com/reportEmbed` iframe, via a real local headless Chromium (Playwright
+  1.63.0 + Chrome Headless Shell), including full-page screenshots and raw frame HTML dumps
+  saved for inspection during the investigation.
+- The actual downloaded export file (`data.xlsx` / similarly named), opened and inspected
+  with pandas to confirm it's genuine structured data, not an error page or empty template.

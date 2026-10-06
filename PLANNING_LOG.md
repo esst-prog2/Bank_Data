@@ -186,3 +186,121 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   one, justified by the spike's finding that the real gap (0.17%) is a
   structural scope-of-consolidation effect, not an arbitrary margin. Decided
   by agent per the spike issue's own critique of that assertion.
+- 2026-10-05: Review feedback on the spike caught an unsupported claim:
+  Cause 1 in `spike/comparison.md` (the 2026-09-30 entry above) said the net
+  interest income (+0.17%) and profit (-0.80%) deltas were "the
+  income-statement-side consequence" of the same prudential-vs-IFRS
+  consolidation-scope gap documented on the balance sheet (27.9m EUR, 0.008%
+  of total assets, Pillar 3 report Table 4, p.25). That inference was never
+  checked. Checking it now: 0.008% cannot by itself explain gaps 21x
+  (NII) and 101x (profit) that size - the reviewer's own "hundred times
+  larger" figure for profit is exact. I looked for the one piece of evidence
+  that would actually settle it - an income-statement-side scope
+  reconciliation, the P&L equivalent of the Pillar 3 report's balance-sheet
+  LI1/LI2 tables (Tables 4-6, pp.25-27) - and it does not exist: the EU's own
+  Pillar 3 disclosure templates ((EU) 2021/637) only define LI-type tables
+  for the balance sheet, and Erste publishes nothing further. I also checked
+  the stress test's own `Data_Dictionary.xlsx` for item codes 2531001/2531004
+  (net interest income / profit or loss for the year): it gives only a label
+  and template name ("TRA_SUM"), not a definition detailed enough to say
+  whether the gap is scope-driven or definitional. Of the four causes claimed
+  in the 2026-09-30 answer, only one (CET1/TREA, restated vs. actual - Cause
+  2: Pillar 3 Table 7 p.29 matches "actual" almost exactly and diverges from
+  "restated" by exactly the amount the EBA's own methodological note
+  predicts) is genuinely settled by evidence I checked myself. The other
+  (net interest income / profit, Cause 1) is downgraded from a claimed cause
+  to a named, unverified hypothesis - `spike/comparison.md` and the test
+  comment in `tests/test_reconcile.py` are both corrected to say so, and the
+  2% test tolerance is now justified by the measured gap itself, not by a
+  causal story. Decided and verified by agent, per the reviewer's challenge.
+  Pushed to `hw4-spike` (commit `1772d02`); not yet merged into `main`, which
+  still has the uncorrected version from PR #5 - flagged to user, not acted
+  on without a decision since `main`'s history is otherwise untouched here.
+- 2026-10-06: Started on task 1.2's "trim to pilot banks" step (AGENTS.md
+  immediate next steps / tasks.md 1.2), using S&P Global's "Europe's 50
+  largest banks by assets" (2026 edition, full table supplied by the user
+  since the source URL is paywalled - 403 on direct fetch) as the trimming
+  criterion. Excluded 13 of the 50 as structurally out of EBA's remit (UK x6,
+  Switzerland x3, Russia x3, Turkiye x1 - none are EU/EEA, so none can appear
+  in the Stress Test, Transparency Exercise, or P3DH regardless of size).
+  Cross-checked the remaining 37 EU/EEA banks against the existing 64-LEI
+  Stress Test 2025 participant list in `data/entities.csv` via GLEIF
+  (`data_acquisition/gleif_client`) - all 37 resolve to an entity already
+  in that list, after fixing a real data bug (next entry). This means the
+  existing 64-bank EBA Stress Test 2025 sample is already a superset of
+  S&P's top-50 EU/EEA banks; no new entity discovery was needed, only
+  annotation. Added `sp50_2026_rank` to `Entity` (`entities.py`) and to every
+  row of `entities.csv` (blank where a bank isn't in the S&P top 50) and
+  filled in the previously-blank `name` column for all 64 rows via GLEIF.
+  Re-ran `python -m data_acquisition.entities` (all 64 validate against
+  GLEIF) and the full test suite (8 passed) after the change. Decided and
+  carried out by agent, S&P list supplied by user.
+- 2026-10-06: Found and fixed a real data-quality bug in EBA's own published
+  Stress Test 2025 bulk file (`data/raw/stress_test/2025/TRA_OTH.csv`), not
+  in this project's own code: exactly 2 of 64 participant LEIs are corrupted
+  in EBA's source data itself - "Groupe BPCE" and "Groupe Credit Agricole"
+  are stored as `FR9695005MSX1OYEMGDF` and `FR969500TJ5KRTCJQWXH`
+  respectively, each 20 characters but actually the country code "FR"
+  prepended to the first 18 characters of the real LEI, with its real last-2
+  check-digit characters silently dropped. Both of EBA's listed values 404
+  against GLEIF; both real LEIs were found by GLEIF fulltext search
+  (`9695005MSX1OYEMGDF46` -> "BPCE", `969500TJ5KRTCJQWXH05` -> "CREDIT
+  AGRICOLE SA") and confirmed by matching the EBA row's own entity-name
+  column ("Groupe BPCE" / "Groupe Credit Agricole"). Checked the rest of the
+  64-LEI universe for the same pattern (LEI starting with its own row's
+  country code) - no other instances found. Corrected both rows in
+  `entities.csv` directly rather than patching around it in code, with the
+  investigation trail in each row's `notes` column. Found and fixed by
+  agent; not yet reported to EBA.
+- 2026-10-06: Verified `data_acquisition/edap_scraper.py` against the live
+  P3DH page for real (task 1.1) - network access to edap-public.eba.europa.eu
+  and app.powerbi.com, blocked from this kind of session on 2026-09-19, is
+  available now, so this was done directly rather than requiring the user to
+  run it locally. Both of design.md's long-open questions are answered:
+  Entity is selected by display/legal name, not LEI (LEI search returns zero
+  results); Module and Template are genuinely different, cross-filtered
+  lists, and Module turned out not to need to be set at all once Template is
+  (confirmed by an identical live export either way) - `DataPointQuery` lost
+  its `module` field as a result. Rewrote the scraper's selectors from
+  guesses to values read directly off the live DOM (internal aria-labels
+  differ from visible labels for 2 of 4 fields; search needs real keystrokes
+  via `.type()`, `.fill()` doesn't trigger Power BI's own filtering; Escape
+  doesn't close a popup, re-clicking the trigger does; the real export
+  control is the table visual's own `.vcMenuBtn` menu, not the page-level
+  `#exportFileButton` the original skeleton guessed). Verified the whole
+  pipeline twice, independently, via the actual shipped CLI: Erste Group
+  Bank AG / EU KM1 template / 31-12-2025 -> a real, structured 198-row
+  .xlsx, sanity-checked against the spike's own Dec-2024 CET1 figure (a
+  plausible ~19% YoY increase, not a red flag). Also found P3DH's own
+  available reference dates only go back to 30/06/2025 - it cannot
+  reproduce the spike's FY2024 comparison; it's a later-period third source,
+  not a cross-check for it. Wired `edap_downloader.fetch_module()` to call
+  the verified scraper for real (resolving LEI -> display name via
+  entities.csv), replacing its unconditional `BulkAccessNotConfirmed` raise.
+  Full investigation trail in DATA_SOURCES_NOTES.md's matching entry.
+  Decided and verified by agent.
+- 2026-10-06: Trimmed the tracked bank universe using S&P Global's "Europe's
+  50 largest banks by assets" (2026 edition) as an external criterion, per
+  task 1.2's "trim to pilot banks" step - full table supplied by the user
+  (the source URL 403s on direct fetch). 13 of 50 excluded as outside EBA's
+  remit entirely (UK, Switzerland, Russia, Turkiye - 6/3/3/1). The remaining
+  37 EU/EEA banks all matched an entity already in the existing 64-bank
+  Stress Test 2025 list in `entities.csv` (via GLEIF name resolution), after
+  fixing the 2-LEI bug above - no new entity discovery was needed. Added
+  `sp50_2026_rank` to `entities.csv`/`Entity` and filled in the previously-
+  blank `name` column for all 64 rows. Kept all 64 rows rather than deleting
+  the 27 not in the S&P list, so the discovered universe isn't lost. Decided
+  and carried out by agent, S&P list supplied by user.
+- 2026-10-06: Noticed `data/entities.csv` and `data/modules.txt` are both
+  listed in `.gitignore` (from the 2026-09-22 entry's "not-committed-empty"
+  convention, written when both files were in fact empty) - so neither
+  today's entities.csv work (S&P cross-check, LEI bug fix, name resolution)
+  nor the new `data/modules.txt` are actually tracked by git; they exist
+  only on this machine. Flagged to user, not changed unilaterally - .gitignore
+  edits and what to commit are the user's call, especially for a graded
+  submission repo.
+- 2026-10-06: User decided to un-ignore and commit both files - they now hold
+  real, substantial project state (64 cross-referenced banks, the S&P-50
+  trim, the EBA LEI bug fix, one verified P3DH template) rather than the
+  empty placeholders the original `.gitignore` entry assumed. Removed both
+  lines from `.gitignore`. Decided by user.

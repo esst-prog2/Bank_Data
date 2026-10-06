@@ -8,17 +8,20 @@ What it does each run:
     5. record success/failure for each attempt, so next run only retries failures/new waves
 
 This is intentionally idempotent and safe to run as often as you like (e.g. daily) - it will
-mostly no-op between real EBA publication waves. Nothing here downloads anything until
-edap_downloader.fetch_module() is actually implemented (see that module's docstring); until
-then this script will run, find "new" work every time, fail loudly on each item, and log the
-failures - which is the intended behaviour, not a bug, so the gap is visible rather than
-silently masked.
+mostly no-op between real EBA publication waves. `edap_downloader.fetch_module()` is real as
+of 2026-10-06 (Playwright-driven, verified against the live P3DH page - see that module's
+and `edap_scraper.py`'s docstrings), so a run now genuinely attempts each entity/wave/item
+combination rather than failing all of them by design.
 
-Modules to request per entity/period are not hardcoded here on purpose - the EBA guide lists
-~10 disclosure modules (CODIS, FINDIS, ESGDIS among them) but we could not confirm the full,
-authoritative list of module codes from public sources; pull the exact list your entities
-actually submit from the Data Points Report's own "Module" filter and put it in
-data/modules.txt (one code per line) before running this for real.
+**`data/modules.txt`'s format changed 2026-10-06**: despite the name (kept for now - see
+`edap_downloader.py`'s docstring for why), each line is P3DH's exact **Template** option
+text (e.g. "K_61.00 - EU KM1 - Key metrics template"), not a short module code like "CODIS"
+or "FINDIS" - the live investigation found P3DH's own Module filter is fully cross-filtered
+from Template and doesn't need to be set independently, so tracking short module codes here
+was never going to be enough to identify one specific table anyway. Get the exact template
+strings from the Data Points Report's own "Template" filter (verified working via
+`edap_scraper.py` - search box included) - a dropdown with ~100+ entries covering every
+EU-template code, not just the ones used in `reconcile.py` so far.
 """
 
 from __future__ import annotations
@@ -55,9 +58,10 @@ def _save_state(state: dict) -> None:
 def _load_modules() -> list[str]:
     if not _MODULES_FILE.exists():
         raise FileNotFoundError(
-            f"{_MODULES_FILE} not found - create it with one disclosure-module code per "
-            "line (check the 'Module' filter on the Data Points Report page for the exact "
-            "codes your tracked entities actually submit)."
+            f"{_MODULES_FILE} not found - create it with one exact P3DH Template option "
+            "per line (e.g. \"K_61.00 - EU KM1 - Key metrics template\"), not a short "
+            "module code - see this script's module docstring for why. Check the Data "
+            "Points Report's own 'Template' filter for the exact text."
         )
     return [line.strip() for line in _MODULES_FILE.read_text().splitlines() if line.strip()]
 

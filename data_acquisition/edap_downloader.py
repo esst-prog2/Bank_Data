@@ -5,13 +5,24 @@ module's interface, not against any specific EBA implementation detail - so when
 answer from P3DH@eba.europa.eu (see DATA_SOURCES_NOTES.md), or find/confirm a real endpoint,
 the fix is localized to `fetch_module()` below.
 
-Current state (2026-09-17): no public bulk API is documented or was found by inspecting the
-live portal (https://edap-public.eba.europa.eu). The Pillar 3 Data Hub is served as embedded
-Power BI reports under an anonymous "Public Access" role; the only in-page download mechanism
-is Power BI's own per-visual "Export data" button, which is UI-driven and capped in row count
-- not suitable for scripted bulk retrieval. `fetch_module()` therefore raises
-NotImplementedError by default so the pipeline fails loudly instead of silently producing
-nothing, and documents the two real options below.
+**2026-10-06: Option B (Playwright) is now real, not a stub.** `edap_scraper.py` was
+verified end to end against the live page (see its own docstring and
+DATA_SOURCES_NOTES.md's 2026-10-06 entry) - real filter selection, real navigation, real
+"Export data" click, real downloaded file, for a real bank (Erste Group Bank AG) and a real
+template (EU KM1). `fetch_module()` below now calls it directly rather than raising. No
+official bulk/API channel has been confirmed by EBA (Option A), so this is the only
+implemented path.
+
+**Naming note kept for compatibility:** this function is still called `fetch_module()` and
+still takes a `module` parameter, matching `run_update.py`'s existing per-(entity, wave,
+module) loop - but P3DH's own UI doesn't actually need a Module filter at all
+(`edap_scraper.py`'s investigation found Module is fully cross-filtered from Template, and
+confirmed a live export with Module left unset produces the same data). So here, `module`
+is treated as the exact P3DH **Template** option text (e.g. "K_61.00 - EU KM1 - Key metrics
+template"), not a short code like "CODIS" - the parameter is not renamed yet to avoid
+touching `run_update.py`'s loop and `data/modules.txt` convention in the same change as the
+scraper wiring; see DATA_SOURCES_NOTES.md for the full reasoning and PLANNING_LOG.md for the
+decision to defer the rename.
 """
 
 from __future__ import annotations
@@ -22,7 +33,9 @@ from pathlib import Path
 
 
 class BulkAccessNotConfirmed(NotImplementedError):
-    """Raised until one of the two paths below has actually been wired up and tested."""
+    """No longer raised by the default path - kept for callers that still catch it
+    specifically, and for the (still real) case where a caller passes an entity LEI this
+    project doesn't track, where there's no display name to resolve against P3DH."""
 
 
 @dataclass(frozen=True)
@@ -35,26 +48,43 @@ class DownloadResult:
 
 
 def fetch_module(lei: str, reference_date: date, module: str, out_dir: Path) -> DownloadResult:
-    """Fetch one disclosure module (e.g. "CODIS", "FINDIS") for one entity/period.
+    """Fetch one P3DH template's data points (despite the name - see module docstring) for
+    one entity/period, via the verified Playwright scraper.
 
-    Option A - official bulk channel (preferred, not yet confirmed to exist):
-        If/when EBA (P3DH@eba.europa.eu) provides a documented bulk endpoint or file drop,
-        implement the real HTTP call here and return source="official_bulk".
+    `module` here is P3DH's exact Template option text (e.g. "K_61.00 - EU KM1 - Key
+    metrics template"), not a short module code - see module docstring for why.
+    `reference_date` must be a `datetime.date` matching one of P3DH's own available
+    reference dates (currently 2025-06-30 through 2026-06-30 - nothing earlier; see
+    `edap_scraper.py`'s docstring) and is formatted here as "DD/MM/YYYY" to match the
+    slicer's own display format.
 
-    Option B - Playwright-driven export (fallback, unverified end-to-end):
-        Drive a real Chromium session to https://edap-public.eba.europa.eu/Report/index/MTE6,
-        set the Entity/Module/Reference Date filters in the "Data Points Report" Power BI
-        visual, and trigger its native Export-data button, then move the downloaded file
-        here. This uses only a documented UI feature (not an internal API), so it's more
-        durable than reverse-engineered endpoints, but it is still one export per
-        entity/module/period - budget real wall-clock time for a full run, and expect to
-        babysit selectors since Power BI's DOM is not a stable public contract.
-
-    Until one of those is implemented, this raises so run_update.py's failures are visible
-    (recorded in the state file) rather than pretending to succeed.
+    Raises `BulkAccessNotConfirmed` if `lei` isn't in `data/entities.csv` (no display name
+    to resolve against P3DH's name-based Entity filter - see `edap_scraper.py`'s "Entity is
+    selected by display/legal name, not LEI" finding). Raises whatever
+    `edap_scraper.export_data_points()` raises (typically `playwright.sync_api.TimeoutError`
+    naming the specific slicer that failed) on a genuine scraper/page failure.
     """
-    raise BulkAccessNotConfirmed(
-        "No confirmed download path yet - see DATA_SOURCES_NOTES.md. "
-        "Email P3DH@eba.europa.eu, or implement the Playwright fallback described in "
-        "this function's docstring, then remove this guard."
+    from data_acquisition import edap_scraper
+    from data_acquisition.entities import load_entities
+
+    entity = next((e for e in load_entities() if e.lei == lei), None)
+    if entity is None or not entity.name:
+        raise BulkAccessNotConfirmed(
+            f"LEI {lei} not found in data/entities.csv (or has no resolved name) - P3DH's "
+            "Entity filter takes a display name, not an LEI, so there's nothing to search "
+            "for. Add/resolve it there first (see data_acquisition/gleif_client.py)."
+        )
+
+    query = edap_scraper.DataPointQuery(
+        entity=entity.name,
+        reference_date=reference_date.strftime("%d/%m/%Y"),
+        template=module,
+    )
+    file_path = edap_scraper.export_data_points(query, out_dir, headless=True)
+    return DownloadResult(
+        lei=lei,
+        reference_date=reference_date,
+        module=module,
+        file_path=file_path,
+        source="playwright_export",
     )

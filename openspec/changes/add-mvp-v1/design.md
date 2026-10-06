@@ -7,15 +7,15 @@ See proposal.md for motivation. Current implementation state as of 2026-09-22:
 - `data_acquisition/eba_exercises.py` is real and working (verified against live EBA
   pages): bulk CSV download plus `build_entities_csv()` for Transparency
   Exercise/Stress Test years.
-- `data_acquisition/edap_downloader.fetch_module()` — the interface `run_update.py`
-  and the rest of the pipeline call for P3DH — is currently a stub that
-  unconditionally raises `BulkAccessNotConfirmed`. AGENTS.md's repo-layout summary
-  describes it as "currently delegates to `edap_scraper`"; that is the intended
-  end state, not the current one — the two are not yet wired together. Wiring them
-  is task 1.1.
-- `data_acquisition/edap_scraper.py` is an unverified skeleton against P3DH's
-  Power BI-embedded "Data Points Report" (see its own docstring for exactly what's
-  confirmed vs. guessed).
+- `data_acquisition/edap_downloader.fetch_module()` — **implemented 2026-10-06**:
+  calls the now-verified `edap_scraper.export_data_points()` directly (resolving
+  the caller's LEI to a display name via `entities.csv` first, since P3DH's Entity
+  filter needs a name, not an LEI). AGENTS.md's repo-layout summary's "currently
+  delegates to `edap_scraper`" description is now actually true, not aspirational.
+- `data_acquisition/edap_scraper.py` — **verified end to end 2026-10-06** against
+  the live page (see its own docstring for the full investigation and
+  DATA_SOURCES_NOTES.md's matching entry): real slicer selectors, real navigation,
+  real "Export data" click, a real downloaded file for a real bank and template.
 - `data/entities.csv` and `data/modules.txt` do not exist yet (only
   `entities.csv.example`) — `run_update.py` and `entities.load_entities()` both
   refuse to run without them.
@@ -168,10 +168,20 @@ not a value the reconciliation layer would return as a DataFrame row at all.
 
 ## Open Questions
 
-- Does P3DH's Entity slicer take an LEI or a display name, and are "Module" and
-  "Template" the same list or two separate ones? Task 1.1 answers this
-  empirically; it changes `edap_scraper`'s selector/value handling, not the
-  concept-mapping, provenance, schema, or task breakdown above.
+- ~~Does P3DH's Entity slicer take an LEI or a display name, and are "Module" and
+  "Template" the same list or two separate ones?~~ **Answered 2026-10-06** (task 1.1,
+  live verification - see `edap_scraper.py`'s docstring and DATA_SOURCES_NOTES.md):
+  Entity takes a display/legal name, not an LEI (LEI search returns zero results).
+  Module and Template are genuinely different lists (Module: ~8 broad categories;
+  Template: one row per specific EBA template code), and Power BI cross-filters them -
+  Module turned out not to need to be set at all once Template is set, confirmed by a
+  live export producing identical data either way. `DataPointQuery` has no `module`
+  field as a result.
 - Which specific banks make up v1's pilot set? Affects task 1.2/1.5's fiscal
   year-end check and which countries matter for ESEF coverage, but doesn't change
   any decision recorded above regardless of which banks are chosen.
+  **Narrowed 2026-10-06**: trimmed using S&P's top-50 European banks by assets (2026)
+  as an external criterion - see PLANNING_LOG.md and DATA_SOURCES_NOTES.md's matching
+  entries. `entities.csv`'s `sp50_2026_rank` column marks the 37-bank subset; the
+  other 27 of the 64 discovered banks remain tracked but outside that external
+  benchmark.
