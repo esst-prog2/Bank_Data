@@ -46,12 +46,15 @@
       smaller set without losing the discovered universe.
 - [ ] 1.3 Create `data/modules.txt` with the exact disclosure module/template
       codes the pilot banks submit
-      — 2026-10-06: started, not complete. Format changed from "short module
-      code" (CODIS/FINDIS) to "exact P3DH Template option text" after 1.1 found
-      Module doesn't need to be tracked separately (see `edap_downloader.py`'s
-      docstring). Seeded with one verified entry ("K_61.00 - EU KM1 - Key metrics
-      template") for one bank (Erste) - covers none of the other 36 sp50-ranked
-      pilot banks yet, and only one template out of the ~100+ P3DH actually lists.
+      — 2026-10-06: still only 2 verified templates (EU KM1, EU LI1), not
+      bank-specific - `run_update.py` tries both against every pilot bank. A
+      real first pass (2 banks, both templates, 8 waves) found both templates
+      are genuinely usable for Deutsche Bank; Societe Generale isn't findable
+      in P3DH's Entity list under any name at all (see DATA_SOURCES_NOTES.md)
+      so no template will ever succeed for it until that's resolved. Scaling
+      to the other 35 pilot banks is unstarted - at ~15-30s per real
+      browser-driven attempt, a full pass (37 x 2 x up to 8 waves) is real
+      wall-clock time (potentially hours), not a quick script run.
 - [ ] 1.4 In `run_update.py`'s state tracking, distinguish a wave that hasn't
       published yet (`not_yet_published`) from a genuine retrieval failure —
       currently both fall into the same generic `except Exception` branch and
@@ -59,6 +62,12 @@
       is an expectation, not a guarantee (DATA_SOURCES_NOTES.md, 2026-09-22),
       so late-but-expected waves will be routine and shouldn't be conflated
       with an actually broken scraper
+      — 2026-10-06: now has concrete real-world motivation beyond the EBA
+      calendar case - the first live run found two more genuinely-distinct
+      "failed" causes (an entity simply absent from P3DH's own list; a
+      template not disclosed at a given reference date's frequency) that are
+      currently indistinguishable from a real scraper break in
+      `download_log.json` without reading the full error string by hand.
 - [ ] 1.5 Confirm none of the v1 pilot banks report on a non-December fiscal
       year-end. `waves.py`'s `_reference_dates_since()` only generates
       YEAR_END/YEAR_END_REMUNERATION waves for December reference dates, but

@@ -326,3 +326,28 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   cached banks via `get_financial_data()`, since the concept map was
   already bank-agnostic. All 8 existing tests still pass. Decided and
   carried out by agent, per the user's request to populate ESEF data.
+- 2026-10-06: Ran `run_update.py` for real for the first time (not just
+  `edap_scraper`/`edap_downloader` in isolation) - found and fixed a real
+  bug along the way: `waves.py`'s own docstring already claimed P3DH has no
+  data before 2025-06-30, but the code never enforced that floor, so it
+  still generated an unfetchable 2025-03-31 wave. Added
+  `EARLIEST_P3DH_REFERENCE_DATE` and filtered on it directly. Also scoped
+  `run_update.py` to the 37-bank `sp50_2026_rank` pilot sample by default
+  (it was iterating all 64 discovered entities), with `--all-entities` and
+  `--limit N` added as real CLI options. Added a second verified P3DH
+  template to `data/modules.txt` (EU LI1, directly relevant to the spike's
+  open Cause 1 question, though confirmed balance-sheet-only by regulation
+  like the Pillar 3 PDF version already checked).
+  First real test pass (2 banks x 2 templates x 8 waves): both failure
+  categories found (16/16 for Societe Generale, 4 for Deutsche Bank's LI1
+  at quarterly-only dates) were genuine and diagnosable, not scraper
+  breakage - confirmed Societe Generale's parent entity isn't in P3DH's
+  Entity list at all (only a Cyprus subsidiary is - its third independent
+  data gap today, after the stress-test LEI note and missing FY2024 ESEF
+  filing), and LI1 only has data at semi-annual/annual reference dates, not
+  quarterly ones (consistent with CRR Article 433's disclosure-frequency
+  rules). Also found and fixed a real inefficiency: wave types sharing a
+  reference date (a Dec 31 date is 4 different wave types at once) caused
+  up to 4x redundant live re-fetches of identical P3DH data - cached this
+  run's own per-(entity, date, module) results to fix it. Full trail in
+  DATA_SOURCES_NOTES.md. Decided and carried out by agent.

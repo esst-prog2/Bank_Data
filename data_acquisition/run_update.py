@@ -66,8 +66,19 @@ def _load_modules() -> list[str]:
     return [line.strip() for line in _MODULES_FILE.read_text().splitlines() if line.strip()]
 
 
-def main() -> None:
+def main(pilot_only: bool = True, limit: int | None = None) -> None:
+    """`pilot_only=True` (the default) restricts the run to entities with a non-empty
+    `sp50_2026_rank` in entities.csv - the 37-bank sample task 1.2 actually trimmed to,
+    not the full 64-bank discovery universe `eba_exercises.py` happened to surface. Each
+    attempt drives a real headless browser against the live P3DH page (~15-30s each,
+    longer on failure), so a full pass (pilot_only entities x all waves x all templates)
+    is real wall-clock time, not an instant bulk download - `limit` caps how many
+    entities are attempted, for a bounded test pass rather than the whole pilot sample."""
     entities = load_entities()
+    if pilot_only:
+        entities = [e for e in entities if e.sp50_2026_rank]
+    if limit is not None:
+        entities = entities[:limit]
     modules = _load_modules()
     pending_waves = waves.expected_waves()
     state = _load_state()
@@ -77,12 +88,28 @@ def main() -> None:
               len(entities) * len(modules) * len(pending_waves))
 
     new_successes = new_failures = skipped = 0
+    # Several waves can share the same reference_date (e.g. 31 Dec is simultaneously
+    # quarterly/semi_annual/year_end/year_end_remuneration), and P3DH's own export doesn't
+    # vary by OUR wave-type label - only by entity/template/reference_date. Without this,
+    # a live run repeats the exact same browser-driven fetch once per wave type sharing a
+    # date (confirmed: 4x redundant fetches for one date in an initial test run) - cache
+    # this run's own results per (lei, reference_date, module) and reuse them across waves
+    # that share a date, instead of re-fetching.
+    this_run_by_date: dict[tuple[str, str, str], dict] = {}
     for entity in entities:
         for wave in pending_waves:
             for module in modules:
                 key = f"{entity.lei}|{wave.wave_id}|{module}"
                 if state.get(key, {}).get("status") == "success":
                     skipped += 1
+                    continue
+                date_key = (entity.lei, wave.reference_date.isoformat(), module)
+                if date_key in this_run_by_date:
+                    state[key] = this_run_by_date[date_key]
+                    if state[key]["status"] == "success":
+                        new_successes += 1
+                    else:
+                        new_failures += 1
                     continue
                 try:
                     result = fetch_module(entity.lei, wave.reference_date, module, _RAW_DIR)
@@ -100,6 +127,7 @@ def main() -> None:
                         "checked_at": datetime.now(timezone.utc).isoformat(),
                     }
                     new_failures += 1
+                this_run_by_date[date_key] = state[key]
 
     _save_state(state)
     log.info("done: %d new successes, %d new failures, %d already-had skipped",
@@ -107,4 +135,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--all-entities", action="store_true",
+                         help="check every discovered LEI in entities.csv, not just the sp50_2026_rank pilot sample")
+    parser.add_argument("--limit", type=int, default=None,
+                         help="only attempt the first N entities - for a bounded test pass")
+    args = parser.parse_args()
+    main(pilot_only=not args.all_entities, limit=args.limit)

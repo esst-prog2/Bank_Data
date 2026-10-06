@@ -495,3 +495,83 @@ Sources checked (this update):
 - Direct inspection of BNP Paribas's and UniCredit's actual tagged concept namespaces (not
   assumed) to confirm the InterestRevenueExpense/Equity gaps are genuine reporting-format
   differences, not retrieval bugs
+
+## Update 2026-10-06 (third entry, same day): first real run_update.py pass
+
+With `edap_scraper.py`/`edap_downloader.py` verified in isolation, ran `run_update.py`
+itself for the first time - the actual scheduled pipeline (state tracking, idempotency),
+not just a direct call into the scraper. Found and fixed two real things before trusting
+it at scale, plus two genuine new source-coverage findings.
+
+**Bug found by running it for real: `waves.py` generated a wave P3DH can never have data
+for.** Its own docstring already claimed "P3DH only has data from the 2025-06 reference
+date onward," but `_reference_dates_since(start_year=2025, ...)` still generated a
+2025-03-31 quarterly wave regardless - the code never actually enforced the floor the
+docstring described. Added `EARLIEST_P3DH_REFERENCE_DATE = date(2025, 6, 30)` and filtered
+on it directly, rather than relying on `start_year` alone.
+
+**Added a second real P3DH template** to `data/modules.txt`: `K_64.01 - EU LI1 -
+Differences between the accounting scope and the scope of prudential consolidation...`,
+found via the Template search box (same method as EU KM1). Directly relevant to the
+spike's still-open Cause 1 question - though, consistent with the Pillar 3 PDF version
+already checked there, this is a balance-sheet-only template by regulation (EU
+2021/637's own Annex defines it that way), so it won't resolve the income-statement
+question even once P3DH has FY2024 data, which it doesn't anyway (see the first
+2026-10-06 entry above).
+
+**Scoped `run_update.py` to the actual pilot sample.** It was iterating all 64
+discovered entities, not the 37 the project actually trimmed to (task 1.2) - changed the
+default to filter on `sp50_2026_rank`, with `--all-entities` to opt back into the full
+64 and `--limit N` for a bounded test pass (both added as real, justified CLI options,
+not test-only hacks).
+
+**First real test pass** (`--limit 2`, Societe Generale + Deutsche Bank, 2 templates x 8
+waves = 32 attempts, ~16 minutes): 12 successes, 20 failures, both failure types genuine
+and diagnosable, not scraper breakage:
+
+- **All 16 Societe Generale attempts failed** - not a bug. Searched P3DH's own Entity
+  list directly for "Societe" and "Generale": the only match is "Societe Generale Bank -
+  Cyprus Ltd", a subsidiary. The parent group entity this project tracks
+  (`O2RNE8IBXP4R0TD8PU41`, GLEIF legal name "SOCIETE GENERALE") is **not in P3DH's entity
+  list under any name containing "Societe" or "Generale"** - confirmed by direct search,
+  not inferred from the failure alone. This is the third independent gap found for this
+  specific bank today (also missing its FY2024 ESEF filing - see the ESEF entry above);
+  worth deciding later whether Societe Generale is even a workable pilot bank for P3DH
+  specifically, or whether its disclosures are filed under a legal entity this project
+  hasn't identified yet.
+- **4 of Deutsche Bank's LI1 attempts failed, all four at pure-quarterly-only reference
+  dates** (2025-06-30-quarterly, 2025-09-30-quarterly, 2026-03-31-quarterly - note
+  2025-06-30 ALSO has a semi_annual wave for the same date, and that one succeeded).
+  Consistent explanation, not yet independently confirmed beyond this pattern: EU Pillar 3
+  disclosure frequency rules (CRR Article 433) require LI1-type disclosures less often than
+  core capital metrics like KM1 - KM1 succeeded at every wave/date tested, LI1 only at
+  semi-annual/annual ones. Power BI's own ReferenceDate cross-filter narrows to dates that
+  actually have data once Template is set, which is what produced this clean a pattern.
+
+**A real inefficiency found and fixed, not just documented**: multiple wave *types* share
+the same reference date (31 Dec is quarterly, semi_annual, year_end, AND
+year_end_remuneration simultaneously) - but P3DH's export doesn't vary by wave type, only
+by the actual date. Before the fix, `run_update.py` fetched the identical data up to 4
+times for one date (confirmed: only 5 distinct files existed on disk despite 12
+successes, because the output filename - entity+template+date, no wave-type component -
+silently overwrote itself on each redundant re-fetch). Fixed by caching this run's own
+per-(entity, reference_date, module) result and reusing it across wave types that share a
+date, instead of re-driving the browser each time - cuts live fetches roughly 2-4x for
+year-end dates without changing the state file's schema or per-wave auditability.
+
+**Dedup fix confirmed, not just reasoned about**: cleared the state file and re-ran with
+`--limit 1` (which, in `entities.csv`'s row order, is Societe Generale alone - 16
+combinations, 12 of them genuinely unique `(lei, reference_date, module)` keys and 4
+sharing a date with another wave type). All 16 wave-keys ended up populated in
+`download_log.json` (the schema is unchanged - still one entry per wave), but the run
+only took ~2.5 minutes for what would otherwise be 16 full live attempts - consistent
+with roughly 12 real attempts plus 4 reused results, not 16 of each.
+
+Sources checked (this update):
+- `data/state/download_log.json` after both real runs, read directly to see actual
+  success/failure counts, error text, and (after the fix) entry count vs. live-attempt
+  count per (entity, wave, module) combination
+- Live P3DH Entity search for "Societe"/"Generale" (2 separate queries) to confirm the
+  Societe Generale gap rather than assume the failure meant something else
+- `data/raw/*.xlsx` file listing, to notice the file-count-vs-success-count mismatch that
+  led to finding the wave-type/reference-date redundancy
