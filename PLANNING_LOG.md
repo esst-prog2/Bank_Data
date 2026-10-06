@@ -304,3 +304,25 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   trim, the EBA LEI bug fix, one verified P3DH template) rather than the
   empty placeholders the original `.gitignore` entry assumed. Removed both
   lines from `.gitignore`. Decided by user.
+- 2026-10-06: Populated ESEF data for 28 more of the 37 S&P-ranked pilot
+  banks (Erste was already cached) - checked `filings.xbrl.org` directly for
+  all 37 first rather than assuming FY2024 exists for each. 29/37 have a
+  2024-12-31 filing; 6 have no filing indexed at all (5 of them German -
+  Deutsche Bank, Commerzbank, DZ Bank, LBBW, Bayerische Landesbank - plus
+  Credit Mutuel, a cooperative confederation like BPCE/Credit Agricole,
+  structurally likely filed under a different LEI); 2 (Societe Generale,
+  Intesa Sanpaolo) are indexed but missing specifically the 2024 filing.
+  Fetched and cached the other 28 (706MB total). Checked concept coverage
+  per bank rather than assuming uniformity: net interest income is
+  genuinely unreported as a single tagged fact for 7 banks (confirmed via
+  BNP Paribas's actual XBRL tags - it reports gross interest income/expense
+  separately, never netted) and total equity is genuinely untagged for all
+  4 Italian pilot banks (checked UniCredit's full concept namespace
+  directly, no alternate tag found). Deliberately did NOT add a derived
+  "revenue minus expense" mapping for the NII gap - that would be exactly
+  the cross-concept combination README.md's non-goals rule out; left as
+  honest `missing_from_source`. No code changes to `reconcile.py` or
+  `CONCEPT_MAP` were needed - confirmed end to end for 3 of the newly
+  cached banks via `get_financial_data()`, since the concept map was
+  already bank-agnostic. All 8 existing tests still pass. Decided and
+  carried out by agent, per the user's request to populate ESEF data.

@@ -48,11 +48,21 @@ up or in progress:
   `data_acquisition/esef_client.py` queries `filings.xbrl.org`'s JSON:API for one entity's
   own filings at a time - confirmed working 2026-09-25 for Erste Group Bank AG (Austria),
   which the earlier "well covered" guess (France, Italy, Spain, Netherlands) hadn't listed;
-  that guess was from documentation, not a direct check. Still can't discover "everyone
-  reporting in country X" the way `eba_exercises.py` can for EBA's exercises, and only
-  handles a calendar (Dec 31) fiscal year-end (same assumption as `waves.py`, see task 1.5) -
-  extend both together if a pilot bank needs otherwise. Germany and Ireland remain flagged as
-  known gaps in DATA_SOURCES_NOTES.md's original entry, unconfirmed either way.
+  that guess was from documentation, not a direct check. As of 2026-10-06, checked and
+  fetched for all 37 S&P-ranked pilot banks in `entities.csv`: 29 have a FY2024 filing
+  (cached, 706MB under `data/raw/esef/`), 8 don't - **Germany is now a confirmed gap, not a
+  guess**: all 5 German pilot banks (Deutsche Bank, Commerzbank, DZ Bank, LBBW, Bayerische
+  Landesbank) have zero filings indexed; Credit Mutuel (a cooperative confederation, likely
+  filed under a different legal entity's LEI) is also missing entirely; Societe Generale
+  and Intesa Sanpaolo are indexed but missing specifically the 2024 filing. Ireland turned
+  out fine (Bank of Ireland, AIB both have FY2024 filings) - the original "Ireland" flag was
+  unconfirmed and is now resolved as a non-issue. Still can't discover "everyone reporting
+  in country X" the way `eba_exercises.py` can for EBA's exercises, and only handles a
+  calendar (Dec 31) fiscal year-end (same assumption as `waves.py`, see task 1.5) - extend
+  both together if a pilot bank needs otherwise. See DATA_SOURCES_NOTES.md's 2026-10-06
+  entries for the full per-bank breakdown and concept-coverage findings (net interest
+  income and total equity are each genuinely untagged - not missing by bug - for several
+  banks; see that entry before assuming `missing_from_source` there is wrong).
 - **GLEIF** - used only to enrich/validate an LEI you already have (legal name, country,
   status), never to discover which banks are in scope. `data_acquisition/gleif_client.py`.
 - **Excluded**: ECB Supervisory Banking Statistics (SUP dataset) - checked directly,
@@ -88,30 +98,28 @@ requirements.txt
 
 ## Immediate next steps (in likely order)
 
-1. **Verify `edap_scraper.py` against the real page.** Run it once with `--headed`, expect at
-   least one slicer selector to need fixing via a local `playwright codegen` pass (see
-   DATA_SOURCES_NOTES.md's 2026-09-19 entry for the exact command and what to look for).
-   Also resolve two open questions the first run should answer: does the Entity slicer take
-   an LEI or a display name, and are "Module" and "Template" the same list or two different
-   ones (currently assumed the same in `edap_downloader.fetch_module()`, flagged with a
-   comment).
-2. **Populate `data/entities.csv` for real.** Easiest path: run
-   `python -m data_acquisition.eba_exercises transparency 2025` to seed it from a real EBA
-   participant list, then trim to whichever pilot banks v1 actually wants.
-3. **Create `data/modules.txt`** with the exact disclosure module/template codes those pilot
-   banks submit (check the Data Points Report's own "Module"/"Template" filter options once
-   the scraper can see them) - `run_update.py` refuses to run without this file.
-4. **If EBA replies** to the bulk-access email: implement Option A in `edap_downloader.py`
+Steps 1-2 and 5-6 below (P3DH scraper verification, populating `entities.csv`, starting
+ESEF, the reconciliation logic itself) are done - see DATA_SOURCES_NOTES.md's 2026-10-06
+entries and PLANNING_LOG.md for what was actually found. What's left:
+
+1. **Extend `data/modules.txt`** past its one current entry (EU KM1, for Erste only) to the
+   other pilot banks and other templates `reconcile.py` might want - the real P3DH Template
+   option text, not a short module code (see `edap_downloader.py`'s docstring for why the
+   format changed). Then run `run_update.py` for a real pass and see what it actually does
+   against live P3DH data for more than one bank/template.
+2. **Decide what to do about the 8 pilot banks with no FY2024 ESEF coverage** (5 German
+   banks + Credit Mutuel have no filing at all; Societe Generale and Intesa Sanpaolo are
+   indexed but missing specifically 2024 - see DATA_SOURCES_NOTES.md's 2026-10-06 ESEF
+   entry). Options: accept the gap as a real, documented limitation; try a different
+   fiscal year for those two; or investigate whether Credit Mutuel/BPCE/Credit Agricole's
+   pattern (consolidated group reported under a different legal entity's LEI than the one
+   EBA lists) also applies here.
+3. **If EBA replies** to the bulk-access email: implement Option A in `edap_downloader.py`
    (a real HTTP call), keep the scraper as a fallback rather than deleting it, and update
    `DATA_SOURCES_NOTES.md`.
-5. **Start the ESEF side** - not begun yet. `filings.xbrl.org`'s API is the concrete starting
-   point (see DATA_SOURCES_NOTES.md's original entry for details and known coverage gaps -
-   Germany and Ireland aren't reliably indexed there).
-6. Only once real data is flowing from at least one source: start on the actual reconciliation
-   logic (source-item -> standardized-concept mapping, provenance tagging) - the README
-   calls this out as the main technical risk, so it deserves real data to test against rather
-   than being designed against assumptions.
-7. See `openspec/changes/add-mvp-v1/` for the current MVP change proposal, derived from
+4. Tasks 1.4 (not-yet-published vs. failed state in `run_update.py`) and 1.5 (non-December
+   fiscal year-ends in `waves.py`) remain open and untouched - see tasks.md.
+5. See `openspec/changes/add-mvp-v1/` for the current MVP change proposal, derived from
    README section 3 ("The size").
 
 ## Working conventions established so far

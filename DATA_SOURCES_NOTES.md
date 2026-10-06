@@ -416,3 +416,82 @@ Sources checked (this update):
   saved for inspection during the investigation.
 - The actual downloaded export file (`data.xlsx` / similarly named), opened and inspected
   with pandas to confirm it's genuine structured data, not an error page or empty template.
+
+## Update 2026-10-06 (later same day): ESEF populated for 28 more pilot banks
+
+`esef_client.py` had only ever been exercised for one bank (Erste). Checked
+`filings.xbrl.org` directly for all 37 S&P-ranked pilot banks (one HTTP call per LEI to
+`/api/entities/{lei}/filings`, not an assumption) before fetching anything, to avoid
+wasting bandwidth guessing at a period that might not exist for a given bank.
+
+**Result: 29 of 37 have a FY2024 (2024-12-31) filing indexed; 8 don't, in two different
+ways worth distinguishing:**
+
+- **6 have NO filing indexed at all, for any year**: Deutsche Bank AG and Commerzbank AG
+  (0 filings each), and Confederation Nationale Credit Mutuel, DZ BANK AG, Landesbank
+  Baden-Wurttemberg, and Bayerische Landesbank (404 on the filings-list endpoint itself -
+  the LEI isn't a known filer at all on this index). **5 of these 6 are German** - this is
+  the first *direct, empirical* confirmation of the Germany gap AGENTS.md has flagged since
+  the project's original research phase as an unconfirmed guess from documentation. It's
+  now a confirmed, 100%-of-sample finding for this project's specific German pilot banks,
+  not a guess. The 6th (Credit Mutuel) is a cooperative confederation, structurally similar
+  to BPCE and Credit Agricole (see the earlier 2026-10-06 LEI-bug entry) - plausibly its
+  consolidated IFRS statements are filed under a different legal entity's LEI than the
+  confederation's own, the same way BPCE/Credit Agricole's *stress-test* LEIs turned out to
+  need correction. Not pursued further here - flagged as a candidate for the same kind of
+  investigation if ESEF coverage for Credit Mutuel becomes a priority.
+- **2 have filings indexed, but not for 2024-12-31 specifically**: Societe Generale (has
+  2021/2022/2023/2025 - 2024 itself is absent, an odd single-year gap, not a general
+  non-coverage) and Intesa Sanpaolo (only has 2021/2022 - nothing since). Both are
+  `missing_from_source` for the ESEF side at period 202412 under the current single-period
+  design, which is the correct, honest outcome - not a bug in this project's code.
+
+**Fetched and cached the other 28** (Erste already was) via `esef_client.fetch_facts()` -
+706MB total under `data/raw/esef/`, average ~1.9s and ~25MB per filing. All 28 succeeded on
+the first attempt - no retries, no `EsefDataError`s.
+
+**Concept coverage per bank is uneven, and checked rather than assumed to be complete**:
+of the 4 ESEF-side concepts (`Assets`, `Equity`, `InterestRevenueExpense`, `ProfitLoss`),
+18 of the 28 report all 4 as undimensioned totals; `Assets` and `ProfitLoss` are universal
+(28/28 each); `Equity` and `InterestRevenueExpense` are not:
+
+- **7 banks (BNP Paribas, Credit Agricole, BPCE, La Banque Postale, Danske Bank, Nykredit,
+  Belfius) have no undimensioned `ifrs-full:InterestRevenueExpense` fact.** Checked BNP
+  Paribas's actual tagged concepts directly (not inferred): it reports
+  `ifrs-full:RevenueFromInterest` and `ifrs-full:InterestExpense` as two SEPARATE gross
+  figures, never netted into one tagged fact. This is a genuine presentation choice (gross
+  interest disclosure), not a missing tag to work around - computing "net interest income"
+  as revenue-minus-expense here would be exactly the kind of cross-source/cross-concept
+  combination README.md section 3 rules out as a non-goal, so `CONCEPT_MAP` was
+  deliberately NOT extended to derive it. `missing_from_source` is the correct, honest
+  status for these banks' `net_interest_income` row from `esef`, not a gap to patch.
+- **4 banks (UniCredit, Banca Monte dei Paschi, Banco BPM, BPER - all four of this
+  project's Italian pilot banks) have no undimensioned `ifrs-full:Equity` fact, and also
+  none of `ifrs-full:EquityAttributableToOwnersOfParent`.** Checked UniCredit's full
+  concept namespace directly: only `ifrs-full:` and a generic `ext:` (entity extension)
+  prefix are used, and no equity-like concept exists under either by substring search. Most
+  likely total equity is only ever tagged as a presentation-level roll-up of its components
+  (share capital, reserves, NCI, etc.) rather than as its own single fact - a common XBRL
+  pattern - but this wasn't confirmed further; logged as a genuine, checked
+  `missing_from_source` rather than a bug.
+
+**Confirmed end to end, not just "fetched"**: ran
+`reconcile.get_financial_data(lei, SUPPORTED_CONCEPTS, period="202412")` for 3 of the newly
+cached banks (BNP Paribas, UniCredit, Santander). All return real rows with the correct
+`status` per concept (including the gaps just described, correctly tagged
+`missing_from_source`, never fabricated) - **no code changes to `reconcile.py` or
+`CONCEPT_MAP` were needed**, since the concept-mapping table was already bank-agnostic
+(keyed on source + item code, not on which bank). The same cross-source pattern from the
+spike repeats here too: Santander's net interest income is EUR 46,789.74m (stress test)
+vs. EUR 46,668.0m (ESEF), a 0.26% gap - small, real, and in the same direction/magnitude
+family as Erste's, not something to read into further without the same kind of checking
+the spike's Cause 1 correction required.
+
+Sources checked (this update):
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for all 37 S&P-ranked LEIs in
+  `entities.csv` (one call per bank, to discover actual available periods before fetching)
+- `https://filings.xbrl.org` xBRL-JSON filings for the 28 banks fetched (full facts, not
+  samples) - cached under `data/raw/esef/<lei>/2024-12-31/facts.json`
+- Direct inspection of BNP Paribas's and UniCredit's actual tagged concept namespaces (not
+  assumed) to confirm the InterestRevenueExpense/Equity gaps are genuine reporting-format
+  differences, not retrieval bugs
