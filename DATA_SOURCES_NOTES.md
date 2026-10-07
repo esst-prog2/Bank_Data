@@ -703,3 +703,61 @@ Sources checked (this update):
 - Swedbank AB's own 16 state entries individually, to confirm its unusually low success
   rate (2/16) has a specific, consistent, genuine explanation rather than being random
   noise
+
+## Update 2026-10-07 (second entry): why the 3 remaining banks are genuinely absent
+
+Investigated each of the 3 banks still showing 0/16 (Societe Generale, Credit Agricole SA,
+Confederation Nationale Credit Mutuel) individually, since "investigate whether these are
+on P3DH under a different legal entity" was explicitly flagged as follow-up work in
+AGENTS.md. Checked GLEIF directly first: all 3 LEIs are ACTIVE, ISSUED, category GENERAL -
+not expired, not errors, not funds/branches masquerading as the parent. The gap is
+structural, not a data-quality problem with the LEI itself.
+
+**Societe Generale: a genuine P3DH gap, not a naming problem.** Searched P3DH for the bank
+under its own name, its common abbreviation ("SG"), and its former French retail
+subsidiary brands (Boursorama, Credit du Nord, both now merged into SG proper) - all
+returned zero results. The only P3DH entity containing "Generale" at all is the unrelated
+"Societe Generale Bank - Cyprus Ltd". Combined with the earlier finding that SG is also
+missing specifically its FY2024 ESEF filing (indexed for every other recent year), this
+looks like a genuine onboarding gap for this one institution rather than a naming issue -
+consistent with EBA's own 2026-09-22 reply that P3DH onboarding is "still rolling out"
+unevenly across institutions, not a single cutover event.
+
+**Confederation Nationale Credit Mutuel: not a gap at all - this is the expected,
+correct outcome.** It's a coordinating confederal/trade body for the Credit Mutuel banking
+group, not itself a licensed, individually-supervised credit institution - so it has no
+Pillar 3 disclosure of its own to find, on P3DH or anywhere else (also has zero ESEF
+filings under this LEI, for the same structural reason). Confirmed the group's real
+operating subsidiaries DO have P3DH data under their own, separate LEIs this project's
+stress-test-derived entity list never captured: a direct search for "CIC" found "Credit
+industriel et commercial - CIC", the group's main listed banking subsidiary, with real
+data. This LEI was simply never going to resolve to anything on P3DH - not a bug to fix,
+a reminder that "discovered via stress_test 2025" doesn't guarantee the discovered LEI is
+the actual Pillar-3-reporting entity for every kind of banking group structure.
+
+**Credit Agricole SA: same underlying pattern as Credit Mutuel, one level removed.**
+P3DH doesn't track "Credit Agricole SA" or "Groupe Credit Agricole" as a standalone
+entity under any name tried. Searching "Agricole" instead returns at least 9 of the
+group's individual regional cooperative banks ("Caisse regionale de credit agricole
+mutuel [region]" - Atlantique Vendee, Brie Picardie, Centre-Est, d'Aquitaine, Nord de
+France, and more not fully enumerated), each presumably under its own separate LEI. P3DH
+appears to organize this banking group's Pillar 3 disclosures at the regional-subsidiary
+level rather than centrally. The LEI this project tracks is still objectively correct -
+"Credit Agricole SA" genuinely has real FY2024 ESEF filings under this exact name and LEI
+(confirmed in the earlier ESEF entry, 3/4 concepts covered) - it simply isn't the entity
+(if any single one exists) that P3DH's own Pillar 3 reporting is organized around.
+
+**Net takeaway for future work**: none of these three require further scraper fixes - the
+matching logic is working correctly; these are real structural facts about how these three
+institutions' legal entities map (or don't) onto P3DH's own reporting granularity.
+Resolving them further would mean discovering the ~39 Credit Agricole regional banks' and
+Credit Mutuel's constituent entities' own LEIs and deciding whether to track them
+individually (a real scope-expansion decision, not a bug fix) - left as an explicit open
+question rather than done unprompted.
+
+Sources checked (this update):
+- `https://api.gleif.org/api/v1/lei-records/{lei}` for all 3 LEIs directly, to confirm
+  ACTIVE/ISSUED status and rule out an expired-or-malformed-LEI explanation
+- Live P3DH Entity search for "SG", "Boursorama", "Credit du Nord" (Societe Generale);
+  "Casa", "Lyonnais", "LCL", "Agricole" (Credit Agricole); "CIC", "Arkea", "Alliance
+  Federale", "Confederation" (Credit Mutuel) - 11 distinct queries across all three

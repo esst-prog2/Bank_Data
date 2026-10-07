@@ -380,3 +380,20 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   having one published KM1 period so far) individually checked and explained, not left
   as unexplained failures. 1.1GB of real P3DH data now cached. Decided and carried out
   by agent, per the user's request to work on all pilot banks.
+- 2026-10-07: Investigated why Societe Generale, Credit Agricole SA, and Confederation
+  Nationale Credit Mutuel are genuinely absent from P3DH (per the follow-up flagged in
+  AGENTS.md). All 3 LEIs confirmed ACTIVE/ISSUED on GLEIF - not expired or malformed.
+  Societe Generale: checked under its own name, "SG", and former subsidiary brands
+  (Boursorama, Credit du Nord) - all zero, also missing specifically its FY2024 ESEF
+  filing - looks like a genuine P3DH onboarding gap for this one bank, not a naming
+  problem. Confederation Nationale Credit Mutuel: not a gap at all - it's a coordinating
+  trade body, not a supervised credit institution, so it correctly has no Pillar 3
+  disclosure; confirmed the group's real subsidiary ("Credit industriel et commercial -
+  CIC") has P3DH data under its own separate LEI this project never captured. Credit
+  Agricole SA: same pattern - P3DH tracks this group at the regional-cooperative-bank
+  level (9+ "Caisse regionale de credit agricole mutuel [region]" entities found), not
+  centrally; the tracked LEI is still correct (has real FY2024 ESEF filings under this
+  exact name) but isn't the Pillar-3-reporting entity. Updated entities.csv's notes for
+  all 3 rows with these findings. None require further scraper fixes - closing this out
+  as "investigated and explained," with discovering the regional entities' own LEIs
+  left as an explicit, un-acted-on scope question. Decided and carried out by agent.
