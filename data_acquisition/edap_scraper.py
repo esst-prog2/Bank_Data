@@ -126,10 +126,10 @@ def _normalize(text: str) -> str:
 #  the one we want outside Power BI's own rendered result window).
 _GENERIC_NAME_WORDS = {
     "bank", "banco", "banca", "bankas", "banque", "bankinter", "group", "groep", "gruppe",
-    "groupe", "gruppen", "holding", "holdings", "societe", "sociedad", "anonyme", "anonima",
-    "societa", "per", "sa", "spa", "srl", "nv", "ab", "asa", "oyj", "oy", "publ", "plc",
-    "ltd", "the", "and", "of", "azioni", "aktien", "aktiengesellschaft", "gesellschaft",
-    "public", "limited", "company",
+    "groupe", "gruppen", "csoport", "holding", "holdings", "societe", "sociedad", "anonyme",
+    "anonima", "societa", "per", "sa", "spa", "srl", "nv", "ab", "asa", "oyj", "oy", "publ",
+    "plc", "ltd", "nyrt", "the", "and", "of", "azioni", "aktien", "aktiengesellschaft",
+    "gesellschaft", "public", "limited", "company",
 }
 #  Normalized once (accents/punctuation/case stripped), so a raw token like "S.A." (which
 #  never literally equals "sa") is still recognized as the same generic word - this was a
