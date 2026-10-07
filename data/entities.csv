@@ -31,7 +31,7 @@ DSNHHQ2B9X5N6OUJ1236,NORDDEUTSCHE LANDESBANK - GIROZENTRALE -,DE,,discovered via
 2G5BKIC2CB69PRJH1W31,BARCLAYS BANK IRELAND PUBLIC LIMITED COMPANY,IE,,discovered via stress_test 2025
 N747OI7JINV7RUUH6190,BPER BANCA S.P.A.,IT,43,discovered via stress_test 2025
 9695005MSX1OYEMGDF46,BPCE,FR,6,"discovered via stress_test 2025; LEI corrected 2026-10-06 - raw TRA_OTH.csv stores it as the malformed ""FR9695005MSX1OYEMGDF"" (same FR-prepended / check-digits-dropped pattern as Credit Agricole above; confirmed by GLEIF fulltext search for ""BPCE"", legal name BPCE, matching row content ""Groupe BPCE"" in TRA_OTH.csv); see DATA_SOURCES_NOTES.md 2026-10-06 entry"
-529900W3MOO00A18X956,OTP Bank Nyrt.,HU,,discovered via stress_test 2025
+529900W3MOO00A18X956,OTP Bank Nyrt.,HU,,"discovered via stress_test 2025; checked 2026-10-08 - ON P3DH as ""OTP-csoport"" (Hungarian ""OTP Group"" - found via raw search after the exact-name match initially (and wrongly) reported it absent, see DATA_SOURCES_NOTES.md), but ESEF (filings.xbrl.org) has nothing past FY2022 for this LEI (no FY2023 or FY2024 filing indexed) - so it has P3DH coverage but not current-year ESEF, the opposite gap pattern from Societe Generale/Credit Agricole/Credit Mutuel."
 M6AD1Y1KW32H8THQ6F76,PIRAEUS FINANCIAL HOLDINGS,GR,,"discovered via stress_test 2025; GLEIF record status INACTIVE as of 2026-10-06 - likely superseded by a newer LEI, not re-verified"
 A5GWLFH3KM7YV2SFQL84,BELFIUS BANQUE,BE,45,discovered via stress_test 2025
 549300C9KPZR0VZ16R05,Morgan Stanley Europe Holding SE,DE,,"discovered via stress_test 2025; GLEIF record status INACTIVE as of 2026-10-06, not re-verified"

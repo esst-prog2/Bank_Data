@@ -761,3 +761,50 @@ Sources checked (this update):
 - Live P3DH Entity search for "SG", "Boursorama", "Credit du Nord" (Societe Generale);
   "Casa", "Lyonnais", "LCL", "Agricole" (Credit Agricole); "CIC", "Arkea", "Alliance
   Federale", "Confederation" (Credit Mutuel) - 11 distinct queries across all three
+
+## Update 2026-10-08: dual ESEF+P3DH coverage outside the S&P-50 pilot sample
+
+Asked for the ratio of banks, among the 27 in the discovered 64-bank universe that are
+NOT in the S&P-top-50-derived 37-bank pilot sample, that have both ESEF and P3DH
+coverage - a check of whether the S&P-50 trim (an external asset-ranking criterion) is
+also incidentally the set of banks with the best actual data availability, or whether
+it's leaving real additional coverage on the table.
+
+Checked `filings.xbrl.org` for FY2024 filings for all 27 non-pilot banks (same method as
+the earlier ESEF entry): **9/27 (33.3%) have one.** Of those 9, checked P3DH directly with
+the now-fixed entity matching: **8/9 (88.9%) are also on P3DH** - HSBC Continental Europe,
+Jyske Bank A/S, Alpha Services and Holdings (P3DH: "Alpha Bank S.A."), National Bank of
+Greece, Bankinter, Piraeus Financial Holdings, Banco Comercial Portugues, and Unicaja
+Banco. The one exception is SBAB Bank AB (Sweden) - has ESEF, not found on P3DH under any
+name tried.
+
+**Net finding: 8/27 (29.6%) of the non-pilot discovered universe has full dual-source
+coverage available right now**, without any further acquisition work - the S&P-50 trim
+was a reasonable, externally-justified criterion (task 1.2's whole point), but it isn't
+the same thing as "the banks with the best data availability," and there's real,
+immediately-usable coverage sitting just outside it.
+
+**A follow-up check (OTP Bank Nyrt., Hungary) found and fixed a real remaining matching
+bug, not just confirmed a gap.** OTP showed as "not on P3DH" under every candidate tried
+("OTP Bank Nyrt.", "OTP", "Nyrt"). A raw, unfiltered search for "OTP" showed 3 real
+options including "OTP-csoport" (Hungarian for "OTP Group") - the word-match fallback's
+generic-word filter didn't recognize "csoport" (Hungarian "group") or "nyrt" (the
+Hungarian public-company suffix) as legal-form boilerplate, so the subset guard
+correctly-but-overcautiously rejected what was actually the right match. Added both to
+`_GENERIC_NAME_WORDS`. Also tried adding "banka" (Croatian/Balkan "bank") and "dd"
+(Croatian "d.d." suffix) in the same pass, but that created a genuine new ambiguity - with
+those also treated as generic, "OTP banka d.d." (a different, unrelated entity also in
+the 3-option result set) reduced to the same bare {"otp"} as "OTP-csoport", and the
+uniqueness guard correctly refused to pick either. Removed both, keeping only the two
+words actually needed - a reminder that the guard is working as intended, catching risk I
+nearly introduced myself rather than only catching the earlier Societe Generale case.
+OTP does have real P3DH data, but its ESEF trail stops at FY2022 (no FY2023 or FY2024
+filing indexed) - the reverse gap pattern from Societe Generale/Credit Agricole/Credit
+Mutuel (P3DH present, ESEF stale), logged in its own right in `entities.csv`.
+
+Sources checked (this update):
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for all 27 non-pilot LEIs
+- Live P3DH Entity search for each of the 9 ESEF-available non-pilot banks' names, plus a
+  raw unfiltered "OTP" search that surfaced the actual match the guarded search had missed
+- `https://filings.xbrl.org/api/entities/529900W3MOO00A18X956/filings` directly, to see
+  OTP's exact filing history (FY2021 x2, FY2022 x2, nothing since)

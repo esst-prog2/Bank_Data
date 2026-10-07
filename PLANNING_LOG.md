@@ -397,3 +397,19 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   all 3 rows with these findings. None require further scraper fixes - closing this out
   as "investigated and explained," with discovering the regional entities' own LEIs
   left as an explicit, un-acted-on scope question. Decided and carried out by agent.
+- 2026-10-08: Checked dual ESEF+P3DH coverage for the 27 banks outside the S&P-50 pilot
+  sample, per user request. 9/27 have FY2024 ESEF; 8 of those 9 are also on P3DH (HSBC
+  Continental Europe, Jyske Bank, Alpha Services and Holdings, National Bank of Greece,
+  Bankinter, Piraeus Financial Holdings, Banco Comercial Portugues, Unicaja Banco) -
+  8/27 (29.6%) have full dual-source coverage available with no further acquisition
+  work, meaning the S&P-50 trim leaves real, usable coverage on the table. Not yet
+  added to the pilot sample - flagged to user as an option, not acted on.
+  Follow-up on OTP Bank Nyrt. specifically found and fixed a real remaining bug: it IS
+  on P3DH (as "OTP-csoport", Hungarian for "OTP Group") but the word-match fallback
+  didn't recognize "csoport"/"nyrt" as generic legal-form words, so a real match was
+  being wrongly rejected. Fixed by adding both to the generics list - tried adding two
+  more (Croatian "banka"/"dd") at the same time but that created a genuine new
+  ambiguity with an unrelated entity, so removed those two and kept only what was
+  actually needed. OTP's ESEF trail stops at FY2022 though (no FY2023/FY2024 filing),
+  so it has P3DH but not current ESEF - the reverse of the other 3 banks' gap pattern.
+  Decided and carried out by agent.
