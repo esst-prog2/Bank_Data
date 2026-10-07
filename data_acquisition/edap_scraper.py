@@ -14,6 +14,11 @@ written. What's confirmed, concretely:
   Entity search box returns zero results; typing "Erste" returns 5 real matches including
   "Erste Group Bank AG". Callers must resolve LEI -> legal name first - `entities.csv`'s
   `name` column (GLEIF-resolved, see the 2026-10-06 entries) is the source for that.
+  **Match case-insensitively** - GLEIF's resolved legal names are frequently ALL CAPS
+  ("ERSTE GROUP BANK AG") while P3DH displays normal case ("Erste Group Bank AG"); an
+  exact-case match falsely reported dozens of real pilot banks (Erste included) as
+  "not on P3DH" in a first full-sample run before this was caught and fixed (see
+  DATA_SOURCES_NOTES.md's 2026-10-06 entry on the full-pilot-sample run).
 - **Module and Template are genuinely different lists, not the same list under two names**
   (this was an open, flagged assumption in `edap_downloader.fetch_module()`'s docstring -
   now resolved). Module has ~8 broad categories ("Common disclosures", "Financial
@@ -63,6 +68,7 @@ wiring this into `edap_downloader.fetch_module()` (still a stub) and `run_update
 from __future__ import annotations
 
 import time
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -102,10 +108,79 @@ class DataPointQuery:
     # confirmed Module doesn't need to be explicitly set (see module docstring).
 
 
+def _normalize(text: str) -> str:
+    """Lowercase, strip accents, drop everything but letters/digits - so "Banco
+    Santander, S.A." and "BANCO SANTANDER S.A." compare equal despite the comma, and a
+    name with/without a diacritic (e.g. "Cooperatieve"/"Coöperatieve") compares equal too.
+    Needed because GLEIF's resolved legal name (entities.csv's `name` column) frequently
+    differs from P3DH's own displayed text in exactly these ways - a literal match
+    previously, falsely, reported dozens of real pilot banks as absent from P3DH
+    (confirmed 2026-10-06, see module docstring)."""
+    nfkd = unicodedata.normalize("NFKD", text)
+    stripped = "".join(c for c in nfkd if not unicodedata.combining(c))
+    return "".join(c for c in stripped.lower() if c.isalnum())
+
+
+#  Legal-form words common across many unrelated entities - too generic to use as a sole
+#  search term (e.g. "BANCO" alone returns every Spanish/Portuguese/Italian bank, burying
+#  the one we want outside Power BI's own rendered result window).
+_GENERIC_NAME_WORDS = {
+    "bank", "banco", "banca", "bankas", "banque", "bankinter", "group", "groep", "gruppe",
+    "groupe", "gruppen", "holding", "holdings", "societe", "sociedad", "anonyme", "anonima",
+    "societa", "per", "sa", "spa", "srl", "nv", "ab", "asa", "oyj", "oy", "publ", "plc",
+    "ltd", "the", "and", "of", "azioni", "aktien", "aktiengesellschaft", "gesellschaft",
+    "public", "limited", "company",
+}
+#  Normalized once (accents/punctuation/case stripped), so a raw token like "S.A." (which
+#  never literally equals "sa") is still recognized as the same generic word - this was a
+#  real bug: "S.A." vs "Sociedad Anonima" both being ignored inconsistently broke the
+#  subset check below for BBVA specifically (confirmed 2026-10-06).
+_GENERIC_NAME_WORDS_NORM = {_normalize(w) for w in _GENERIC_NAME_WORDS}
+
+
+def _distinctive_words(text: str) -> set[str]:
+    """Normalized words from `text` that aren't generic legal-form boilerplate - the
+    proper-noun-like core of a name. Used to tell a genuine legal-name variant (same
+    distinctive words, different legal-form suffix, e.g. "AIB Group plc" for "AIB GROUP
+    PUBLIC LIMITED COMPANY") apart from a DIFFERENT, more specific entity that merely
+    shares a word (e.g. "Societe Generale Bank - Cyprus Ltd" for "SOCIETE GENERALE" -
+    "cyprus" is a real, distinguishing extra word, not a legal-form synonym)."""
+    return {
+        _normalize(w) for w in text.replace("-", " ").split()
+        if _normalize(w) and _normalize(w) not in _GENERIC_NAME_WORDS_NORM
+    }
+
+
+def _search_candidates(value: str) -> list[str]:
+    """Search terms to try in turn for the `entity` field, most-specific first: the full
+    value, then its individual words longest-to-shortest (skipping generic legal-form
+    words per `_GENERIC_NAME_WORDS`), then its first word as a last resort. A single
+    generic or mismatched term can return far more results than Power BI's popup renders
+    at once, hiding the real option even though it exists - trying several is cheap (one
+    extra `.type()` + wait each) and far more reliable than guessing one in advance."""
+    words = [w.strip(".,") for w in value.split()]
+    distinctive = sorted(
+        {w for w in words if len(w) > 2 and w.lower() not in _GENERIC_NAME_WORDS},
+        key=len, reverse=True,
+    )
+    candidates = [value, *distinctive, *(words[:1])]
+    seen: set[str] = set()
+    out = []
+    for c in candidates:
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out
+
+
 def _select_slicer(page: Page, field_key: str, value: str, timeout_ms: int = 15000) -> None:
-    """Open the named slicer, type `value` into its own search box, click the option whose
-    text exactly matches `value`, then close the slicer by re-clicking its trigger (toggle -
-    Escape does not close it, confirmed 2026-10-06)."""
+    """Open the named slicer, search for an option matching `value` (normalized, see
+    `_normalize` - not a literal string match), click it, then close the slicer by
+    re-clicking its trigger (toggle - Escape does not close it, confirmed 2026-10-06).
+
+    For `entity` specifically, tries several search terms in turn (`_search_candidates`)
+    rather than one guess, since GLEIF's resolved name often doesn't surface the right
+    option on the first attempt (see that function's docstring)."""
     aria_label = FIELD_ARIA_LABELS[field_key]
     frame = page.frame_locator(POWERBI_IFRAME_SELECTOR)
     trigger = frame.locator(TRIGGER_SELECTOR.format(field=aria_label))
@@ -116,34 +191,68 @@ def _select_slicer(page: Page, field_key: str, value: str, timeout_ms: int = 150
     if not popup_id:
         raise PWTimeoutError(f"slicer '{aria_label}' has no aria-controls popup id")
     popup = frame.locator(f"#{popup_id}")
+    options = popup.locator(OPTION_SELECTOR)
+    value_norm = _normalize(value)
+    value_distinctive = _distinctive_words(value) if field_key == "entity" else set()
 
-    search = popup.locator(SEARCH_SELECTOR)
+    def _try_click_match(term_norm: str) -> bool:
+        n = options.count()
+        exact_i = None
+        word_hits: list[int] = []
+        for i in range(n):
+            text = options.nth(i).inner_text(timeout=2000)
+            text_norm = _normalize(text)
+            if text_norm == value_norm:
+                exact_i = i
+                break  # exact full-value match always wins outright
+            # Fallback: the SEARCH TERM (not the full value) as one whole normalized word
+            # in the option - handles genuine legal-name variants GLEIF's resolved name
+            # doesn't share with P3DH's own text (e.g. "BELFIUS BANQUE" vs P3DH's "Belfius
+            # Bank", "AIB GROUP PUBLIC LIMITED COMPANY" vs "AIB Group plc"). Guarded two
+            # ways, both confirmed necessary 2026-10-06: it must uniquely identify one
+            # option (else a shared common word like "aib" inside an unrelated
+            # "...Aibling" name could false-match), AND that option's own distinctive
+            # words must be a SUBSET of the value's - without this, "SOCIETE GENERALE"
+            # wrongly matched "Societe Generale Bank - Cyprus Ltd" (a real but different,
+            # more specific subsidiary: "cyprus" is a genuine extra distinguishing word,
+            # not a legal-form synonym the first guard alone can tell apart).
+            words = {_normalize(w) for w in text.replace("-", " ").split()}
+            if term_norm in words and _distinctive_words(text) <= value_distinctive:
+                word_hits.append(i)
+        target = exact_i if exact_i is not None else (word_hits[0] if len(word_hits) == 1 else None)
+        if target is None:
+            return False
+        options.nth(target).click(timeout=timeout_ms)
+        return True
+
     # Power BI hides the search box when cross-filtering has already narrowed this
     # slicer's own option list down small (observed on `reference_date` once entity +
-    # template were already set) - type into it only when it's actually there to use.
-    # Type only a short leading token, not the full value: typing the complete exact
-    # string (e.g. the full legal name with "AG"/"S.A." suffixes) was observed to
-    # sometimes return zero results where a shorter prefix reliably matched - exact
-    # selection still happens below by matching the FULL value against option text.
-    search_term = value.split()[0] if " " in value else value
-    if search.count() > 0 and search.first.is_visible():
-        search.first.click(timeout=timeout_ms)
-        search.first.type(search_term, delay=80)  # NOT .fill() - the popup's list only re-renders from real keystrokes
-        time.sleep(2.5)  # debounce - Power BI's own filtering is not instant, and is itself not fixed-latency (observed flaky at 1.5s)
+    # template were already set) - only search when there's actually a box to use.
+    search = popup.locator(SEARCH_SELECTOR)
+    search_visible = search.count() > 0 and search.first.is_visible()
+    candidates = _search_candidates(value) if field_key == "entity" else [value]
 
-    options = popup.locator(OPTION_SELECTOR)
     matched = False
-    for i in range(options.count()):
-        if options.nth(i).inner_text(timeout=2000).strip() == value:
-            options.nth(i).click(timeout=timeout_ms)
+    tried: list[str] = []
+    for term in candidates:
+        if search_visible:
+            search.first.click(timeout=timeout_ms)
+            search.first.fill("")  # clear the previous candidate before typing the next
+            search.first.type(term, delay=80)  # NOT .fill() for the query itself - the popup's list only re-renders from real keystrokes
+            time.sleep(2.5)  # debounce - Power BI's own filtering is not instant, and is itself not fixed-latency (observed flaky at 1.5s)
+        tried.append(term)
+        if _try_click_match(_normalize(term)):
             matched = True
             break
+        if not search_visible:
+            break  # no search box to refine with - one attempt is all there is
+
     if not matched:
         trigger.first.click(timeout=timeout_ms)  # best-effort close before raising
         raise PWTimeoutError(
-            f"slicer '{aria_label}': no option exactly matching {value!r} - check spelling "
-            f"against the field's real option text (see this module's docstring for how "
-            f"the search box works)."
+            f"slicer '{aria_label}': no option matching {value!r} after trying search "
+            f"term(s) {tried} - check against the field's real option text (see this "
+            f"module's docstring for how the search box works)."
         )
 
     time.sleep(0.5)

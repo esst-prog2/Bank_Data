@@ -575,3 +575,131 @@ Sources checked (this update):
   Societe Generale gap rather than assume the failure meant something else
 - `data/raw/*.xlsx` file listing, to notice the file-count-vs-success-count mismatch that
   led to finding the wave-type/reference-date redundancy
+
+## Update 2026-10-06/07: entity matching was a real, major source of false negatives
+
+Asked to run `run_update.py` against the full 37-bank pilot sample (not just the 2-bank
+test above). The first full pass (592 combinations) came back with 97 successes and 495
+failures - a far worse ratio than the 2-bank test predicted, and immediately suspicious on
+its own terms: **Erste Group Bank AG itself showed 0/16 successes**, despite having been
+directly, manually verified present on P3DH with real data just hours earlier in this same
+session. That contradiction was the signal something in the matching logic was wrong, not
+that dozens of real pilot banks had quietly vanished from a live public system overnight.
+
+**Root cause 1, confirmed and fixed**: `entities.csv`'s `name` column (GLEIF's resolved
+legal name) is frequently ALL CAPS ("ERSTE GROUP BANK AG"), while P3DH displays normal
+case ("Erste Group Bank AG"). `_select_slicer`'s exact-text match was case-sensitive.
+Fixed to compare lowercased. A second full pass (same 592 combinations) went from 97 to
+177 successes - confirming most of the original 495 "failures" were this one bug, not
+real unavailability.
+
+**Root cause 2, found by not trusting the improved-but-still-low number**: 22 of 37 banks
+still showed 0/16 even after the case fix, including unmistakably-major banks (Santander,
+ING, BBVA, Rabobank) that are certainly on P3DH. Direct live searches (not inference)
+showed GLEIF's resolved name frequently doesn't literally substring-match P3DH's own text
+at all, for several independent reasons found by checking specific cases:
+- Punctuation: GLEIF's "BANCO SANTANDER S.A." vs P3DH's "Banco Santander, S.A." (comma).
+- Legal-form language variants: GLEIF's "KBC GROEP" (Flemish) vs P3DH's "KBC Groupe"
+  (French); "BELFIUS BANQUE" (French "Banque") vs P3DH's "Belfius Bank" (English);
+  "AIB GROUP PUBLIC LIMITED COMPANY" (spelled out) vs P3DH's "AIB Group plc" (abbreviated).
+- Trailing qualifiers: "Svenska Handelsbanken AB" vs P3DH's "Svenska Handelsbanken -
+  gruppen"; "Skandinaviska Enskilda Banken AB" vs P3DH's "...- gruppen" too.
+- A too-generic single search word burying the real option: the original "search by first
+  word" heuristic picked "BANCO" for every Spanish/Portuguese/Italian bank in the sample,
+  which returns far more results than Power BI's popup renders at once.
+
+Fixed with three layered changes to `edap_scraper._select_slicer`, in order of how safe
+they are to trust:
+1. `_normalize()` - lowercase, strip accents, drop all punctuation - so comma/diacritic
+   differences stop mattering. Did NOT fully fix KBC/Belfius/Handelsbanken/AIB/BBVA (those
+   differ by more than punctuation - different whole words).
+2. `_search_candidates()` - try the full value, then each real word longest-to-shortest
+   (skipping generic legal-form words like "bank"/"banco"/"group"), instead of guessing
+   one term in advance. Fixes the "BANCO buries the result" problem.
+3. A word-level fallback match: if no exact normalized match, accept an option where the
+   SEARCHED term appears as one whole normalized word, but ONLY when (a) it's the unique
+   such option among currently-rendered results, AND (b) the option's own non-generic
+   ("distinctive") words are a SUBSET of the input value's distinctive words. Guard (b) was
+   added after guard (a) alone produced a real false positive: searching "SOCIETE GENERALE"
+   uniquely matched "Societe Generale Bank - Cyprus Ltd" (a genuine but different,
+   more specific subsidiary - "Cyprus" is a real extra distinguishing word the input never
+   had, not a legal-form synonym). Verified this guard rejects that case while still
+   accepting the legitimate variants (KBC/Belfius/Handelsbanken/AIB/BBVA/BPCE all confirmed
+   correct afterward, each checked by printing exactly which option text got selected, not
+   just that *something* matched).
+
+A related bug in the generic-word list itself was found and fixed during this check:
+"Sociedad Anonima" (Spanish "S.A.") wasn't recognized as equivalent to "S.A." because the
+generic-word filter compared raw, unnormalized tokens - "S.A." (with periods) never
+literally equals "sa" in the list. Normalizing both sides before the comparison fixed BBVA
+specifically (GLEIF: "...SOCIEDAD ANONIMA"; P3DH: "...S.A.").
+
+**Net effect, checked by testing every one of the 10 remaining 2026-10-06 mismatches
+individually with full output, not just re-running the whole batch and hoping**: real
+entity-match coverage went from 15/37 (the two-bug-affected state) to 34/37. The 3 that
+remain genuinely unmatched - Societe Generale (confirmed: no entity on P3DH contains
+"Societe" or "Generale" except the unrelated Cyprus subsidiary), Credit Agricole SA, and
+Confederation Nationale Credit Mutuel (both cooperative confederations, structurally
+similar to the BPCE/Credit Agricole LEI-correction case from the stress-test discovery
+work - plausibly filed under a different legal entity than the one GLEIF resolves for
+their tracked LEI) - are real, checked gaps, not matching-logic failures.
+
+## Update 2026-10-07: overnight crash, a real resilience bug, and final full-pilot results
+
+The full 37-bank run was re-launched with the fixed matching logic (592 combinations,
+expected ~2 hours). It was still running when this session's conversation picked back up
+the next day - it had died overnight with no Python traceback (exit code 4), almost
+certainly because the machine slept or restarted, not a code failure.
+
+**A real resilience bug, found by the crash itself**: `run_update.py` only called
+`_save_state()` once, after the entire double-nested loop finished. The dead run had
+already downloaded real P3DH files for about 20 of the 37 entities - confirmed by the
+files actually sitting on disk - but `download_log.json` didn't exist at all, so none of
+that work was recorded. A naive restart would have silently re-driven a live browser
+through ~20 entities' worth of work it had already done. Fixed by moving `_save_state()`
+inside the entity loop (saves after every entity, not just at the very end) - bounds any
+future interruption's cost to at most one entity's remaining combinations instead of the
+whole run.
+
+**Recovered the lost state rather than re-fetching it.** `edap_scraper.export_data_points()`'s
+output filename is fully deterministic
+(`f"{safe_entity}_{template[:10]}_{date}.xlsx"`), so for every (entity, template,
+reference_date) combination the exact expected path could be computed and checked for
+existence directly - no fuzzy filename parsing needed. This recovered 249 of the 592
+combinations as genuine, already-complete successes purely from files already on disk,
+before resuming the run for the remaining 343.
+
+**Final result, full 37-bank pilot sample, both templates, all 8 waves (592
+combinations): 364 successes (61.5%), 228 failures.** 34 of 37 banks have at least some
+real data; only the 3 banks named above (Societe Generale, Credit Agricole SA, Credit
+Mutuel) have zero, and all three are checked, explained gaps, not unexplained ones. Of the
+228 failures:
+- 121 are `reference_date` mismatches - mostly EU LI1's confirmed semi-annual/annual-only
+  disclosure frequency (see the first 2026-10-06 run_update.py entry above) repeating
+  across the full sample, plus genuine per-bank submission-timing differences, e.g.
+  **Swedbank AB only has a KM1 figure published for the very first available reference
+  date (30/06/2025) so far** - every later KM1 attempt fails at the reference_date step
+  once Template narrows the date list down to just that one, and every LI1 attempt fails
+  at the template step (Swedbank doesn't appear to submit LI1 at all, at any date tested).
+- 41 are `entity` mismatches, all 3 confirmed-absent banks x their full 16 waves/templates
+  each, minus a handful of transient page-load failures elsewhere.
+- 39 are `unknown` (mostly `Page.goto` timeouts) - transient network/page-load hiccups
+  against the live site, not diagnosed further; a retry pass could plausibly recover some
+  of these, not attempted here given the time already spent.
+- 27 are `template` mismatches - a given template (overwhelmingly LI1) not found at all
+  for that entity once Entity is set, before reference_date is even reached - i.e. "this
+  bank doesn't submit this disclosure," a stronger statement than "not at this date."
+
+1.1GB of real P3DH data now cached under `data/raw/` (150 distinct files, after the
+wave-type/date deduplication from the earlier entry) alongside the 706MB of ESEF data from
+the prior entries - genuinely cross-checkable, multi-source coverage for the large
+majority of the pilot sample, not a handful of cherry-picked examples.
+
+Sources checked (this update):
+- `data/raw/*.xlsx` listing and file timestamps, used to deterministically reconstruct
+  `download_log.json` rather than re-fetch already-completed work
+- The complete, final `data/state/download_log.json` (592/592 entries), read directly for
+  the per-bank and per-failure-category breakdown above
+- Swedbank AB's own 16 state entries individually, to confirm its unusually low success
+  rate (2/16) has a specific, consistent, genuine explanation rather than being random
+  noise

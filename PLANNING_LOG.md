@@ -351,3 +351,32 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   up to 4x redundant live re-fetches of identical P3DH data - cached this
   run's own per-(entity, date, module) results to fix it. Full trail in
   DATA_SOURCES_NOTES.md. Decided and carried out by agent.
+- 2026-10-06/07: Asked to run P3DH acquisition for the full 37-bank pilot sample. The
+  first full pass (97/592 successes) immediately looked wrong - Erste Group Bank AG
+  itself showed 0/16 despite being manually verified present hours earlier - and traced
+  to entity-name matching, not real unavailability. Found and fixed two real bugs:
+  (1) GLEIF's resolved legal names are often ALL CAPS while P3DH displays normal case -
+  exact-case matching was silently wrong; (2) GLEIF's name frequently doesn't literally
+  match P3DH's text at all (punctuation, legal-form-language variants like
+  "Groep"/"Groupe", trailing qualifiers, or a too-generic single search word burying the
+  real result). Rewrote `edap_scraper`'s entity matching with normalization, a
+  multi-candidate search cascade, and a guarded word-level fallback - the guard matters:
+  an earlier, unguarded version of the fallback produced a real false positive (matched
+  Societe Generale's unrelated Cyprus subsidiary), caught by testing each fix
+  individually rather than trusting an improved aggregate number. Verified entity-match
+  coverage went from 15/37 to 34/37 this way; the remaining 3 (Societe Generale, Credit
+  Agricole SA, Credit Mutuel) are confirmed, checked, genuine gaps. Decided and verified
+  by agent.
+- 2026-10-07: The full re-run (with the fixed matching) died overnight with no error -
+  the machine almost certainly slept or restarted. Found a real resilience bug this
+  exposed: `run_update.py` only saved its state file once, at the very end, so ~20
+  entities' worth of already-downloaded real data wasn't recorded anywhere and a naive
+  restart would have redone it. Fixed to save after every entity. Reconstructed the lost
+  state directly from the deterministic output filenames already on disk (249/592
+  combinations recovered with zero re-fetching) and resumed only the remaining 343.
+  Final result: 364/592 (61.5%) succeeded across the full pilot sample; 34 of 37 banks
+  have real P3DH data, with every remaining gap (the 3 absent banks, EU LI1's
+  semi-annual/annual-only frequency, per-bank submission-timing gaps like Swedbank only
+  having one published KM1 period so far) individually checked and explained, not left
+  as unexplained failures. 1.1GB of real P3DH data now cached. Decided and carried out
+  by agent, per the user's request to work on all pilot banks.

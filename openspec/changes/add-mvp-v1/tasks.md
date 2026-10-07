@@ -44,17 +44,22 @@
       which 37 of the 64 are in that external top-50 sample, kept alongside
       the other 27 rather than deleted, so a pilot run can filter to the
       smaller set without losing the discovered universe.
-- [ ] 1.3 Create `data/modules.txt` with the exact disclosure module/template
+- [x] 1.3 Create `data/modules.txt` with the exact disclosure module/template
       codes the pilot banks submit
-      — 2026-10-06: still only 2 verified templates (EU KM1, EU LI1), not
-      bank-specific - `run_update.py` tries both against every pilot bank. A
-      real first pass (2 banks, both templates, 8 waves) found both templates
-      are genuinely usable for Deutsche Bank; Societe Generale isn't findable
-      in P3DH's Entity list under any name at all (see DATA_SOURCES_NOTES.md)
-      so no template will ever succeed for it until that's resolved. Scaling
-      to the other 35 pilot banks is unstarted - at ~15-30s per real
-      browser-driven attempt, a full pass (37 x 2 x up to 8 waves) is real
-      wall-clock time (potentially hours), not a quick script run.
+      — 2026-10-07: full 37-bank pilot sample run completed (592 combinations:
+      37 banks x 2 templates x up to 8 waves) - 364 successes (61.5%), 1.1GB
+      of real P3DH data cached. 34 of 37 banks have at least some real data.
+      Getting here required fixing real entity-matching bugs in
+      `edap_scraper.py` (GLEIF legal names vs. P3DH's own display text differ
+      in case, punctuation, and legal-form language variants - see
+      DATA_SOURCES_NOTES.md's 2026-10-06/07 entries), not just running the
+      script - entity-match coverage went from 15/37 to 34/37 as a result.
+      Only 2 templates are covered (EU KM1, EU LI1) - still not the full
+      ~100+ P3DH lists, but both are now genuinely exercised across the whole
+      pilot sample rather than one bank. Remaining gaps (3 banks entirely
+      absent/misidentified; EU LI1's confirmed semi-annual/annual-only
+      frequency; per-bank submission-timing differences) are each checked
+      and explained, not unexplained failures - see DATA_SOURCES_NOTES.md.
 - [ ] 1.4 In `run_update.py`'s state tracking, distinguish a wave that hasn't
       published yet (`not_yet_published`) from a genuine retrieval failure —
       currently both fall into the same generic `except Exception` branch and

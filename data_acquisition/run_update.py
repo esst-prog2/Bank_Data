@@ -95,6 +95,10 @@ def main(pilot_only: bool = True, limit: int | None = None) -> None:
     # date (confirmed: 4x redundant fetches for one date in an initial test run) - cache
     # this run's own results per (lei, reference_date, module) and reuse them across waves
     # that share a date, instead of re-fetching.
+    # Save after every entity, not just once at the end - confirmed necessary 2026-10-06:
+    # a ~3-hour real run was killed mid-pass (the machine slept/restarted overnight) and
+    # lost every bit of its state because nothing had been written to disk yet, even
+    # though ~20 entities' worth of real files had already been downloaded successfully.
     this_run_by_date: dict[tuple[str, str, str], dict] = {}
     for entity in entities:
         for wave in pending_waves:
@@ -128,8 +132,8 @@ def main(pilot_only: bool = True, limit: int | None = None) -> None:
                     }
                     new_failures += 1
                 this_run_by_date[date_key] = state[key]
+        _save_state(state)  # persist after each entity - see comment above the loop
 
-    _save_state(state)
     log.info("done: %d new successes, %d new failures, %d already-had skipped",
               new_successes, new_failures, skipped)
 
