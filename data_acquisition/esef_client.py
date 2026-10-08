@@ -77,6 +77,31 @@ def find_filing(lei: str, period_end: str) -> EsefFiling:
     if not candidates:
         raise EsefNotFoundError(f"no ESEF filing indexed for {lei} at period_end={period_end}")
     candidates.sort(key=lambda f: f["attributes"].get("date_added", ""))
+    # When several filings share the SAME date_added (a genuine tie, not a later
+    # resubmission), prefer the one whose fxo_id is the English-language variant -
+    # found 2026-10-08 via BBVA's 2021 filing: two same-date candidates existed
+    # (fxo_id suffixes "-en" and "-es"), and the "-es" one, despite being correctly
+    # indexed under BBVA's own LEI/path by filings.xbrl.org, actually CONTAINS
+    # Banco de Sabadell's data (confirmed by its own documentInfo.namespaces
+    # declaring "bancsabadell.com", and its Assets figure - 251.9bn - matching
+    # Sabadell's real size, not BBVA's ~663bn) - a real content-publishing error at
+    # the source, not something this project introduced. The stable sort above had
+    # been silently picking whichever candidate the API happened to list last,
+    # which for BBVA was the mislabeled one. Preferring "-en" is a heuristic, not a
+    # guarantee the English variant is always the correct one - if it still looks
+    # wrong, there is no fully reliable way to tell from metadata alone; the only
+    # certain check is what this investigation did: compare the fetched value
+    # against an adjacent year's own comparative figure for the same bank.
+    max_date = candidates[-1]["attributes"].get("date_added", "")
+    tied = [c for c in candidates if c["attributes"].get("date_added", "") == max_date]
+    if len(tied) > 1:
+        # the language marker is a "-en"/"-es"/etc. suffix on json_url's filename
+        # (e.g. ".../LEI-20211231-en.json"), NOT on fxo_id (which just ends in a
+        # numeric index like "-0"/"-1") - confirmed directly against BBVA's own
+        # candidate list while fixing this.
+        english = [c for c in tied if "-en." in (c["attributes"].get("json_url") or "")]
+        if english:
+            candidates = candidates[: -len(tied)] + [english[-1]]
     # Prefer a filing filings.xbrl.org actually processed (has a json_url) over a more
     # recent one that failed its own validation pipeline - found 2026-10-08 via OTP Bank
     # Nyrt.'s 2021 filing, which has json_url=None and error_count=1 (filings.xbrl.org's

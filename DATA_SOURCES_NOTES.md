@@ -935,3 +935,66 @@ Sources checked (this update):
   trading-income extension concepts (or confirm the absence of one clean equivalent)
 - Unicaja Banco's full FY2021 filing, searched directly for goodwill/bargain-purchase
   concepts, to confirm the >100% profit margin's real cause rather than assume a bug
+
+## Update 2026-10-08 (fourth entry): a real data-publishing error at the source, found before presenting a wrong headline
+
+Asked for an *analysis* of the DuPont output, not just the table - computed year-over-year
+trends and flagged the biggest mover: BBVA's ROE appeared to jump +13.47 percentage points
+from 2021 (4.15%) to 2024 (17.62%), far more than any other bank. That number was about to
+be reported as a genuine finding. It wasn't one - checked before writing it down, not after.
+
+**The giveaway**: BBVA's 2021 Total Assets (251.9bn) implied the balance sheet nearly
+tripled to 713.1bn in 2022 - not plausible for organic growth or any single acquisition at
+a bank this size. Checked the underlying cached filing directly rather than assume a real
+business event: its own `documentInfo.namespaces` declares `'sabadell':
+'http://www.bancsabadell.com/20211231'` - this is **Banco de Sabadell's** XBRL taxonomy,
+not BBVA's, despite being served under BBVA's own LEI (`K8MS7FD7N5Z2WQ51AZ71`) and path by
+`filings.xbrl.org`. Confirmed BBVA's LEI itself is correct (GLEIF: legal name "BANCO BILBAO
+VIZCAYA ARGENTARIA SOCIEDAD ANONIMA") - the error is in which document
+`filings.xbrl.org` serves for that LEI's 2021-12-31 filing, not in this project's entity
+list.
+
+**Root cause, fully traced**: BBVA's 2021-12-31 filing has two indexed candidates with
+*identical* `date_added` timestamps - an English-language one (`...-en.json`, genuinely
+BBVA's own data, namespace `bbva.es`, Assets 662.9bn) and a Spanish-language one
+(`...-es.json`, which despite its filename and URL path actually contains Banco de
+Sabadell's report - namespace `bancsabadell.com`, Assets 251.9bn, a plausible size for
+Sabadell, not BBVA). This is a genuine content-publishing error at the source, not
+something this project's acquisition code introduced. `esef_client.find_filing()`'s
+original tie-break (sort by `date_added`, take the last) is not meaningful when dates are
+identical - it silently picked whichever the API happened to list last, which for BBVA was
+the mislabeled Spanish-language entry.
+
+**Checked whether this is isolated or systemic before trusting the rest of the dataset.**
+Scanned every cached (bank, period) combination for the same kind of `date_added` tie: 6
+existed (all at 2021-12-31 specifically - KBC Groupe, OP Osuuskunta, Raiffeisen Bank
+International, SEB, Banco Comercial Português, and BBVA). Checked the other 5 directly,
+the same way as BBVA (their own `documentInfo.namespaces`): all 5 correctly self-identify
+as the expected company (`kbc.com`, `op.fi`, `rbinternational.com`, `sebgroup.com`,
+`millenniumbcp.pt`) - genuine, harmless language-variant ties (the underlying IFRS figures
+don't change based on which language the report is written in), not cross-company
+mix-ups. **BBVA's case is confirmed isolated, not a systemic pattern** - but the check was
+necessary to be able to say that with any confidence, rather than assume it.
+
+**Fixed `find_filing()`**: when candidates tie on `date_added`, prefer the one whose
+`json_url` is the English-language variant (`-en.json`) - documented as a heuristic, not a
+guarantee (there's no fully reliable way to know which variant is correctly labeled from
+metadata alone; the only certain check is comparing the fetched figure against an adjacent
+year's own comparative, which is what resolved BBVA's case specifically). Deleted BBVA's
+bad 2021 cache and re-fetched: now correctly returns the English/`bbva.es` filing.
+Recomputed BBVA's 2021 DuPont result: ROE corrects from the bogus 4.15% to a real 11.52%,
+making its 2021-2024 change +6.10pp - still a strong improvement, matching the sector-wide
+pattern, not an outlier anymore.
+
+Sources checked (this update):
+- BBVA's cached 2021 and 2022 facts.json files, compared directly for the Assets
+  discrepancy that first raised suspicion
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for BBVA's raw filing-candidate
+  list, to find the exact tie (two same-date entries) and confirm it's a real artifact of
+  the API's own data, not a caching bug on this project's side
+- Both language variants of BBVA's 2021 filing JSON fetched directly and compared
+  (`documentInfo.namespaces`, Assets value) to identify which one is genuinely BBVA's
+- `https://api.gleif.org/api/v1/lei-records/K8MS7FD7N5Z2WQ51AZ71` directly, to rule out
+  the possibility that this project's own LEI-to-bank mapping was the error
+- A full scan of every cached (bank, period) combination's filing-candidate list, to check
+  whether the same kind of tie affected any other bank before concluding BBVA was isolated

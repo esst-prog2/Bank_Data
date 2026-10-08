@@ -521,3 +521,24 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   programmatically from the run's own output rather than retyped, after an
   earlier manual transcription slip in a test literal). Decided and carried
   out by agent, per user's correction.
+- 2026-10-08: Asked for an analysis (not just the table) of the DuPont output.
+  Computing year-over-year trends surfaced BBVA as the biggest ROE improver
+  (+13.47pp, 2021-2024) - checked before reporting it, not after, since a
+  balance sheet "tripling" in one year isn't plausible. Found a real,
+  isolated data-publishing error at filings.xbrl.org: BBVA's 2021-12-31
+  filing has two same-date candidates (English and Spanish language), and
+  the Spanish one actually contains Banco de Sabadell's data (confirmed via
+  its own documentInfo.namespaces declaring bancsabadell.com), not a
+  language translation of BBVA's own report - a genuine content mix-up at
+  the source, not this project's bug, but esef_client.find_filing()'s
+  tie-break silently picked the wrong one when dates were identical.
+  Fixed find_filing() to prefer the English-language variant on a tie
+  (documented as a heuristic, not a guarantee). Checked whether this was
+  systemic before trusting the rest of the dataset: scanned all cached
+  (bank, period) combinations for the same kind of tie - found 5 more (all
+  2021-only), verified all 5 correctly self-identify as the right company
+  (KBC, OP, RBI, SEB, BCP) - confirmed BBVA was isolated, not a pattern.
+  Re-fetched BBVA's 2021 data with the fix: ROE corrects from a bogus
+  4.15% to a real 11.52%, making its 2021-2024 change +6.10pp - a strong
+  but no-longer-anomalous result consistent with the sector-wide trend.
+  Decided and carried out by agent.
