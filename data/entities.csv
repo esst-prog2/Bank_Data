@@ -1,0 +1,65 @@
+lei,name,country,sp50_2026_rank,notes
+O2RNE8IBXP4R0TD8PU41,SOCIETE GENERALE,FR,7,"discovered via stress_test 2025; confirmed 2026-10-07 - this LEI/entity is not present on P3DH under any name tried (""Societe Generale"", ""SG"", or former subsidiary brands ""Boursorama""/""Credit du Nord"" - all zero results on P3DH's own Entity search; the only P3DH entity containing ""Generale"" is the unrelated ""Societe Generale Bank - Cyprus Ltd"" subsidiary). Also missing its FY2024 ESEF filing (indexed for 2021-2023 and 2025, not 2024). Most likely a genuine P3DH onboarding gap for this specific institution (EBA confirmed onboarding is still rolling out unevenly), not a naming/LEI problem - the LEI itself is GLEIF ACTIVE/ISSUED. See DATA_SOURCES_NOTES.md 2026-10-07 entry."
+F0HUI1NY1AZMJMD8LP67,HSBC CONTINENTAL EUROPE,FR,,discovered via stress_test 2025
+7LTWFZYICNSX8D621K86,DEUTSCHE BANK AKTIENGESELLSCHAFT,DE,8,discovered via stress_test 2025
+815600E4E6DCD2D25E30,BANCO BPM SOCIETA' PER AZIONI,IT,42,discovered via stress_test 2025
+NNVPP80YIZGEY2314M97,ICCREA BANCA SPA - ISTITUTO CENTRALE DEL CREDITO COOPERATIVO,IT,,discovered via stress_test 2025
+TO822O0VT80V06K0FH57,CAIXA GERAL DE DEPOSITOS S.A.,PT,,discovered via stress_test 2025
+3M5E1GQGKL17HI6CPN30,JYSKE BANK A/S,DK,,discovered via stress_test 2025
+635400AKJBGNS5WNQL34,AIB GROUP PUBLIC LIMITED COMPANY,IE,50,discovered via stress_test 2025
+2W8N8UU78PMDQKZENC08,INTESA SANPAOLO SPA,IT,13,discovered via stress_test 2025
+9ZHRYM6F437SQJ6OUG95,Raiffeisen Bank International AG,AT,41,discovered via stress_test 2025
+EQYXK86SF381Q21S3020,BANK OF AMERICA EUROPE DESIGNATED ACTIVITY COMPANY,IE,,discovered via stress_test 2025
+96950066U5XAAIRCPA78,LA BANQUE POSTALE,FR,19,discovered via stress_test 2025
+549300RG3H390KEL8896,Banca Transilvania SA,RO,,discovered via stress_test 2025
+MAES062Z21O4RZ2U7M96,DANSKE BANK A/S,DK,25,discovered via stress_test 2025
+529900ODI3047E2LIV03,Nordea Bank Abp,FI,22,discovered via stress_test 2025
+969500TJ5KRTCJQWXH05,CREDIT AGRICOLE SA,FR,3,"discovered via stress_test 2025; LEI corrected 2026-10-06 - raw TRA_OTH.csv stores it as the malformed ""FR969500TJ5KRTCJQWXH"" (20 chars, but a real LEI with ""FR"" prepended and its last 2 check-digit chars dropped - confirmed by GLEIF fulltext search for ""Credit Agricole"", legal name CREDIT AGRICOLE SA, matching row content ""Groupe Credit Agricole"" in TRA_OTH.csv); see DATA_SOURCES_NOTES.md 2026-10-06 entry. Confirmed 2026-10-07 - this exact LEI/entity (""Credit Agricole SA""/""Groupe Credit Agricole"") is NOT on P3DH as a standalone entity under any name tried; searching ""Agricole"" instead returns 9+ of the group's individual regional cooperative banks (""Caisse regionale de credit agricole mutuel [region]""), each presumably under its own separate LEI this project hasn't captured. P3DH appears to track this banking group at the regional-subsidiary level, not centrally - the LEI we have is still correct (confirmed valid by ESEF: this exact entity has real FY2024 ESEF filings), it just isn't the one (if any) P3DH tracks for Pillar 3. See DATA_SOURCES_NOTES.md 2026-10-07 entry."
+8IBZUGJ7JPLH368JE346,Goldman Sachs Bank Europe SE,DE,,discovered via stress_test 2025
+DG3RU1DBUFHT4ZF9WN62,Cooperatieve Rabobank U.A.,NL,23,discovered via stress_test 2025
+P4GTT6GF1W40CVIMFR43,POWSZECHNA KASA OSZCZEDNOSCI BANK POLSKI SPOLKA AKCYJNA,PL,,discovered via stress_test 2025
+5299009N55YRQC69CN08,ALPHA SERVICES AND HOLDINGS,GR,,discovered via stress_test 2025
+NHBDILHZTYCNBV5UYZ31,Svenska Handelsbanken AB,SE,34,discovered via stress_test 2025
+M312WZV08Y7LYUC71685,Swedbank AB,SE,36,discovered via stress_test 2025
+213800X3Q9LSAKRUWY91,KBC GROEP,BE,29,discovered via stress_test 2025
+B81CK4ESI35472RHJ606,Landesbank Baden-Wurttemberg,DE,31,discovered via stress_test 2025
+5UMCZOEYKCVFAW8ZLO05,NATIONAL BANK OF GREECE,GR,,discovered via stress_test 2025
+635400C8EK6DRI12LJ39,BANK OF IRELAND GROUP PLC,IE,49,discovered via stress_test 2025
+VWMYAEQSTOPNV0SUGU82,BANKINTER SOCIEDAD ANONIMA,ES,,discovered via stress_test 2025
+549300ZK53CNGEEI6A29,J.P. Morgan SE,DE,,discovered via stress_test 2025
+DSNHHQ2B9X5N6OUJ1236,NORDDEUTSCHE LANDESBANK - GIROZENTRALE -,DE,,discovered via stress_test 2025
+2G5BKIC2CB69PRJH1W31,BARCLAYS BANK IRELAND PUBLIC LIMITED COMPANY,IE,,discovered via stress_test 2025
+N747OI7JINV7RUUH6190,BPER BANCA S.P.A.,IT,43,discovered via stress_test 2025
+9695005MSX1OYEMGDF46,BPCE,FR,6,"discovered via stress_test 2025; LEI corrected 2026-10-06 - raw TRA_OTH.csv stores it as the malformed ""FR9695005MSX1OYEMGDF"" (same FR-prepended / check-digits-dropped pattern as Credit Agricole above; confirmed by GLEIF fulltext search for ""BPCE"", legal name BPCE, matching row content ""Groupe BPCE"" in TRA_OTH.csv); see DATA_SOURCES_NOTES.md 2026-10-06 entry"
+529900W3MOO00A18X956,OTP Bank Nyrt.,HU,,"discovered via stress_test 2025; checked 2026-10-08 - ON P3DH as ""OTP-csoport"" (Hungarian ""OTP Group"" - found via raw search after the exact-name match initially (and wrongly) reported it absent, see DATA_SOURCES_NOTES.md), but ESEF (filings.xbrl.org) has nothing past FY2022 for this LEI (no FY2023 or FY2024 filing indexed) - so it has P3DH coverage but not current-year ESEF, the opposite gap pattern from Societe Generale/Credit Agricole/Credit Mutuel."
+M6AD1Y1KW32H8THQ6F76,PIRAEUS FINANCIAL HOLDINGS,GR,,"discovered via stress_test 2025; GLEIF record status INACTIVE as of 2026-10-06 - likely superseded by a newer LEI, not re-verified"
+A5GWLFH3KM7YV2SFQL84,BELFIUS BANQUE,BE,45,discovered via stress_test 2025
+549300C9KPZR0VZ16R05,Morgan Stanley Europe Holding SE,DE,,"discovered via stress_test 2025; GLEIF record status INACTIVE as of 2026-10-06, not re-verified"
+R0MUWSFPU8MPRO8K5P83,BNP PARIBAS,FR,1,discovered via stress_test 2025
+DIZES5CFO5K3I5R58746,Landesbank Hessen-Thueringen Girozentrale,DE,,discovered via stress_test 2025
+529900SSGT49ZZSWYE62,Volkswagen Financial Services AG,DE,,discovered via stress_test 2025
+J4CP7MHCXR8DAQMKIL78,BANCA MONTE DEI PASCHI DI SIENA S.P.A.,IT,39,discovered via stress_test 2025
+851WYGNLUQLFZBSYGB56,COMMERZBANK Aktiengesellschaft,DE,24,discovered via stress_test 2025
+LIU16F6VZJSD6UKHD557,NYKREDIT REALKREDIT A/S,DK,38,discovered via stress_test 2025
+N1FBEDJ5J41VKZLO2475,CITIBANK EUROPE PUBLIC LIMITED COMPANY,IE,,discovered via stress_test 2025
+549300TRUWO2CD2G5692,"UNICREDIT, SOCIETA' PER AZIONI",IT,14,discovered via stress_test 2025
+549300NYKK9MWM7GGW15,ING GROEP N.V.,NL,12,discovered via stress_test 2025
+PQOH26KWDF7CG10L6792,ERSTE GROUP BANK AG,AT,26,discovered via stress_test 2025
+F3JS33DEI6XQ4ZBPTN86,Skandinaviska Enskilda Banken AB,SE,33,discovered via stress_test 2025
+549300GKFG0RYRRQ1414,DNB BANK ASA,NO,35,discovered via stress_test 2025
+JU1U6S0DG9YLT7N8ZV32,BANCO COMERCIAL PORTUGUES S.A.,PT,,discovered via stress_test 2025
+7CUNS533WID6K7DGFI87,CAIXABANK SA,ES,20,discovered via stress_test 2025
+VDYMYTQGZZ6DU0912C88,BAYERISCHE LANDESBANK,DE,37,discovered via stress_test 2025
+K8MS7FD7N5Z2WQ51AZ71,BANCO BILBAO VIZCAYA ARGENTARIA SOCIEDAD ANONIMA,ES,15,discovered via stress_test 2025
+6TJCK1B7E7UTXP528Y04,Citigroup Global Markets Europe AG,DE,,discovered via stress_test 2025
+H0YX5LBGKDVOWCXBZ594,SBAB Bank AB (publ),SE,,discovered via stress_test 2025
+549300C6TUMDXNOVXS82,Lansforsakringar Bank Aktiebolag,SE,,discovered via stress_test 2025
+7437003B5WFBOIEFY714,OP Osuuskunta,FI,48,discovered via stress_test 2025
+549300FH0WJAPEHTIQ77,BOFA SECURITIES EUROPE SA,FR,,discovered via stress_test 2025
+SI5RG2M0WQQLZCXKRM20,BANCO DE SABADELL S.A.,ES,44,discovered via stress_test 2025
+9695000CG7B84NLR5984,CONFEDERATION NATIONALE CREDIT MUTUEL,FR,10,"discovered via stress_test 2025; confirmed 2026-10-07 - this entity is a coordinating trade/confederal body, not itself a supervised credit institution, so it correctly has no Pillar 3 disclosure of its own on P3DH (not a gap - expected). The group's actual regulated entities report separately under their own LEIs, outside this project's stress-test-derived universe: confirmed directly on P3DH, ""Credit industriel et commercial - CIC"" (the group's main listed banking subsidiary) is present with its own data. Also has no ESEF filing at all under this LEI (see the ESEF 2026-10-06 entry) - consistent with the same structural point. See DATA_SOURCES_NOTES.md 2026-10-07 entry."
+BFXS5XCH7N0Y05NIXW11,ABN AMRO Bank N.V.,NL,27,discovered via stress_test 2025
+529900HNOAA1KXQJUQ27,"DZ BANK AG Deutsche Zentral-Genossenschaftsbank, Frankfurt am Main",DE,21,discovered via stress_test 2025
+5493006QMFDDMYWIAM13,BANCO SANTANDER S.A.,ES,4,discovered via stress_test 2025
+5493000LKS7B3UTF7H35,BANK POLSKA KASA OPIEKI - SPOLKA AKCYJNA,PL,,discovered via stress_test 2025
+5493007SJLLCTM6J6M37,UNICAJA BANCO SA,ES,,discovered via stress_test 2025

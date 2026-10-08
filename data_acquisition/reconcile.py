@@ -234,3 +234,47 @@ def get_financial_data(
             elif source == "esef":
                 rows.extend(_esef_rows(bank_lei, concept, item_code, period))
     return pd.DataFrame(rows, columns=_DATAFRAME_COLUMNS)
+
+
+class RwaDensityError(ValueError):
+    """RWA density could not be computed for this bank/period - no reported_actual TREA
+    row, or no total_assets row, available."""
+
+
+def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
+    """RWA density = total_risk_exposure_amount / total_assets, for one bank/period.
+
+    Homework 5 (2026-10-08): promotes the spike's own one-off, by-hand calculation
+    (spike/compare_sources.py) into a real, reusable, tested function - see
+    tests/test_reconcile.py's test_rwa_density_uses_reported_actual_trea for the
+    externally-sourced expected value this is checked against.
+
+    Deliberately uses ONLY the TREA row tagged `provenance == "reported_actual"`, never
+    `restated_actual` - see spike/comparison.md's "RWA density: which numerator?" section
+    for the full reasoning. Restated TREA is a CRR3 pro-forma recast for the stress
+    test's own forward-looking 3-year horizon; `total_assets` (from ESEF) was never
+    recast for CRR3. Pairing a post-2025-rules numerator with a pre-2025-rules
+    denominator would silently mix two different capital regimes into one ratio - this
+    function refuses to do that by construction, not just by convention (using restated
+    TREA for Erste FY2024 gives ~42.5%, a plausible-looking but methodologically
+    mismatched number per the spike).
+
+    Raises RwaDensityError if either figure isn't available for this bank/period (no
+    ESEF filing cached, or no reported_actual TREA row) - never silently computes a
+    density from whichever TREA row happened to be present.
+    """
+    df = get_financial_data(
+        bank_lei, ["total_risk_exposure_amount", "total_assets"], period=period,
+    )
+    trea = df[
+        (df["standardized_concept"] == "total_risk_exposure_amount")
+        & (df["provenance"] == "reported_actual")
+    ]
+    assets = df[df["standardized_concept"] == "total_assets"]
+    if trea.empty or trea.iloc[0]["status"] != "ok":
+        raise RwaDensityError(
+            f"{bank_lei}/{period}: no reported_actual total_risk_exposure_amount available"
+        )
+    if assets.empty or assets.iloc[0]["status"] != "ok":
+        raise RwaDensityError(f"{bank_lei}/{period}: no total_assets available")
+    return float(trea.iloc[0]["value"]) / float(assets.iloc[0]["value"])

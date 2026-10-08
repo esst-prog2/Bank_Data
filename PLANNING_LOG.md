@@ -186,3 +186,277 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   one, justified by the spike's finding that the real gap (0.17%) is a
   structural scope-of-consolidation effect, not an arbitrary margin. Decided
   by agent per the spike issue's own critique of that assertion.
+- 2026-10-05: Review feedback on the spike caught an unsupported claim:
+  Cause 1 in `spike/comparison.md` (the 2026-09-30 entry above) said the net
+  interest income (+0.17%) and profit (-0.80%) deltas were "the
+  income-statement-side consequence" of the same prudential-vs-IFRS
+  consolidation-scope gap documented on the balance sheet (27.9m EUR, 0.008%
+  of total assets, Pillar 3 report Table 4, p.25). That inference was never
+  checked. Checking it now: 0.008% cannot by itself explain gaps 21x
+  (NII) and 101x (profit) that size - the reviewer's own "hundred times
+  larger" figure for profit is exact. I looked for the one piece of evidence
+  that would actually settle it - an income-statement-side scope
+  reconciliation, the P&L equivalent of the Pillar 3 report's balance-sheet
+  LI1/LI2 tables (Tables 4-6, pp.25-27) - and it does not exist: the EU's own
+  Pillar 3 disclosure templates ((EU) 2021/637) only define LI-type tables
+  for the balance sheet, and Erste publishes nothing further. I also checked
+  the stress test's own `Data_Dictionary.xlsx` for item codes 2531001/2531004
+  (net interest income / profit or loss for the year): it gives only a label
+  and template name ("TRA_SUM"), not a definition detailed enough to say
+  whether the gap is scope-driven or definitional. Of the four causes claimed
+  in the 2026-09-30 answer, only one (CET1/TREA, restated vs. actual - Cause
+  2: Pillar 3 Table 7 p.29 matches "actual" almost exactly and diverges from
+  "restated" by exactly the amount the EBA's own methodological note
+  predicts) is genuinely settled by evidence I checked myself. The other
+  (net interest income / profit, Cause 1) is downgraded from a claimed cause
+  to a named, unverified hypothesis - `spike/comparison.md` and the test
+  comment in `tests/test_reconcile.py` are both corrected to say so, and the
+  2% test tolerance is now justified by the measured gap itself, not by a
+  causal story. Decided and verified by agent, per the reviewer's challenge.
+  Pushed to `hw4-spike` (commit `1772d02`); not yet merged into `main`, which
+  still has the uncorrected version from PR #5 - flagged to user, not acted
+  on without a decision since `main`'s history is otherwise untouched here.
+- 2026-10-06: Started on task 1.2's "trim to pilot banks" step (AGENTS.md
+  immediate next steps / tasks.md 1.2), using S&P Global's "Europe's 50
+  largest banks by assets" (2026 edition, full table supplied by the user
+  since the source URL is paywalled - 403 on direct fetch) as the trimming
+  criterion. Excluded 13 of the 50 as structurally out of EBA's remit (UK x6,
+  Switzerland x3, Russia x3, Turkiye x1 - none are EU/EEA, so none can appear
+  in the Stress Test, Transparency Exercise, or P3DH regardless of size).
+  Cross-checked the remaining 37 EU/EEA banks against the existing 64-LEI
+  Stress Test 2025 participant list in `data/entities.csv` via GLEIF
+  (`data_acquisition/gleif_client`) - all 37 resolve to an entity already
+  in that list, after fixing a real data bug (next entry). This means the
+  existing 64-bank EBA Stress Test 2025 sample is already a superset of
+  S&P's top-50 EU/EEA banks; no new entity discovery was needed, only
+  annotation. Added `sp50_2026_rank` to `Entity` (`entities.py`) and to every
+  row of `entities.csv` (blank where a bank isn't in the S&P top 50) and
+  filled in the previously-blank `name` column for all 64 rows via GLEIF.
+  Re-ran `python -m data_acquisition.entities` (all 64 validate against
+  GLEIF) and the full test suite (8 passed) after the change. Decided and
+  carried out by agent, S&P list supplied by user.
+- 2026-10-06: Found and fixed a real data-quality bug in EBA's own published
+  Stress Test 2025 bulk file (`data/raw/stress_test/2025/TRA_OTH.csv`), not
+  in this project's own code: exactly 2 of 64 participant LEIs are corrupted
+  in EBA's source data itself - "Groupe BPCE" and "Groupe Credit Agricole"
+  are stored as `FR9695005MSX1OYEMGDF` and `FR969500TJ5KRTCJQWXH`
+  respectively, each 20 characters but actually the country code "FR"
+  prepended to the first 18 characters of the real LEI, with its real last-2
+  check-digit characters silently dropped. Both of EBA's listed values 404
+  against GLEIF; both real LEIs were found by GLEIF fulltext search
+  (`9695005MSX1OYEMGDF46` -> "BPCE", `969500TJ5KRTCJQWXH05` -> "CREDIT
+  AGRICOLE SA") and confirmed by matching the EBA row's own entity-name
+  column ("Groupe BPCE" / "Groupe Credit Agricole"). Checked the rest of the
+  64-LEI universe for the same pattern (LEI starting with its own row's
+  country code) - no other instances found. Corrected both rows in
+  `entities.csv` directly rather than patching around it in code, with the
+  investigation trail in each row's `notes` column. Found and fixed by
+  agent; not yet reported to EBA.
+- 2026-10-06: Verified `data_acquisition/edap_scraper.py` against the live
+  P3DH page for real (task 1.1) - network access to edap-public.eba.europa.eu
+  and app.powerbi.com, blocked from this kind of session on 2026-09-19, is
+  available now, so this was done directly rather than requiring the user to
+  run it locally. Both of design.md's long-open questions are answered:
+  Entity is selected by display/legal name, not LEI (LEI search returns zero
+  results); Module and Template are genuinely different, cross-filtered
+  lists, and Module turned out not to need to be set at all once Template is
+  (confirmed by an identical live export either way) - `DataPointQuery` lost
+  its `module` field as a result. Rewrote the scraper's selectors from
+  guesses to values read directly off the live DOM (internal aria-labels
+  differ from visible labels for 2 of 4 fields; search needs real keystrokes
+  via `.type()`, `.fill()` doesn't trigger Power BI's own filtering; Escape
+  doesn't close a popup, re-clicking the trigger does; the real export
+  control is the table visual's own `.vcMenuBtn` menu, not the page-level
+  `#exportFileButton` the original skeleton guessed). Verified the whole
+  pipeline twice, independently, via the actual shipped CLI: Erste Group
+  Bank AG / EU KM1 template / 31-12-2025 -> a real, structured 198-row
+  .xlsx, sanity-checked against the spike's own Dec-2024 CET1 figure (a
+  plausible ~19% YoY increase, not a red flag). Also found P3DH's own
+  available reference dates only go back to 30/06/2025 - it cannot
+  reproduce the spike's FY2024 comparison; it's a later-period third source,
+  not a cross-check for it. Wired `edap_downloader.fetch_module()` to call
+  the verified scraper for real (resolving LEI -> display name via
+  entities.csv), replacing its unconditional `BulkAccessNotConfirmed` raise.
+  Full investigation trail in DATA_SOURCES_NOTES.md's matching entry.
+  Decided and verified by agent.
+- 2026-10-06: Trimmed the tracked bank universe using S&P Global's "Europe's
+  50 largest banks by assets" (2026 edition) as an external criterion, per
+  task 1.2's "trim to pilot banks" step - full table supplied by the user
+  (the source URL 403s on direct fetch). 13 of 50 excluded as outside EBA's
+  remit entirely (UK, Switzerland, Russia, Turkiye - 6/3/3/1). The remaining
+  37 EU/EEA banks all matched an entity already in the existing 64-bank
+  Stress Test 2025 list in `entities.csv` (via GLEIF name resolution), after
+  fixing the 2-LEI bug above - no new entity discovery was needed. Added
+  `sp50_2026_rank` to `entities.csv`/`Entity` and filled in the previously-
+  blank `name` column for all 64 rows. Kept all 64 rows rather than deleting
+  the 27 not in the S&P list, so the discovered universe isn't lost. Decided
+  and carried out by agent, S&P list supplied by user.
+- 2026-10-06: Noticed `data/entities.csv` and `data/modules.txt` are both
+  listed in `.gitignore` (from the 2026-09-22 entry's "not-committed-empty"
+  convention, written when both files were in fact empty) - so neither
+  today's entities.csv work (S&P cross-check, LEI bug fix, name resolution)
+  nor the new `data/modules.txt` are actually tracked by git; they exist
+  only on this machine. Flagged to user, not changed unilaterally - .gitignore
+  edits and what to commit are the user's call, especially for a graded
+  submission repo.
+- 2026-10-06: User decided to un-ignore and commit both files - they now hold
+  real, substantial project state (64 cross-referenced banks, the S&P-50
+  trim, the EBA LEI bug fix, one verified P3DH template) rather than the
+  empty placeholders the original `.gitignore` entry assumed. Removed both
+  lines from `.gitignore`. Decided by user.
+- 2026-10-06: Populated ESEF data for 28 more of the 37 S&P-ranked pilot
+  banks (Erste was already cached) - checked `filings.xbrl.org` directly for
+  all 37 first rather than assuming FY2024 exists for each. 29/37 have a
+  2024-12-31 filing; 6 have no filing indexed at all (5 of them German -
+  Deutsche Bank, Commerzbank, DZ Bank, LBBW, Bayerische Landesbank - plus
+  Credit Mutuel, a cooperative confederation like BPCE/Credit Agricole,
+  structurally likely filed under a different LEI); 2 (Societe Generale,
+  Intesa Sanpaolo) are indexed but missing specifically the 2024 filing.
+  Fetched and cached the other 28 (706MB total). Checked concept coverage
+  per bank rather than assuming uniformity: net interest income is
+  genuinely unreported as a single tagged fact for 7 banks (confirmed via
+  BNP Paribas's actual XBRL tags - it reports gross interest income/expense
+  separately, never netted) and total equity is genuinely untagged for all
+  4 Italian pilot banks (checked UniCredit's full concept namespace
+  directly, no alternate tag found). Deliberately did NOT add a derived
+  "revenue minus expense" mapping for the NII gap - that would be exactly
+  the cross-concept combination README.md's non-goals rule out; left as
+  honest `missing_from_source`. No code changes to `reconcile.py` or
+  `CONCEPT_MAP` were needed - confirmed end to end for 3 of the newly
+  cached banks via `get_financial_data()`, since the concept map was
+  already bank-agnostic. All 8 existing tests still pass. Decided and
+  carried out by agent, per the user's request to populate ESEF data.
+- 2026-10-06: Ran `run_update.py` for real for the first time (not just
+  `edap_scraper`/`edap_downloader` in isolation) - found and fixed a real
+  bug along the way: `waves.py`'s own docstring already claimed P3DH has no
+  data before 2025-06-30, but the code never enforced that floor, so it
+  still generated an unfetchable 2025-03-31 wave. Added
+  `EARLIEST_P3DH_REFERENCE_DATE` and filtered on it directly. Also scoped
+  `run_update.py` to the 37-bank `sp50_2026_rank` pilot sample by default
+  (it was iterating all 64 discovered entities), with `--all-entities` and
+  `--limit N` added as real CLI options. Added a second verified P3DH
+  template to `data/modules.txt` (EU LI1, directly relevant to the spike's
+  open Cause 1 question, though confirmed balance-sheet-only by regulation
+  like the Pillar 3 PDF version already checked).
+  First real test pass (2 banks x 2 templates x 8 waves): both failure
+  categories found (16/16 for Societe Generale, 4 for Deutsche Bank's LI1
+  at quarterly-only dates) were genuine and diagnosable, not scraper
+  breakage - confirmed Societe Generale's parent entity isn't in P3DH's
+  Entity list at all (only a Cyprus subsidiary is - its third independent
+  data gap today, after the stress-test LEI note and missing FY2024 ESEF
+  filing), and LI1 only has data at semi-annual/annual reference dates, not
+  quarterly ones (consistent with CRR Article 433's disclosure-frequency
+  rules). Also found and fixed a real inefficiency: wave types sharing a
+  reference date (a Dec 31 date is 4 different wave types at once) caused
+  up to 4x redundant live re-fetches of identical P3DH data - cached this
+  run's own per-(entity, date, module) results to fix it. Full trail in
+  DATA_SOURCES_NOTES.md. Decided and carried out by agent.
+- 2026-10-06/07: Asked to run P3DH acquisition for the full 37-bank pilot sample. The
+  first full pass (97/592 successes) immediately looked wrong - Erste Group Bank AG
+  itself showed 0/16 despite being manually verified present hours earlier - and traced
+  to entity-name matching, not real unavailability. Found and fixed two real bugs:
+  (1) GLEIF's resolved legal names are often ALL CAPS while P3DH displays normal case -
+  exact-case matching was silently wrong; (2) GLEIF's name frequently doesn't literally
+  match P3DH's text at all (punctuation, legal-form-language variants like
+  "Groep"/"Groupe", trailing qualifiers, or a too-generic single search word burying the
+  real result). Rewrote `edap_scraper`'s entity matching with normalization, a
+  multi-candidate search cascade, and a guarded word-level fallback - the guard matters:
+  an earlier, unguarded version of the fallback produced a real false positive (matched
+  Societe Generale's unrelated Cyprus subsidiary), caught by testing each fix
+  individually rather than trusting an improved aggregate number. Verified entity-match
+  coverage went from 15/37 to 34/37 this way; the remaining 3 (Societe Generale, Credit
+  Agricole SA, Credit Mutuel) are confirmed, checked, genuine gaps. Decided and verified
+  by agent.
+- 2026-10-07: The full re-run (with the fixed matching) died overnight with no error -
+  the machine almost certainly slept or restarted. Found a real resilience bug this
+  exposed: `run_update.py` only saved its state file once, at the very end, so ~20
+  entities' worth of already-downloaded real data wasn't recorded anywhere and a naive
+  restart would have redone it. Fixed to save after every entity. Reconstructed the lost
+  state directly from the deterministic output filenames already on disk (249/592
+  combinations recovered with zero re-fetching) and resumed only the remaining 343.
+  Final result: 364/592 (61.5%) succeeded across the full pilot sample; 34 of 37 banks
+  have real P3DH data, with every remaining gap (the 3 absent banks, EU LI1's
+  semi-annual/annual-only frequency, per-bank submission-timing gaps like Swedbank only
+  having one published KM1 period so far) individually checked and explained, not left
+  as unexplained failures. 1.1GB of real P3DH data now cached. Decided and carried out
+  by agent, per the user's request to work on all pilot banks.
+- 2026-10-07: Investigated why Societe Generale, Credit Agricole SA, and Confederation
+  Nationale Credit Mutuel are genuinely absent from P3DH (per the follow-up flagged in
+  AGENTS.md). All 3 LEIs confirmed ACTIVE/ISSUED on GLEIF - not expired or malformed.
+  Societe Generale: checked under its own name, "SG", and former subsidiary brands
+  (Boursorama, Credit du Nord) - all zero, also missing specifically its FY2024 ESEF
+  filing - looks like a genuine P3DH onboarding gap for this one bank, not a naming
+  problem. Confederation Nationale Credit Mutuel: not a gap at all - it's a coordinating
+  trade body, not a supervised credit institution, so it correctly has no Pillar 3
+  disclosure; confirmed the group's real subsidiary ("Credit industriel et commercial -
+  CIC") has P3DH data under its own separate LEI this project never captured. Credit
+  Agricole SA: same pattern - P3DH tracks this group at the regional-cooperative-bank
+  level (9+ "Caisse regionale de credit agricole mutuel [region]" entities found), not
+  centrally; the tracked LEI is still correct (has real FY2024 ESEF filings under this
+  exact name) but isn't the Pillar-3-reporting entity. Updated entities.csv's notes for
+  all 3 rows with these findings. None require further scraper fixes - closing this out
+  as "investigated and explained," with discovering the regional entities' own LEIs
+  left as an explicit, un-acted-on scope question. Decided and carried out by agent.
+- 2026-10-08: Checked dual ESEF+P3DH coverage for the 27 banks outside the S&P-50 pilot
+  sample, per user request. 9/27 have FY2024 ESEF; 8 of those 9 are also on P3DH (HSBC
+  Continental Europe, Jyske Bank, Alpha Services and Holdings, National Bank of Greece,
+  Bankinter, Piraeus Financial Holdings, Banco Comercial Portugues, Unicaja Banco) -
+  8/27 (29.6%) have full dual-source coverage available with no further acquisition
+  work, meaning the S&P-50 trim leaves real, usable coverage on the table. Not yet
+  added to the pilot sample - flagged to user as an option, not acted on.
+  Follow-up on OTP Bank Nyrt. specifically found and fixed a real remaining bug: it IS
+  on P3DH (as "OTP-csoport", Hungarian for "OTP Group") but the word-match fallback
+  didn't recognize "csoport"/"nyrt" as generic legal-form words, so a real match was
+  being wrongly rejected. Fixed by adding both to the generics list - tried adding two
+  more (Croatian "banka"/"dd") at the same time but that created a genuine new
+  ambiguity with an unrelated entity, so removed those two and kept only what was
+  actually needed. OTP's ESEF trail stops at FY2022 though (no FY2023/FY2024 filing),
+  so it has P3DH but not current ESEF - the reverse of the other 3 banks' gap pattern.
+  Decided and carried out by agent.
+- 2026-10-08: Homework 5 ("your program, used once for real"), finished sentence for
+  "A test would go red if ...", decided by user: "A test would go red if the RWA
+  density calculation ever used restated TREA instead of reported_actual TREA as the
+  numerator." This is the spike's own "RWA density: which numerator?" finding
+  (spike/comparison.md) that has never been backed by an automated test -
+  spike/compare_sources.py computes it once, by hand, as a throwaway print statement,
+  not as a reusable, tested function in reconcile.py. Decided by user.
+- 2026-10-08: Homework 5's expected value, decided by user, fixed BEFORE writing the
+  test or running any code: RWA density for Erste Group Bank AG FY2024 = 44.5%
+  (precisely 157,240.73 / 353,736.00 = 0.444514...). Source: spike/comparison.md's
+  "RWA density: which numerator?" section, itself hand-computed from two externally
+  published figures - TREA actual EUR 157,240.73m (Erste's own Pillar 3 Disclosure
+  Report 2024, p.29, Table 7 "Key metrics template", reported_actual/CRR2 column) and
+  total assets EUR 353,736.00m (Erste's FY2024 ESEF filing, ifrs-full:Assets). Not
+  derived by running reconcile.py - the spike's own number, decided before any new
+  test code exists. Decided by user.
+- 2026-10-08: Homework 5, step 5 (show it red, then green). Implemented
+  reconcile.compute_rwa_density() for real (promoted spike/compare_sources.py's
+  one-off hand calculation into a reusable, tested function), with
+  tests/test_reconcile.py::test_rwa_density_uses_reported_actual_trea asserting it
+  equals the externally-sourced 44.5% value logged above.
+  RED run: changed data_acquisition/reconcile.py's `trea = df[...]` filter from
+  `df["provenance"] == "reported_actual"` to `df["provenance"] == "restated_actual"`
+  (the one line the finished sentence names) and ran
+  `pytest tests/test_reconcile.py::test_rwa_density_uses_reported_actual_trea -v`.
+  Result: FAILED - "Obtained: 0.4247551077671908, Expected: 0.4445 +/- 5.0e-04" -
+  0.4248 is restated TREA's density, matching spike/comparison.md's own "~42.5%"
+  prediction for what using the wrong numerator would give almost exactly.
+  GREEN run: reverted the line back to `df["provenance"] == "reported_actual"` and
+  re-ran the same command. Result: PASSED in 1.87s. Full suite (9 tests) also passed
+  both before the break and after the revert. Decided and carried out by agent.
+- 2026-10-08: Homework 5, step 6 (use the program once for real), expectation written
+  BEFORE running: compute_rwa_density() for BNP Paribas (LEI R0MUWSFPU8MPRO8K5P83,
+  FY2024, period "202412") - never individually computed before. Prediction: LOWER
+  than Erste's 44.5%, likely in the 20-35% range - BNP Paribas is a much larger,
+  more trading/market-making-heavy universal bank (large repo and derivatives books),
+  which tends to inflate total assets relative to risk-weighted exposure more than a
+  retail/CEE-focused bank like Erste, pulling density down. This is a genuine guess,
+  not informed by running the code. Decided and carried out by agent.
+- 2026-10-08: Homework 5, step 6 result: compute_rwa_density() for BNP Paribas
+  returned 0.281801 (28.18%) - within the predicted 20-35% range, lower than Erste's
+  44.5% as expected. Did not differ from the prediction enough to flag as a bug or a
+  new test case - the directional reasoning (larger, more trading-heavy balance sheet
+  pulls density down) held. Worth noting as a real, usable output rather than a
+  one-off: this is the project's first RWA density figure for a bank other than
+  Erste, now backed by a real function instead of a throwaway script calculation.
+  Decided and carried out by agent.

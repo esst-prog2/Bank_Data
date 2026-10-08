@@ -2,9 +2,26 @@
 
 ## 1. Data sources (prerequisite — see AGENTS.md "Immediate next steps")
 
-- [ ] 1.1 Verify `data_acquisition/edap_scraper.py` against the live P3DH page
+- [x] 1.1 Verify `data_acquisition/edap_scraper.py` against the live P3DH page
       (`--headed`, `playwright codegen` pass); resolve the Entity-slicer (LEI vs.
       display name) and Module/Template list open questions
+      — 2026-10-06: verified headlessly (network access to edap-public.eba.europa.eu
+      and app.powerbi.com turned out to be available from this session, unlike the
+      2026-09-19 attempt). Entity slicer takes a display/legal name, not an LEI
+      (LEI search returns 0 results). Module and Template are genuinely different
+      lists, cross-filtered by Power BI - Module doesn't need to be set at all once
+      Template is. Real selectors captured from the live DOM (aria-labels differ
+      from visible header text for 2 of 4 fields; search requires real keystrokes
+      via `.type()`, not `.fill()`; Escape doesn't close a popup, re-clicking the
+      trigger does; the real export control is the table visual's own `.vcMenuBtn`
+      context menu, not the page-level `#exportFileButton`). Full end-to-end run
+      confirmed twice independently: Erste Group Bank AG, EU KM1 template,
+      31/12/2025 -> a real, structured 198-row .xlsx. Also found P3DH's available
+      reference dates only go back to 30/06/2025 - it cannot reproduce the spike's
+      FY2024 comparison. `edap_downloader.fetch_module()` now calls the verified
+      scraper for real instead of raising `BulkAccessNotConfirmed` unconditionally.
+      See `edap_scraper.py`'s docstring and DATA_SOURCES_NOTES.md's 2026-10-06
+      entry for the full trail.
 - [x] 1.2 Populate `data/entities.csv` from a real EBA Transparency Exercise
       participant list, trimmed to the pilot banks v1 will support. Once 1.1
       is verified, cross-check this list against the P3DH Entity slicer's own
@@ -18,8 +35,31 @@
       (`discover_participants("transparency", 2025)` returns 0 — a real gap,
       not yet fixed; see DATA_SOURCES_NOTES.md). Cross-check against P3DH's
       own Entity slicer is still pending 1.1.
-- [ ] 1.3 Create `data/modules.txt` with the exact disclosure module/template
+      — 2026-10-06: trimmed using S&P's top-50 European banks by assets (2026)
+      as the external criterion: 13 of 50 excluded as outside EBA's remit
+      (UK/Switzerland/Russia/Turkiye), the remaining 37 EU/EEA banks all
+      matched an entity already in the 64-bank list (names resolved via
+      GLEIF, 2 corrupted LEIs in EBA's own source data fixed — see
+      DATA_SOURCES_NOTES.md). `entities.csv` now has `sp50_2026_rank` marking
+      which 37 of the 64 are in that external top-50 sample, kept alongside
+      the other 27 rather than deleted, so a pilot run can filter to the
+      smaller set without losing the discovered universe.
+- [x] 1.3 Create `data/modules.txt` with the exact disclosure module/template
       codes the pilot banks submit
+      — 2026-10-07: full 37-bank pilot sample run completed (592 combinations:
+      37 banks x 2 templates x up to 8 waves) - 364 successes (61.5%), 1.1GB
+      of real P3DH data cached. 34 of 37 banks have at least some real data.
+      Getting here required fixing real entity-matching bugs in
+      `edap_scraper.py` (GLEIF legal names vs. P3DH's own display text differ
+      in case, punctuation, and legal-form language variants - see
+      DATA_SOURCES_NOTES.md's 2026-10-06/07 entries), not just running the
+      script - entity-match coverage went from 15/37 to 34/37 as a result.
+      Only 2 templates are covered (EU KM1, EU LI1) - still not the full
+      ~100+ P3DH lists, but both are now genuinely exercised across the whole
+      pilot sample rather than one bank. Remaining gaps (3 banks entirely
+      absent/misidentified; EU LI1's confirmed semi-annual/annual-only
+      frequency; per-bank submission-timing differences) are each checked
+      and explained, not unexplained failures - see DATA_SOURCES_NOTES.md.
 - [ ] 1.4 In `run_update.py`'s state tracking, distinguish a wave that hasn't
       published yet (`not_yet_published`) from a genuine retrieval failure —
       currently both fall into the same generic `except Exception` branch and
@@ -27,6 +67,12 @@
       is an expectation, not a guarantee (DATA_SOURCES_NOTES.md, 2026-09-22),
       so late-but-expected waves will be routine and shouldn't be conflated
       with an actually broken scraper
+      — 2026-10-06: now has concrete real-world motivation beyond the EBA
+      calendar case - the first live run found two more genuinely-distinct
+      "failed" causes (an entity simply absent from P3DH's own list; a
+      template not disclosed at a given reference date's frequency) that are
+      currently indistinguishable from a real scraper break in
+      `download_log.json` without reading the full error string by hand.
 - [ ] 1.5 Confirm none of the v1 pilot banks report on a non-December fiscal
       year-end. `waves.py`'s `_reference_dates_since()` only generates
       YEAR_END/YEAR_END_REMUNERATION waves for December reference dates, but

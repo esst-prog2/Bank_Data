@@ -8,17 +8,20 @@ What it does each run:
     5. record success/failure for each attempt, so next run only retries failures/new waves
 
 This is intentionally idempotent and safe to run as often as you like (e.g. daily) - it will
-mostly no-op between real EBA publication waves. Nothing here downloads anything until
-edap_downloader.fetch_module() is actually implemented (see that module's docstring); until
-then this script will run, find "new" work every time, fail loudly on each item, and log the
-failures - which is the intended behaviour, not a bug, so the gap is visible rather than
-silently masked.
+mostly no-op between real EBA publication waves. `edap_downloader.fetch_module()` is real as
+of 2026-10-06 (Playwright-driven, verified against the live P3DH page - see that module's
+and `edap_scraper.py`'s docstrings), so a run now genuinely attempts each entity/wave/item
+combination rather than failing all of them by design.
 
-Modules to request per entity/period are not hardcoded here on purpose - the EBA guide lists
-~10 disclosure modules (CODIS, FINDIS, ESGDIS among them) but we could not confirm the full,
-authoritative list of module codes from public sources; pull the exact list your entities
-actually submit from the Data Points Report's own "Module" filter and put it in
-data/modules.txt (one code per line) before running this for real.
+**`data/modules.txt`'s format changed 2026-10-06**: despite the name (kept for now - see
+`edap_downloader.py`'s docstring for why), each line is P3DH's exact **Template** option
+text (e.g. "K_61.00 - EU KM1 - Key metrics template"), not a short module code like "CODIS"
+or "FINDIS" - the live investigation found P3DH's own Module filter is fully cross-filtered
+from Template and doesn't need to be set independently, so tracking short module codes here
+was never going to be enough to identify one specific table anyway. Get the exact template
+strings from the Data Points Report's own "Template" filter (verified working via
+`edap_scraper.py` - search box included) - a dropdown with ~100+ entries covering every
+EU-template code, not just the ones used in `reconcile.py` so far.
 """
 
 from __future__ import annotations
@@ -55,15 +58,27 @@ def _save_state(state: dict) -> None:
 def _load_modules() -> list[str]:
     if not _MODULES_FILE.exists():
         raise FileNotFoundError(
-            f"{_MODULES_FILE} not found - create it with one disclosure-module code per "
-            "line (check the 'Module' filter on the Data Points Report page for the exact "
-            "codes your tracked entities actually submit)."
+            f"{_MODULES_FILE} not found - create it with one exact P3DH Template option "
+            "per line (e.g. \"K_61.00 - EU KM1 - Key metrics template\"), not a short "
+            "module code - see this script's module docstring for why. Check the Data "
+            "Points Report's own 'Template' filter for the exact text."
         )
     return [line.strip() for line in _MODULES_FILE.read_text().splitlines() if line.strip()]
 
 
-def main() -> None:
+def main(pilot_only: bool = True, limit: int | None = None) -> None:
+    """`pilot_only=True` (the default) restricts the run to entities with a non-empty
+    `sp50_2026_rank` in entities.csv - the 37-bank sample task 1.2 actually trimmed to,
+    not the full 64-bank discovery universe `eba_exercises.py` happened to surface. Each
+    attempt drives a real headless browser against the live P3DH page (~15-30s each,
+    longer on failure), so a full pass (pilot_only entities x all waves x all templates)
+    is real wall-clock time, not an instant bulk download - `limit` caps how many
+    entities are attempted, for a bounded test pass rather than the whole pilot sample."""
     entities = load_entities()
+    if pilot_only:
+        entities = [e for e in entities if e.sp50_2026_rank]
+    if limit is not None:
+        entities = entities[:limit]
     modules = _load_modules()
     pending_waves = waves.expected_waves()
     state = _load_state()
@@ -73,12 +88,32 @@ def main() -> None:
               len(entities) * len(modules) * len(pending_waves))
 
     new_successes = new_failures = skipped = 0
+    # Several waves can share the same reference_date (e.g. 31 Dec is simultaneously
+    # quarterly/semi_annual/year_end/year_end_remuneration), and P3DH's own export doesn't
+    # vary by OUR wave-type label - only by entity/template/reference_date. Without this,
+    # a live run repeats the exact same browser-driven fetch once per wave type sharing a
+    # date (confirmed: 4x redundant fetches for one date in an initial test run) - cache
+    # this run's own results per (lei, reference_date, module) and reuse them across waves
+    # that share a date, instead of re-fetching.
+    # Save after every entity, not just once at the end - confirmed necessary 2026-10-06:
+    # a ~3-hour real run was killed mid-pass (the machine slept/restarted overnight) and
+    # lost every bit of its state because nothing had been written to disk yet, even
+    # though ~20 entities' worth of real files had already been downloaded successfully.
+    this_run_by_date: dict[tuple[str, str, str], dict] = {}
     for entity in entities:
         for wave in pending_waves:
             for module in modules:
                 key = f"{entity.lei}|{wave.wave_id}|{module}"
                 if state.get(key, {}).get("status") == "success":
                     skipped += 1
+                    continue
+                date_key = (entity.lei, wave.reference_date.isoformat(), module)
+                if date_key in this_run_by_date:
+                    state[key] = this_run_by_date[date_key]
+                    if state[key]["status"] == "success":
+                        new_successes += 1
+                    else:
+                        new_failures += 1
                     continue
                 try:
                     result = fetch_module(entity.lei, wave.reference_date, module, _RAW_DIR)
@@ -96,11 +131,20 @@ def main() -> None:
                         "checked_at": datetime.now(timezone.utc).isoformat(),
                     }
                     new_failures += 1
+                this_run_by_date[date_key] = state[key]
+        _save_state(state)  # persist after each entity - see comment above the loop
 
-    _save_state(state)
     log.info("done: %d new successes, %d new failures, %d already-had skipped",
               new_successes, new_failures, skipped)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--all-entities", action="store_true",
+                         help="check every discovered LEI in entities.csv, not just the sp50_2026_rank pilot sample")
+    parser.add_argument("--limit", type=int, default=None,
+                         help="only attempt the first N entities - for a bounded test pass")
+    args = parser.parse_args()
+    main(pilot_only=not args.all_entities, limit=args.limit)

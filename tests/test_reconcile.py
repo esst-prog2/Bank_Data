@@ -139,3 +139,20 @@ def test_esef_only_concept_has_no_stress_test_row(_esef_available):
     assert row["source"] == "esef"
     assert row["status"] == "ok"
     assert row["value"] > 0
+
+
+def test_rwa_density_uses_reported_actual_trea(_source_available, _esef_available):
+    """Homework 5, 2026-10-08. Finished sentence (PLANNING_LOG.md, decided by user): "A
+    test would go red if the RWA density calculation ever used restated TREA instead of
+    reported_actual TREA as the numerator."
+
+    Expected value, fixed in PLANNING_LOG.md BEFORE this test was written, not derived
+    by running this code: RWA density for Erste Group Bank AG FY2024 = 44.5% (precisely
+    157,240.73 / 353,736.00 = 0.444514...), from spike/comparison.md's own hand
+    calculation - TREA actual EUR 157,240.73m is Erste's own Pillar 3 Disclosure Report
+    2024, p.29, Table 7; total assets EUR 353,736.00m is Erste's FY2024 ESEF filing
+    (ifrs-full:Assets). Using restated TREA instead (150,251.17) would give ~42.5% - the
+    spike's own example of a "plausible-looking but methodologically mismatched number".
+    """
+    density = reconcile.compute_rwa_density(_BANK_LEI, period="202412")
+    assert density == pytest.approx(0.4445, abs=0.0005)

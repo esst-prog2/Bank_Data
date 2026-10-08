@@ -29,6 +29,7 @@ class Entity:
     lei: str
     name: str
     country: str
+    sp50_2026_rank: str = ""
     notes: str = ""
 
 

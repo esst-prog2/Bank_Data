@@ -72,14 +72,25 @@ def _reference_dates_since(start_year: int, today: date) -> list[tuple[date, Ref
         year += 1
 
 
+#  Confirmed live 2026-10-06 (see DATA_SOURCES_NOTES.md's matching entry): P3DH's own
+#  Reference Date slicer has nothing earlier than 30/06/2025. The docstring below already
+#  claimed this floor before it was actually verified; `_reference_dates_since` did not
+#  enforce it - `start_year=2025` alone still generated a 2025-03-31 wave, which no query
+#  against P3DH can ever match. Fixed to floor on the confirmed date, not just the year.
+EARLIEST_P3DH_REFERENCE_DATE = date(2025, 6, 30)
+
+
 def expected_waves(today: date | None = None, start_year: int = 2025) -> list[Wave]:
     """Every wave whose submission deadline has already passed as of `today` - i.e. every
     wave that COULD already be published. P3DH itself only has data from the 2025-06
-    reference date onward (it launched Jan 2026), so start_year defaults to 2025.
+    reference date onward (it launched Jan 2026), so start_year defaults to 2025 and any
+    reference date before EARLIEST_P3DH_REFERENCE_DATE is dropped regardless.
     """
     today = today or date.today()
     waves = []
     for ref_date, ref_type in _reference_dates_since(start_year, today):
+        if ref_date < EARLIEST_P3DH_REFERENCE_DATE:
+            continue
         deadline = ref_date + relativedelta(months=_DEADLINE_MONTHS[ref_type])
         if deadline <= today:
             waves.append(Wave(ref_date, ref_type, deadline))
