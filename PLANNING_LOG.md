@@ -413,3 +413,50 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   actually needed. OTP's ESEF trail stops at FY2022 though (no FY2023/FY2024 filing),
   so it has P3DH but not current ESEF - the reverse of the other 3 banks' gap pattern.
   Decided and carried out by agent.
+- 2026-10-08: Homework 5 ("your program, used once for real"), finished sentence for
+  "A test would go red if ...", decided by user: "A test would go red if the RWA
+  density calculation ever used restated TREA instead of reported_actual TREA as the
+  numerator." This is the spike's own "RWA density: which numerator?" finding
+  (spike/comparison.md) that has never been backed by an automated test -
+  spike/compare_sources.py computes it once, by hand, as a throwaway print statement,
+  not as a reusable, tested function in reconcile.py. Decided by user.
+- 2026-10-08: Homework 5's expected value, decided by user, fixed BEFORE writing the
+  test or running any code: RWA density for Erste Group Bank AG FY2024 = 44.5%
+  (precisely 157,240.73 / 353,736.00 = 0.444514...). Source: spike/comparison.md's
+  "RWA density: which numerator?" section, itself hand-computed from two externally
+  published figures - TREA actual EUR 157,240.73m (Erste's own Pillar 3 Disclosure
+  Report 2024, p.29, Table 7 "Key metrics template", reported_actual/CRR2 column) and
+  total assets EUR 353,736.00m (Erste's FY2024 ESEF filing, ifrs-full:Assets). Not
+  derived by running reconcile.py - the spike's own number, decided before any new
+  test code exists. Decided by user.
+- 2026-10-08: Homework 5, step 5 (show it red, then green). Implemented
+  reconcile.compute_rwa_density() for real (promoted spike/compare_sources.py's
+  one-off hand calculation into a reusable, tested function), with
+  tests/test_reconcile.py::test_rwa_density_uses_reported_actual_trea asserting it
+  equals the externally-sourced 44.5% value logged above.
+  RED run: changed data_acquisition/reconcile.py's `trea = df[...]` filter from
+  `df["provenance"] == "reported_actual"` to `df["provenance"] == "restated_actual"`
+  (the one line the finished sentence names) and ran
+  `pytest tests/test_reconcile.py::test_rwa_density_uses_reported_actual_trea -v`.
+  Result: FAILED - "Obtained: 0.4247551077671908, Expected: 0.4445 +/- 5.0e-04" -
+  0.4248 is restated TREA's density, matching spike/comparison.md's own "~42.5%"
+  prediction for what using the wrong numerator would give almost exactly.
+  GREEN run: reverted the line back to `df["provenance"] == "reported_actual"` and
+  re-ran the same command. Result: PASSED in 1.87s. Full suite (9 tests) also passed
+  both before the break and after the revert. Decided and carried out by agent.
+- 2026-10-08: Homework 5, step 6 (use the program once for real), expectation written
+  BEFORE running: compute_rwa_density() for BNP Paribas (LEI R0MUWSFPU8MPRO8K5P83,
+  FY2024, period "202412") - never individually computed before. Prediction: LOWER
+  than Erste's 44.5%, likely in the 20-35% range - BNP Paribas is a much larger,
+  more trading/market-making-heavy universal bank (large repo and derivatives books),
+  which tends to inflate total assets relative to risk-weighted exposure more than a
+  retail/CEE-focused bank like Erste, pulling density down. This is a genuine guess,
+  not informed by running the code. Decided and carried out by agent.
+- 2026-10-08: Homework 5, step 6 result: compute_rwa_density() for BNP Paribas
+  returned 0.281801 (28.18%) - within the predicted 20-35% range, lower than Erste's
+  44.5% as expected. Did not differ from the prediction enough to flag as a bug or a
+  new test case - the directional reasoning (larger, more trading-heavy balance sheet
+  pulls density down) held. Worth noting as a real, usable output rather than a
+  one-off: this is the project's first RWA density figure for a bank other than
+  Erste, now backed by a real function instead of a throwaway script calculation.
+  Decided and carried out by agent.
