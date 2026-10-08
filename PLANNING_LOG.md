@@ -510,3 +510,14 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   gross-fallback-derivation, ROE-equals-NI/Equity structural identity,
   missing-concept-raises). Decided and carried out by agent, methodology
   choices decided by user via direct questions.
+- 2026-10-08: User caught that "do 2021-2024" meant the full range, not just the
+  two endpoints - only 2021 and 2024 had been fetched. Fetched 2022 (40 banks)
+  and 2023 (34 banks) ESEF filings, all 74 succeeded. Re-ran compute_dupont()
+  across the complete 2021-2024 range (141 bank-years attempted): 97 succeeded
+  (25/2021, 29/2022, 25/2023, 18/2024), 44 failed with the same
+  already-explained concept-tagging gaps as before - no new unexplained
+  failures. Delivered as dupont_analysis.csv/.xlsx on the user's Desktop (xlsx
+  has a second sheet listing all 44 failures with reasons, parsed
+  programmatically from the run's own output rather than retyped, after an
+  earlier manual transcription slip in a test literal). Decided and carried
+  out by agent, per user's correction.
