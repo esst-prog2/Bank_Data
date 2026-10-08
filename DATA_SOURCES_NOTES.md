@@ -808,3 +808,53 @@ Sources checked (this update):
   raw unfiltered "OTP" search that surfaced the actual match the guarded search had missed
 - `https://filings.xbrl.org/api/entities/529900W3MOO00A18X956/filings` directly, to see
   OTP's exact filing history (FY2021 x2, FY2022 x2, nothing since)
+
+## Update 2026-10-08 (second entry): 2021 ESEF filings fetched; a real bug found and fixed
+
+Asked for a full period-by-period ESEF coverage census across all 64 tracked entities
+(not just the 37-bank pilot sample), using `filings.xbrl.org`'s `/filings` listing
+endpoint (lightweight - no full downloads) to count, per `period_end`, how many entities
+have at least one filing: 2020 (10), 2021 (39), 2022 (40), 2023 (34), 2024 (38), 2025
+(19). Only 2024-12-31 had ever actually been fetched and cached (29/38 entities, all
+from the S&P-50 pilot sample) - every other year was known to exist but never
+downloaded.
+
+**Bulk-fetched all 39 entities with a 2021-12-31 filing. 38/39 succeeded.** The one
+failure - OTP Bank Nyrt. - turned out to be a real, previously-latent bug in
+`esef_client.find_filing()`, not a data gap: its 2021 filing record has
+`"json_url": null` and `"error_count": 1` (filings.xbrl.org's own processing pipeline
+failed on it - only the raw ESEF .zip package is available, not structured JSON).
+`find_filing()` unconditionally did `"https://filings.xbrl.org" + a["json_url"]` on
+whichever candidate was most recently added, with no null check - this crashed with a
+bare `TypeError: can only concatenate str (not "NoneType") to str` instead of a
+diagnosable error. Fixed two ways: (1) when multiple filings share a period_end, prefer
+one filings.xbrl.org actually processed (has a `json_url`) over a more recent one that
+failed validation, rather than blindly taking the most recent; (2) if none are usable,
+raise a clear `EsefDataError` naming the error count and pointing at the raw package URL
+instead of letting a TypeError leak through unexplained.
+
+**A size discrepancy worth recording so it isn't mistaken for missing data later**:
+2021 filings are roughly 100x smaller on disk than 2024 filings for the same bank (Erste:
+265KB vs 33MB) despite having a similar total FACT count (756 vs 896 - only ~1.2x more).
+Checked directly: a handful of 2024 filings embed a few individual facts with enormous
+string values (Erste's largest is 5.5MB as one fact's `value`, several more multi-MB) -
+very likely large embedded text-block/narrative disclosures or inline content that
+simply weren't present the same way in 2021 filings, not evidence of broken or
+incomplete 2021 data. The actual concepts this project cares about
+(Assets/Equity/InterestRevenueExpense/ProfitLoss) were confirmed present for the large
+majority of the 38 successfully fetched 2021 filings via the same coverage check used
+for 2024.
+
+Updated coverage (filings at hand / available, across all 64 tracked entities):
+2020: 0/10 (0%); **2021: 38/39 (97.4%)**; 2022: 0/40 (0%); 2023: 0/34 (0%); **2024:
+29/38 (76.3%)**; 2025: 0/19 (0%). ~725MB now cached under `data/raw/esef/` across both
+fetched periods.
+
+Sources checked (this update):
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for all 64 tracked LEIs, to
+  build the full period census (not just FY2024 presence)
+- OTP Bank Nyrt.'s raw 2021-12-31 filing attributes, read directly, to confirm the
+  `json_url: null` / `error_count: 1` diagnosis rather than guess at the TypeError's cause
+- Direct byte-level inspection of Erste's 2021 vs. 2024 cached facts.json files (fact
+  counts, value-string-length distributions) to confirm the size gap is a few outlier
+  large-text facts, not missing data

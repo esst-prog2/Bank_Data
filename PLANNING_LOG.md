@@ -460,3 +460,15 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   one-off: this is the project's first RWA density figure for a bank other than
   Erste, now backed by a real function instead of a throwaway script calculation.
   Decided and carried out by agent.
+- 2026-10-08: Fetched all 39 entities' 2021-12-31 ESEF filings (full 64-bank universe,
+  not just the S&P-50 pilot sample), per user request to build out period coverage.
+  38/39 succeeded. The one failure (OTP Bank Nyrt.) was a real bug in
+  esef_client.find_filing() - a filing with json_url=null (filings.xbrl.org's own
+  processing failed on it) crashed with a bare TypeError instead of a clear error.
+  Fixed: prefer a usable (non-null json_url) filing among candidates sharing a
+  period_end, and raise a clear EsefDataError naming the problem when none exist.
+  Also found and documented (not a bug): 2021 filings are ~100x smaller on disk than
+  2024's despite similar fact counts - traced to a few outlier multi-MB text-block
+  facts in 2024 filings, not missing 2021 data. Updated coverage: 2021 now at 38/39
+  (97.4%) available-vs-cached, alongside 2024's existing 29/38 (76.3%); all other
+  years remain uncached. Decided and carried out by agent.

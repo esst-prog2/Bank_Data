@@ -77,12 +77,27 @@ def find_filing(lei: str, period_end: str) -> EsefFiling:
     if not candidates:
         raise EsefNotFoundError(f"no ESEF filing indexed for {lei} at period_end={period_end}")
     candidates.sort(key=lambda f: f["attributes"].get("date_added", ""))
-    a = candidates[-1]["attributes"]
+    # Prefer a filing filings.xbrl.org actually processed (has a json_url) over a more
+    # recent one that failed its own validation pipeline - found 2026-10-08 via OTP Bank
+    # Nyrt.'s 2021 filing, which has json_url=None and error_count=1 (filings.xbrl.org's
+    # own processing failed on it), only a raw ESEF .zip package is available. Taking
+    # candidates[-1] blindly crashed with a bare TypeError ("can only concatenate str to
+    # NoneType") instead of a diagnosable error - fixed both by preferring a usable
+    # filing when multiple exist, and by raising clearly when none are.
+    usable = [c for c in candidates if c["attributes"].get("json_url")]
+    chosen = usable[-1] if usable else candidates[-1]
+    a = chosen["attributes"]
+    if not a.get("json_url"):
+        raise EsefDataError(
+            f"{lei} has a filing for period_end={period_end} but filings.xbrl.org has "
+            f"no processed JSON for it (error_count={a.get('error_count')}) - only the "
+            f"raw ESEF package is available: https://filings.xbrl.org{a.get('package_url', '')}"
+        )
     return EsefFiling(
         lei=lei,
         period_end=period_end,
         json_url="https://filings.xbrl.org" + a["json_url"],
-        report_url="https://filings.xbrl.org" + a["report_url"],
+        report_url="https://filings.xbrl.org" + (a.get("report_url") or ""),
     )
 
 
