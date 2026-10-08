@@ -156,3 +156,52 @@ def test_rwa_density_uses_reported_actual_trea(_source_available, _esef_availabl
     """
     density = reconcile.compute_rwa_density(_BANK_LEI, period="202412")
     assert density == pytest.approx(0.4445, abs=0.0005)
+
+
+def test_compute_total_revenue_sums_esef_components(_esef_available):
+    """2026-10-08, DuPont analysis. Erste's FY2024 filing tags all three Total
+    Revenue components directly (net interest income, net fee and commission income,
+    and - unlike most banks - the IFRS standard TradingIncomeExpense tag), so this is
+    the one bank/period where `complete` should be True and the components sum
+    exactly to the reported total: 7,528 + 2,938 + 519 = 10,985 (EUR million, 2024-12-31
+    duration facts - 7,528 is the same FY2024 net interest income figure already
+    established throughout this project since the spike, e.g.
+    spike/comparison.md's own citation to Erste's Annual Report p.236)."""
+    revenue = reconcile.compute_total_revenue(_BANK_LEI, "202412")
+    assert revenue["complete"] is True
+    assert revenue["value"] == pytest.approx(10985.0, abs=1.0)
+    assert revenue["components"]["net_interest_income"] == pytest.approx(7528.0, abs=1.0)
+    assert revenue["components"]["net_fee_and_commission_income"] == pytest.approx(2938.0, abs=1.0)
+    assert revenue["components"]["trading_income"] == pytest.approx(519.0, abs=1.0)
+
+
+def test_compute_total_revenue_derives_net_fee_from_gross_when_untagged():
+    """Most ESEF filers (confirmed 2026-10-08: 28/29 cached banks) tag fee and
+    commission income/expense as a gross pair, not a single net fact - Banco
+    Santander is one of them (no ifrs-full:FeeAndCommissionIncomeExpense tag).
+    compute_total_revenue() must fall back to Income - Expense in that case, not
+    report the component as missing. Santander FY2024: income 17,602.0m - expense
+    4,592.0m = 13,010.0m (confirmed by direct inspection of the cached filing)."""
+    revenue = reconcile.compute_total_revenue("5493006QMFDDMYWIAM13", "202412")
+    assert revenue["components"]["net_fee_and_commission_income"] == pytest.approx(13010.0, abs=1.0)
+
+
+def test_compute_dupont_roe_equals_net_income_over_equity():
+    """Structural identity, not an externally-sourced value: however Profit Margin x
+    Asset Utilization x Equity Multiplier is computed, it must algebraically reduce to
+    Net Income / Total Equity - a regression guard against the three factors drifting
+    out of sync with each other (e.g. a future edit using total_assets in one factor
+    and average_total_assets in another would break this silently otherwise)."""
+    result = reconcile.compute_dupont(_BANK_LEI, "202412")
+    assert result.roe == pytest.approx(result.net_income / result.total_equity, rel=1e-9)
+    assert result.roe == pytest.approx(
+        result.profit_margin * result.asset_utilization * result.equity_multiplier, rel=1e-9
+    )
+
+
+def test_compute_dupont_missing_concept_raises_dupont_error():
+    """BNP Paribas reports gross interest income/expense separately, never a single
+    net_interest_income total (same finding as the spike's NII investigation) - this
+    is correctly a retrieval gap (DuPontError), never a silently fabricated 0."""
+    with pytest.raises(reconcile.DuPontError):
+        reconcile.compute_dupont("R0MUWSFPU8MPRO8K5P83", "202412")

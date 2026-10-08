@@ -30,6 +30,7 @@ P3DH is not wired into this module yet - see AGENTS.md "Immediate next steps".
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -65,6 +66,23 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     ("esef", "ifrs-full:Equity"): "total_equity",
     ("esef", "ifrs-full:InterestRevenueExpense"): "net_interest_income",
     ("esef", "ifrs-full:ProfitLoss"): "profit_or_loss_for_the_year",
+    # Added 2026-10-08 for compute_total_revenue()/compute_dupont() (homework: DuPont
+    # analysis). FeeAndCommissionIncomeExpense is the NET concept some filers tag
+    # directly (e.g. Erste); most only tag the gross Income/Expense pair (confirmed:
+    # 28/29 cached FY2024 banks have the gross pair, only 16/29 tag net directly) -
+    # compute_total_revenue() prefers the net tag and falls back to Income - Expense.
+    # TradingIncomeExpense is the IFRS *standard* taxonomy concept for trading
+    # income, but only 9/29 cached banks actually use it - most tag it under their
+    # own custom extension taxonomy (e.g. bnpp:NetGainOnFinancialInstruments...,
+    # san:GainsLossesOnFinancialAssetsAndLiabilitiesHeldForTrading), which this
+    # static per-item table deliberately does not attempt to chase per-bank (see
+    # design.md decision 1 - a static table trades comprehensiveness for
+    # reviewability; mapping ~20 banks' individual extension concepts would be
+    # exactly the curation-cost blowup that decision accepted as a non-goal for v1).
+    ("esef", "ifrs-full:FeeAndCommissionIncome"): "fee_and_commission_income",
+    ("esef", "ifrs-full:FeeAndCommissionExpense"): "fee_and_commission_expense",
+    ("esef", "ifrs-full:FeeAndCommissionIncomeExpense"): "fee_and_commission_income_expense",
+    ("esef", "ifrs-full:TradingIncomeExpense"): "trading_income_expense",
 }
 
 # Whether an ESEF concept is a balance-sheet instant (as-of a date) or an
@@ -75,14 +93,43 @@ _ESEF_PERIOD_KIND: dict[str, str] = {
     "ifrs-full:Equity": "instant",
     "ifrs-full:InterestRevenueExpense": "duration",
     "ifrs-full:ProfitLoss": "duration",
+    "ifrs-full:FeeAndCommissionIncome": "duration",
+    "ifrs-full:FeeAndCommissionExpense": "duration",
+    "ifrs-full:FeeAndCommissionIncomeExpense": "duration",
+    "ifrs-full:TradingIncomeExpense": "duration",
 }
 
-# This module only has one ESEF filing cached (Erste Group's FY2024) - see
-# esef_client's module docstring on why that's a deliberate scope limit, not an
-# oversight. A period request outside this simply gets no ESEF rows, never a
-# fabricated "missing" for a year nobody asked this module to fetch.
+# 2026-10-08: generalized from a single hardcoded ESEF period (originally only
+# FY2024, Erste-only) to any period this project has fetched - the DuPont work
+# needed FY2021 too (38 banks cached) alongside FY2024 (29 banks). `_ESEF_PERIOD`
+# stays as a named default (not a hard restriction) for callers that don't care
+# which year, e.g. compute_rwa_density's default argument.
 _ESEF_PERIOD_END = "2024-12-31"
 _ESEF_PERIOD = "202412"
+
+
+def _period_to_esef_period_end(period: str) -> str:
+    """"202412" -> "2024-12-31" - only calendar (Dec 31) fiscal year-ends are
+    supported, same assumption as esef_client.py and waves.py (task 1.5)."""
+    if len(period) != 6 or period[4:] != "12":
+        raise ValueError(f"only December year-end periods are supported, got {period!r}")
+    return f"{period[:4]}-12-31"
+
+
+def _esef_period_end_to_period(period_end: str) -> str:
+    """"2024-12-31" -> "202412\""""
+    return period_end[:4] + period_end[5:7]
+
+
+def _cached_esef_periods(bank_lei: str) -> list[str]:
+    """Which ESEF period_ends (YYYY-MM-DD) are already cached on disk for this bank -
+    a local-cache listing, not a live filings.xbrl.org query. Used when `period` is
+    None, so "give me everything" means everything this project has actually
+    fetched, not a live discovery of every period that might exist."""
+    esef_dir = _ROOT / "data" / "raw" / "esef" / bank_lei
+    if not esef_dir.exists():
+        return []
+    return sorted(p.name for p in esef_dir.iterdir() if p.is_dir())
 
 _ITEMS_BY_CONCEPT: dict[str, list[tuple[str, str]]] = {}
 for (_source, _item), _concept in CONCEPT_MAP.items():
@@ -156,40 +203,51 @@ def _stress_test_rows(df: pd.DataFrame, bank_lei: str, bank_name: str, concept: 
 
 
 def _esef_rows(bank_lei: str, concept: str, item_code: str, period: str | None) -> list[dict]:
-    if period is not None and period != _ESEF_PERIOD:
-        return []  # this module has no filing cached for that period - see docstring
+    if period is not None:
+        try:
+            period_ends = [_period_to_esef_period_end(period)]
+        except ValueError:
+            return []  # not a December year-end - this module can't serve it, see docstring
+    else:
+        period_ends = _cached_esef_periods(bank_lei)  # "give me everything" = everything cached
 
-    try:
-        facts = esef_client.fetch_facts(bank_lei, _ESEF_PERIOD_END)
-    except esef_client.EsefNotFoundError:
-        return [{
-            "bank_lei": bank_lei, "period": _ESEF_PERIOD, "standardized_concept": concept,
+    rows: list[dict] = []
+    for period_end in period_ends:
+        our_period = _esef_period_end_to_period(period_end)
+        try:
+            facts = esef_client.fetch_facts(bank_lei, period_end)
+        except esef_client.EsefNotFoundError:
+            rows.append({
+                "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
+                "source_reporting_item": item_code, "source": "esef",
+                "provenance": None, "value": None, "status": "missing_from_source",
+                "origin_reference": f"ESEF (filings.xbrl.org), {bank_lei}, no filing for {period_end}",
+            })
+            continue
+        except esef_client.EsefDataError as exc:
+            raise DataSourceError(str(exc)) from exc
+
+        duration_key, instant_key = esef_client.fiscal_year_keys(period_end)
+        period_key = instant_key if _ESEF_PERIOD_KIND[item_code] == "instant" else duration_key
+        value = esef_client.get_concept_value(facts, item_code, period_key)
+        filing = esef_client.find_filing(bank_lei, period_end)
+
+        if value is None:
+            rows.append({
+                "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
+                "source_reporting_item": item_code, "source": "esef",
+                "provenance": None, "value": None, "status": "missing_from_source",
+                "origin_reference": f"ESEF filing {filing.report_url}, concept {item_code} not tagged as a total",
+            })
+            continue
+
+        rows.append({
+            "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "esef",
-            "provenance": None, "value": None, "status": "missing_from_source",
-            "origin_reference": f"ESEF (filings.xbrl.org), {bank_lei}, no filing for {_ESEF_PERIOD_END}",
-        }]
-    except esef_client.EsefDataError as exc:
-        raise DataSourceError(str(exc)) from exc
-
-    duration_key, instant_key = esef_client.fiscal_year_keys(_ESEF_PERIOD_END)
-    period_key = instant_key if _ESEF_PERIOD_KIND[item_code] == "instant" else duration_key
-    value = esef_client.get_concept_value(facts, item_code, period_key)
-    filing = esef_client.find_filing(bank_lei, _ESEF_PERIOD_END)
-
-    if value is None:
-        return [{
-            "bank_lei": bank_lei, "period": _ESEF_PERIOD, "standardized_concept": concept,
-            "source_reporting_item": item_code, "source": "esef",
-            "provenance": None, "value": None, "status": "missing_from_source",
-            "origin_reference": f"ESEF filing {filing.report_url}, concept {item_code} not tagged as a total",
-        }]
-
-    return [{
-        "bank_lei": bank_lei, "period": _ESEF_PERIOD, "standardized_concept": concept,
-        "source_reporting_item": item_code, "source": "esef",
-        "provenance": "reported_actual", "value": value / 1_000_000, "status": "ok",
-        "origin_reference": f"ESEF filing (FY2024), {filing.report_url}, concept {item_code}",
-    }]
+            "provenance": "reported_actual", "value": value / 1_000_000, "status": "ok",
+            "origin_reference": f"ESEF filing (FY{period_end[:4]}), {filing.report_url}, concept {item_code}",
+        })
+    return rows
 
 
 def get_financial_data(
@@ -278,3 +336,169 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
     if assets.empty or assets.iloc[0]["status"] != "ok":
         raise RwaDensityError(f"{bank_lei}/{period}: no total_assets available")
     return float(trea.iloc[0]["value"]) / float(assets.iloc[0]["value"])
+
+
+class DuPontError(ValueError):
+    """A DuPont figure (net income, total assets, total equity, or net interest
+    income - the one mandatory Total Revenue component) wasn't available for this
+    bank/period."""
+
+
+def _esef_value(df: pd.DataFrame, concept: str) -> float | None:
+    rows = df[(df["source"] == "esef") & (df["standardized_concept"] == concept)]
+    if rows.empty or rows.iloc[0]["status"] != "ok":
+        return None
+    return float(rows.iloc[0]["value"])
+
+
+def compute_total_revenue(bank_lei: str, period: str) -> dict:
+    """Total Revenue = net interest income + net fee and commission income + trading
+    income (when tagged) - the denominator compute_dupont()'s Asset Utilization ratio
+    needs. Not itself a single reported IFRS concept: it's a composite this project
+    builds explicitly for the DuPont homework by SUMMING individually-sourced
+    components. This is different from the project's usual refusal to derive
+    cross-source figures (e.g. net_interest_income is never derived from gross
+    interest income/expense across sources - spike/comparison.md's Cause 1): Total
+    Revenue is, by definition, an aggregate of several P&L lines from ONE bank's own
+    filing, not two sources' competing claims about the same concept.
+
+    All three components come from ESEF specifically (never stress_test), so the
+    whole buildup stays on one consistent reporting perimeter - mixing a
+    stress-test-sourced NII with ESEF-sourced fee/trading income would silently
+    combine two different consolidation scopes, the exact comparability problem the
+    spike's Cause 1 investigation found and corrected for net interest income alone.
+
+    Net fee and commission income prefers a direct net tag
+    (ifrs-full:FeeAndCommissionIncomeExpense) and falls back to Income - Expense when
+    only the gross pair is tagged (confirmed 2026-10-08: 16/29 cached FY2024 banks tag
+    net directly, 28/29 have the gross pair - deriving it here is safe because it's
+    one bank's own two disclosed figures, not two different banks' or sources').
+
+    Trading income is included ONLY when the IFRS standard tag
+    (ifrs-full:TradingIncomeExpense) is present - confirmed only 9/29 cached FY2024
+    banks use it; the rest tag it under their own custom extension taxonomy (e.g.
+    bnpp:NetGainOnFinancialInstruments..., san:GainsLossesOnFinancialAssetsAnd...),
+    which this project does not attempt to chase per-bank (see CONCEPT_MAP's
+    comment - mapping ~20 banks' individual extensions would be exactly the
+    curation-cost blowup design.md decision 1 accepted as a non-goal for v1). Decided
+    by user (2026-10-08, PLANNING_LOG.md): include it where available rather than drop
+    it entirely, with the gap flagged explicitly via the returned `complete` field -
+    never silently treated as zero for the banks missing it.
+
+    Returns {"value": float (EUR millions), "complete": bool, "components": dict}.
+    `complete` is False whenever the fee or trading component couldn't be determined
+    - callers comparing Asset Utilization/Profit Margin across banks should check it
+    rather than assume every bank's Total Revenue was built from the same inputs.
+    Raises DuPontError if net interest income itself is unavailable (the one
+    mandatory component - a bank with no NII figure isn't a meaningful subject here).
+    """
+    df = get_financial_data(
+        bank_lei,
+        ["net_interest_income", "fee_and_commission_income", "fee_and_commission_expense",
+         "fee_and_commission_income_expense", "trading_income_expense"],
+        period=period,
+    )
+    nii = _esef_value(df, "net_interest_income")
+    if nii is None:
+        raise DuPontError(f"{bank_lei}/{period}: no ESEF net_interest_income available")
+
+    fee_net = _esef_value(df, "fee_and_commission_income_expense")
+    if fee_net is None:
+        fee_inc = _esef_value(df, "fee_and_commission_income")
+        fee_exp = _esef_value(df, "fee_and_commission_expense")
+        if fee_inc is not None and fee_exp is not None:
+            fee_net = fee_inc - fee_exp
+
+    trading = _esef_value(df, "trading_income_expense")
+
+    total = nii + (fee_net or 0.0) + (trading or 0.0)
+    return {
+        "value": total,
+        "complete": fee_net is not None and trading is not None,
+        "components": {
+            "net_interest_income": nii,
+            "net_fee_and_commission_income": fee_net,
+            "trading_income": trading,
+        },
+    }
+
+
+@dataclass(frozen=True)
+class DuPontResult:
+    bank_lei: str
+    period: str
+    net_income: float
+    total_assets: float
+    total_equity: float
+    total_revenue: float
+    revenue_complete: bool
+    profit_margin: float
+    asset_utilization: float
+    equity_multiplier: float
+    roa: float
+    roe: float
+
+
+def compute_dupont(bank_lei: str, period: str) -> DuPontResult:
+    """3-factor bank DuPont decomposition:
+
+        ROE = Profit Margin x Asset Utilization x Equity Multiplier
+            = (Net Income / Total Revenue) x (Total Revenue / Total Assets)
+              x (Total Assets / Total Equity)
+
+    Adapted from a university DuPont-analysis Excel template (a 2008/2009 Hungarian
+    banking-sector comparison built on local-GAAP line items - "rendkivuli
+    eredmeny"/extraordinary items, detailed interest-income sub-categories - that
+    don't exist in IFRS/ESEF taxonomies, for 11 banks' Hungarian subsidiaries this
+    project doesn't track). This function keeps the template's core 3-factor ratio
+    structure (its own rows 66-69: ROE / leverage / ROA / profit margin) applied to
+    this project's actual IFRS/XBRL data and tracked banks, per explicit user
+    decision 2026-10-08 (PLANNING_LOG.md) - not the template's Hungarian-GAAP line
+    items or its 11-bank Hungarian leaderboard, neither of which this project's data
+    can support.
+
+    Uses POINT-IN-TIME (year-end) total_assets/total_equity, NOT the template's own
+    average-of-four-quarters methodology - this project has one annual ESEF snapshot
+    per bank/year, not intra-year quarterly balance sheets, so a true average isn't
+    computable from what's actually available. Flagged here rather than silently
+    approximated as if it were the same thing.
+
+    Net income and all Total Revenue components come from ESEF (never stress_test),
+    keeping the whole decomposition on one consistent reporting perimeter - see
+    compute_total_revenue()'s docstring for why that matters.
+
+    Raises DuPontError if net income, total assets, or total equity aren't available,
+    or if compute_total_revenue() can't find net interest income. The result's
+    `revenue_complete` field carries through compute_total_revenue()'s own
+    completeness flag - check it before comparing profit_margin/asset_utilization
+    across banks as if every one's Total Revenue were built from the same inputs.
+    """
+    df = get_financial_data(
+        bank_lei, ["profit_or_loss_for_the_year", "total_assets", "total_equity"], period=period,
+    )
+    net_income = _esef_value(df, "profit_or_loss_for_the_year")
+    total_assets = _esef_value(df, "total_assets")
+    total_equity = _esef_value(df, "total_equity")
+    if net_income is None:
+        raise DuPontError(f"{bank_lei}/{period}: no ESEF profit_or_loss_for_the_year available")
+    if total_assets is None:
+        raise DuPontError(f"{bank_lei}/{period}: no total_assets available")
+    if total_equity is None:
+        raise DuPontError(f"{bank_lei}/{period}: no total_equity available")
+
+    revenue = compute_total_revenue(bank_lei, period)
+    total_revenue = revenue["value"]
+
+    profit_margin = net_income / total_revenue
+    asset_utilization = total_revenue / total_assets
+    equity_multiplier = total_assets / total_equity
+    roa = net_income / total_assets
+    roe = profit_margin * asset_utilization * equity_multiplier
+
+    return DuPontResult(
+        bank_lei=bank_lei, period=period, net_income=net_income,
+        total_assets=total_assets, total_equity=total_equity,
+        total_revenue=total_revenue, revenue_complete=revenue["complete"],
+        profit_margin=profit_margin, asset_utilization=asset_utilization,
+        equity_multiplier=equity_multiplier, roa=roa, roe=roe,
+    )

@@ -472,3 +472,41 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   facts in 2024 filings, not missing 2021 data. Updated coverage: 2021 now at 38/39
   (97.4%) available-vs-cached, alongside 2024's existing 29/38 (76.3%); all other
   years remain uncached. Decided and carried out by agent.
+- 2026-10-08: Built a DuPont analysis feature (compute_total_revenue(),
+  compute_dupont() in reconcile.py), adapted from a user-supplied 2008/2009
+  Hungarian banking-sector Excel template (DuPont_elemzes_2009Q4.xlsx). The
+  template's exact line items (Hungarian local-GAAP chart of accounts -
+  "rendkivuli eredmeny"/extraordinary items, granular interest sub-categories)
+  and its 11-bank Hungarian leaderboard don't map onto IFRS/ESEF XBRL data or
+  this project's tracked EU banks - user decided (confirmed via direct
+  question) to keep only the template's core 3-factor ratio structure (its
+  own rows 66-69: ROE = Profit Margin x Asset Utilization x Equity
+  Multiplier), applied to our actual banks/years, not the Hungarian-specific
+  detail.
+  Total Revenue (not itself a single IFRS concept) is built as NII + net fee
+  and commission income + trading income, per user decision. Checked actual
+  tag coverage across 29 cached FY2024 banks before implementing: fee income
+  is reliably available (28/29, via a direct net tag or income-minus-expense
+  fallback), but the standard trading-income tag is only used by 9/29 - the
+  rest tag it under their own bank-specific custom extension taxonomy (e.g.
+  bnpp:NetGainOnFinancialInstruments..., san:GainsLossesOn...), which this
+  project does not attempt to chase per-bank. User decided: include trading
+  income where tagged, explicitly flag the rest as incomplete rather than
+  silently treating it as zero (`complete` field on the result).
+  Generalized reconcile.py's ESEF handling along the way (a real prerequisite
+  fix, not scope creep) - it previously hardcoded a single ESEF period
+  (FY2024 only), which would have silently excluded all 2021 data; now
+  reads whatever ESEF periods are actually cached per bank.
+  Ran compute_dupont() across all 67 bank-years with cached ESEF data (38
+  for 2021, 29 for 2024): 43 succeeded, 24 failed with clear, explained
+  reasons (all tracing back to previously-confirmed concept-tagging gaps -
+  the 5 Italian banks' missing Equity tag, the NII-reported-gross-not-net
+  pattern). Found and verified one genuine anomaly rather than dismissing
+  it: Unicaja Banco's 2021 Profit Margin computes to >100% because of a real
+  EUR 1,301.3m "bargain purchase gain" (ifrs-full:GainRecognisedInBargain
+  PurchaseTransaction) from its 2021 merger with Liberbank - a real one-off
+  M&A accounting gain correctly excluded from Total Revenue but included in
+  Net Income, not a data error. Added 4 new tests (sums-correctly,
+  gross-fallback-derivation, ROE-equals-NI/Equity structural identity,
+  missing-concept-raises). Decided and carried out by agent, methodology
+  choices decided by user via direct questions.

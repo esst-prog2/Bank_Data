@@ -858,3 +858,80 @@ Sources checked (this update):
 - Direct byte-level inspection of Erste's 2021 vs. 2024 cached facts.json files (fact
   counts, value-string-length distributions) to confirm the size gap is a few outlier
   large-text facts, not missing data
+
+## Update 2026-10-08 (third entry): DuPont analysis built from a Hungarian 2009 template
+
+User supplied an Excel template (`DuPont_elemzes_2009Q4.xlsx`) and asked for a DuPont
+analysis for every available bank, every year. Inspected it fully with openpyxl before
+writing any code - this mattered, because the template turned out to be far more specific
+than "a DuPont analysis": a 2008-vs-2009 comparison of 11 named banks operating in Hungary
+(BB, CIB, Commerzbank, Erste, FHB, K&H, MKB, OTP, Raiffeisen, UniCredit, Volksbank), built
+entirely on the Hungarian supervisory local-GAAP chart of accounts (hundreds of specific
+line items - interest income split by instrument type, "rendkivuli" extraordinary items,
+general reserve movements), plus a ranking/leaderboard mechanic (HLOOKUP-based 1st/2nd/3rd
+placement per ratio). None of that framework exists in IFRS/ESEF XBRL, and the named
+entities are 2008-era Hungarian subsidiaries, not the group-consolidated EU banks this
+project tracks (the template's "Erste" is Erste Bank Hungary Zrt., not Erste Group Bank
+AG).
+
+**What does transfer**: the template's actual analytical core (`Dupont08` rows 66-69) is
+the standard bank 3-factor DuPont decomposition - ROE = Profit Margin x Asset Utilization
+x Equity Multiplier. Confirmed this with the user directly (two explicit questions) rather
+than assume: (1) keep only the core 3-factor structure, not the Hungarian line items or
+leaderboard; (2) define Total Revenue as net interest income + net fee/commission income +
+trading income.
+
+**A real prerequisite fix, found before the DuPont work could even start**:
+`reconcile.py` hardcoded ESEF to a single period (`_ESEF_PERIOD_END = "2024-12-31"`,
+originally set when only Erste's FY2024 filing was cached). With FY2021 data now also
+cached for 38 banks, this would have silently excluded all of it. Generalized `_esef_rows()`
+to accept any period (converting this project's "YYYYMM" convention to ESEF's "YYYY-MM-DD"),
+and to return every *cached* period when none is specified (mirroring how the stress-test
+side already returns multiple scenarios for `period=None`) - a local-cache listing, not a
+live discovery query, consistent with the module's existing "report what's actually been
+fetched" convention.
+
+**Checked real tag coverage before committing to the Total Revenue definition**, rather
+than assume IFRS tagging is uniform: fee and commission income is reliable (28/29 cached
+FY2024 banks have it, either a direct net tag - `ifrs-full:FeeAndCommissionIncomeExpense`,
+16/29 - or the gross Income/Expense pair, which `compute_total_revenue()` falls back to
+deriving since it's one bank's own two disclosed figures, not a cross-source combination).
+Trading income is NOT reliable: the IFRS standard tag (`ifrs-full:TradingIncomeExpense`)
+is used by only 9/29 banks - the other 20 tag it under their own custom extension taxonomy
+with entity-specific names (confirmed directly: BNP Paribas uses
+`bnpp:NetGainOnFinancialInstrumentsAtFairValueThroughProfitOrLossNoninsuranceActivities`;
+Santander splits it across several `san:GainsLossesOn...` concepts with no single obvious
+"the" trading figure). Mapping ~20 banks' individual extensions one by one would be exactly
+the curation-cost blowup `design.md` decision 1 already ruled out as a v1 non-goal, so this
+wasn't attempted. User decided (second direct question): include trading income only where
+the standard tag is present, and flag every other bank's Total Revenue as `complete=False`
+rather than silently treat the missing component as zero.
+
+**Full run: 67 bank-years attempted (38 for FY2021, 29 for FY2024), 43 succeeded, 24
+failed with clear, specific reasons** - every failure traces back to a concept-tagging gap
+already confirmed in earlier entries (the 5 Italian banks' missing undimensioned
+`ifrs-full:Equity` fact; the NII-reported-as-gross-not-net pattern, now also confirmed for
+Societe Generale, Nykredit, and Danske Bank alongside the originally-found 7). None are new,
+unexplained gaps.
+
+**Found and verified a genuine anomaly rather than flagging it as broken**: Unicaja Banco's
+2021 result has Profit Margin >100% (101.89%) - mathematically unusual (net income
+exceeding total revenue), but checked directly rather than assumed to be a bug. Unicaja
+Banco merged with Liberbank in 2021; its filing tags
+`ifrs-full:GainRecognisedInBargainPurchaseTransaction` = EUR 1,301.3m for FY2021 - a real,
+one-off "negative goodwill" M&A accounting gain, correctly excluded from Total Revenue
+(it's not operating income) but included in Net Income. A genuine, explainable result, not
+a data error - exactly the kind of real-world messiness this project's "explain anomalies,
+don't hide them" approach exists to surface rather than silently smooth over.
+
+Sources checked (this update):
+- Full cell-by-cell inspection of `DuPont_elemzes_2009Q4.xlsx` via openpyxl (14 sheets,
+  the largest with 441 rows) before writing any code, to understand what the template
+  actually required rather than guess from its filename/sheet names alone
+- Direct coverage checks (`get_concept_value()` against all 29 cached FY2024 filings) for
+  `ifrs-full:TradingIncomeExpense`, `ifrs-full:FeeAndCommissionIncomeExpense`, and the
+  gross fee income/expense pair, before choosing the Total Revenue formula
+- BNP Paribas's and Santander's actual tagged concept namespaces, to find their real
+  trading-income extension concepts (or confirm the absence of one clean equivalent)
+- Unicaja Banco's full FY2021 filing, searched directly for goodwill/bargain-purchase
+  concepts, to confirm the >100% profit margin's real cause rather than assume a bug
