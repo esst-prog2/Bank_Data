@@ -30,7 +30,17 @@ class Entity:
     name: str
     country: str
     sp50_2026_rank: str = ""
+    # Non-S&P-50 banks added to the pilot sample on their own merits (not a fabricated
+    # S&P rank) - e.g. the 8 banks with confirmed dual ESEF+P3DH coverage found 2026-10-08
+    # (DATA_SOURCES_NOTES.md), added 2026-10-11. Holds a short dated reason, not a rank.
+    pilot_added: str = ""
     notes: str = ""
+
+    @property
+    def is_pilot(self) -> bool:
+        """True if this entity should be included in a `pilot_only` run - either via the
+        external S&P-50 criterion or via a deliberate, documented pilot_added reason."""
+        return bool(self.sp50_2026_rank or self.pilot_added)
 
 
 def load_entities(path: Path = _ENTITIES_CSV) -> list[Entity]:

@@ -563,3 +563,51 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   values found anywhere - confirmed the Dec-31-only assumption in waves.py
   and esef_client.py is not a live limitation for any v1 pilot bank. No
   code change needed. Decided and carried out by agent.
+- 2026-10-11: Asked for the 5 most important next steps, then to do all 5.
+  Asked 3 scoped questions before starting (P3DH wiring scope; what to do
+  about the 8 ESEF-gap pilot banks; whether to expand the pilot universe).
+  User chose: EU KM1 only (not also EU LI1); investigate the subsidiary-LEI
+  pattern for all 8 ESEF-gap banks; add all 8 non-S&P-50 dual-coverage
+  banks to the pilot universe. Decided by user (which options) and agent
+  (how to execute).
+- 2026-10-11: Investigated the ESEF-gap subsidiary-LEI question for all 8
+  banks (5 German + Credit Mutuel + Societe Generale + Intesa Sanpaolo).
+  Confirmed via filings.xbrl.org's own country filter: Germany has ZERO
+  filings nationally (count: 0, vs. 1179 for France and 873 for Italy) - a
+  real national coverage gap on this aggregator, not fixable via any LEI.
+  Found a real fix for Credit Mutuel: its subsidiary Credit Industriel et
+  Commercial (CIC) has its own LEI with real ESEF filings FY2021-FY2024.
+  Confirmed Societe Generale's FY2024 gap and Intesa Sanpaolo's FY2023-2025
+  gap are NOT subsidiary-LEI issues (same correct, ACTIVE/ISSUED LEI has
+  other years; no better LEI exists per GLEIF) - genuine isolated filer
+  gaps. Corrected the prior record for Intesa (previously understated as
+  "missing just FY2024"; actually missing FY2023 onward). Decided and
+  carried out by agent.
+- 2026-10-11: Added Credit Industriel et Commercial (CIC, LEI
+  N4JDFKKH2FTD8RKFXO39) to entities.csv as its own tracked entity (Credit
+  Mutuel's real Pillar-3/ESEF reporting subsidiary). Added a `pilot_added`
+  column to entities.csv/entities.py (Entity.is_pilot) so banks can join
+  the pilot sample on a documented reason other than a fabricated S&P rank;
+  used it for CIC plus the 8 confirmed dual-coverage banks (46 pilot banks
+  total now, up from 37). Updated run_update.py's pilot_only filter to
+  `is_pilot`. Fetched ESEF 2021-2024 for all 9 newly-added banks (32/36
+  succeeded; Jyske Bank genuinely only has FY2024, Bankinter genuinely has
+  a one-year gap at FY2022 - both confirmed real, not bugs). Decided and
+  carried out by agent.
+- 2026-10-11: Wired EBA Pillar 3 Data Hub (EU KM1 template only) into
+  reconcile.get_financial_data() as a third source for cet1_capital,
+  cet1_ratio, and total_risk_exposure_amount (reconcile._p3dh_rows,
+  cache-only - never a live P3DH query from inside this module, since that
+  would mean triggering a 15-30s headless-browser scrape as a side effect
+  of a DataFrame call). Validated the row mapping, unit conversion
+  (EUR->EUR millions), and reference-date->period mapping against the
+  stress test's own independent figure for Erste/FY2024 (23995.665 vs.
+  23995.673 for cet1_capital; 0.152605 vs. 0.152605 for cet1_ratio) before
+  trusting it. Added 4 tests. EU LI1 deliberately not wired (per the user's
+  scope choice above). Decided and carried out by agent.
+- 2026-10-11: Closed out tasks.md 4.4: archived the add-mvp-v1 change via
+  `openspec archive` (all 14 tasks complete; P3DH now wired in, re-scoped
+  to EU KM1 only rather than deferred, since README section 3's MVP scope
+  never actually required P3DH specifically). Filled in the auto-created
+  data-retrieval spec's placeholder Purpose section. Decided and carried
+  out by agent.

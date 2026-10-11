@@ -3,7 +3,7 @@ a reconciled pandas DataFrame of standardized financial/regulatory figures, each
 tagged with enough source/provenance metadata to check it against the original
 publication (see openspec/changes/add-mvp-v1/specs/data-retrieval/spec.md).
 
-Two real, verified sources are wired in:
+Three real, verified sources are wired in:
 
 - EBA EU-wide Stress Test 2025 bulk CSV (eba_exercises.py, exercise="stress_test").
   Its TRA_SUM template (inside TRA_OTH.csv) reports a mix of P&L and
@@ -14,25 +14,30 @@ Two real, verified sources are wired in:
 - ESEF financial statements via filings.xbrl.org (esef_client.py) - one bank's own
   filing for one fiscal year, IFRS-taxonomy-tagged balance-sheet and
   income-statement concepts, all `reported_actual`.
+- EBA Pillar 3 Data Hub (P3DH), EU KM1 "Key metrics" template only, added
+  2026-10-11 - see `_p3dh_rows()`'s own docstring for exactly what's read and why
+  it's cache-only (never a live P3DH query from inside this function). EU LI1
+  (also scraped by run_update.py) is deliberately NOT wired in here yet - it's a
+  reconciliation table between accounting and prudential consolidation scopes,
+  not simple concept:value facts, and needs its own design rather than reusing
+  this module's per-item CONCEPT_MAP shape.
 
 Two of the standardized concepts (net_interest_income,
-profit_or_loss_for_the_year) are reported by BOTH sources for the same bank and
-period - each source's own figure is returned as its own row, never combined
-into one value (spec's "Multiple sources report the same concept" scenario).
-The other concepts are source-specific: cet1_ratio/cet1_capital/
-total_risk_exposure_amount only come from the stress test (they're regulatory
-capital concepts with no IFRS balance-sheet equivalent); total_assets/
-total_equity only come from ESEF (no equivalent line in the stress test's
-TRA_SUM template).
-
-P3DH is not wired into this module yet - see AGENTS.md "Immediate next steps".
+profit_or_loss_for_the_year) are reported by BOTH the stress test and ESEF for
+the same bank and period; three more (cet1_ratio, cet1_capital,
+total_risk_exposure_amount) are now reported by BOTH the stress test and P3DH -
+each source's own figure is returned as its own row, never combined into one
+value (spec's "Multiple sources report the same concept" scenario). total_assets/
+total_equity remain ESEF-only (no equivalent line in either regulatory source).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
+import openpyxl
 import pandas as pd
 
 from data_acquisition import esef_client
@@ -83,6 +88,14 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     ("esef", "ifrs-full:FeeAndCommissionExpense"): "fee_and_commission_expense",
     ("esef", "ifrs-full:FeeAndCommissionIncomeExpense"): "fee_and_commission_income_expense",
     ("esef", "ifrs-full:TradingIncomeExpense"): "trading_income_expense",
+    # Added 2026-10-11: EU KM1 ("K_61.00 - EU KM1 - Key metrics template") row codes,
+    # confirmed against Erste Group Bank AG's own cached exports - see _p3dh_rows()'s
+    # docstring for the cross-check against the stress test's independent figure for
+    # the same bank/period that validated both the row mapping and the unit/period
+    # handling below.
+    ("p3dh", "K_61.00:0010"): "cet1_capital",
+    ("p3dh", "K_61.00:0040"): "total_risk_exposure_amount",
+    ("p3dh", "K_61.00:0050"): "cet1_ratio",
 }
 
 # Whether an ESEF concept is a balance-sheet instant (as-of a date) or an
@@ -250,6 +263,110 @@ def _esef_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
     return rows
 
 
+# The column code for EU KM1's "a. T" column - the figure as originally filed for an
+# export's OWN reference date. See _p3dh_rows()'s docstring for why the T-1..T-4
+# lookback columns the template also discloses are deliberately not read.
+_P3DH_CURRENT_COLUMN = "0010"
+
+
+def _p3dh_entity_name(bank_lei: str) -> str | None:
+    return next((e.name for e in load_entities() if e.lei == bank_lei), None)
+
+
+def _cached_p3dh_files(bank_name: str, template_prefix: str) -> list[Path]:
+    """Matches run_update.py's actual on-disk naming (edap_scraper.export_data_points):
+    "<entity name, spaces/slashes replaced>_<template prefix>*.xlsx" directly under
+    data/raw/ - a local-cache listing, never a live P3DH query."""
+    safe_name = bank_name.replace(" ", "_").replace("/", "-")
+    return sorted((_ROOT / "data" / "raw").glob(f"{safe_name}_{template_prefix}*.xlsx"))
+
+
+def _read_p3dh_fact(path: Path, row_code: str, column_code: str) -> tuple[datetime, str, float]:
+    """Pulls one (ReferenceDate, Row Name, FactValue) triple out of a cached P3DH Data
+    Points Report export - see module docstring's "Export" sheet layout: row 1 carries
+    ReferenceDate, row 2 is the real header, data rows follow. Raises DataSourceError if
+    the file is malformed or the requested row/column genuinely isn't in it - EU KM1 is
+    a fixed, complete EBA template, so a correctly-identified KM1 export missing one of
+    its own standard rows means something is wrong with the file, not that the bank
+    didn't disclose that line."""
+    import warnings
+
+    try:
+        with warnings.catch_warnings():
+            # P3DH's own export doesn't set a default cell style - harmless, openpyxl
+            # applies its own default; silenced so it doesn't look like a real problem
+            # on every single file read.
+            warnings.filterwarnings("ignore", message="Workbook contains no default style")
+            wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
+        ws = wb.worksheets[0]
+        rows_iter = ws.iter_rows(values_only=True)
+        header1 = next(rows_iter)
+        reference_date = next((c for c in header1 if isinstance(c, datetime)), None)
+        header2 = next(rows_iter)
+        idx = {name: i for i, name in enumerate(header2)}
+        for r in rows_iter:
+            if r[idx["Row"]] == row_code and r[idx["Column"]] == column_code:
+                return reference_date, str(r[idx["Row Name"]]).strip(), float(r[idx["FactValue"]])
+    except (OSError, KeyError, StopIteration, ValueError) as exc:
+        raise DataSourceError(f"failed to read {path}: {exc}") from exc
+    raise DataSourceError(f"{path}: row {row_code!r}/column {column_code!r} not found - malformed export?")
+
+
+def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) -> list[dict]:
+    """item_code is "<template prefix>:<row code>", e.g. "K_61.00:0010" for EU KM1's
+    CET1 capital row. Reads cached P3DH Data Points Report exports only - run_update.py
+    (via edap_scraper's real Playwright export) is the only thing that ever triggers a
+    live P3DH fetch; unlike esef_client.fetch_facts (a cheap bulk JSON download),
+    triggering a ~15-30s headless-browser scrape as a side effect of a DataFrame call
+    would make this function slow and flaky in a way none of its other sources are, so
+    get_financial_data() deliberately returns nothing for a bank/template run_update.py
+    hasn't fetched yet, rather than scrape on demand. This is a real, documented
+    asymmetry versus esef_client/eba_exercises, not an oversight.
+
+    Only the "a. T" column is read, even though EU KM1 also discloses the same metric's
+    previous four quarters (T-1..T-4) in every export. Deliberately not read: (1) a bank
+    with several cached reference dates would otherwise produce multiple overlapping,
+    near-duplicate rows for the same real calendar quarter (that quarter's own "T" value
+    from its own file, plus every later file's backward-looking echo of the same figure),
+    and (2) a later file's lookback column could silently carry a RESTATED figure for an
+    earlier quarter with no way to tag it as a restatement (unlike the stress test's own
+    explicit Scenario 11 "Restated" code) - using only "T" means every row this function
+    returns is the figure originally filed for its own reference date.
+
+    Capital/exposure rows convert EUR -> EUR millions, matching this module's existing
+    convention; ratio rows are left as decimal fractions, already matching stress_test's
+    cet1_ratio. Confirmed, not assumed: Erste Group Bank AG's 2025-12-31 KM1 export's own
+    T-4 column (2024-12-31, for cross-check only - not what this function reads) gives
+    cet1_capital 23995.665 (EUR m) and cet1_ratio 0.152605 against the stress test's
+    independently reported_actual figures for the exact same bank/period, 23995.673 and
+    0.152605 - matching almost exactly, which validated both the unit conversion and the
+    reference-date -> period mapping below before trusting either.
+    """
+    template_prefix, row_code = item_code.split(":")
+    bank_name = _p3dh_entity_name(bank_lei)
+    if bank_name is None:
+        return []
+
+    rows: list[dict] = []
+    for path in _cached_p3dh_files(bank_name, template_prefix):
+        reference_date, row_name, raw_value = _read_p3dh_fact(path, row_code, _P3DH_CURRENT_COLUMN)
+        our_period = reference_date.strftime("%Y%m")
+        if period is not None and our_period != period:
+            continue
+        value = raw_value if concept == "cet1_ratio" else raw_value / 1_000_000
+        rows.append({
+            "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
+            "source_reporting_item": item_code, "source": "p3dh",
+            "provenance": "reported_actual", "value": value, "status": "ok",
+            "origin_reference": (
+                f"EBA Pillar 3 Data Hub, {bank_name}, {template_prefix} - EU KM1 - Key "
+                f"metrics template, row {row_code} ({row_name}), "
+                f"reference date {reference_date.date().isoformat()}"
+            ),
+        })
+    return rows
+
+
 def get_financial_data(
     bank_lei: str,
     concepts: list[str],
@@ -291,6 +408,8 @@ def get_financial_data(
                 rows.extend(_stress_test_rows(df, bank_lei, bank_name, concept, item_code, period))
             elif source == "esef":
                 rows.extend(_esef_rows(bank_lei, concept, item_code, period))
+            elif source == "p3dh":
+                rows.extend(_p3dh_rows(bank_lei, concept, item_code, period))
     return pd.DataFrame(rows, columns=_DATAFRAME_COLUMNS)
 
 

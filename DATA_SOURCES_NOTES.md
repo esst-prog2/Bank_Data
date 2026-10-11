@@ -1060,3 +1060,134 @@ Sources checked (this update):
   exception text each real failure cause produces before writing the classifier against it
 - A live headless Playwright render of the regenerated `docs/review.html` to check for
   JS/console errors before publishing it
+
+## Update 2026-10-11 (second entry): P3DH wired in, the ESEF-gap subsidiary-LEI check, and a 9-bank pilot expansion
+
+Asked for the 5 most important next steps, then to execute all 5. Three of them needed a
+real decision first, asked via AskUserQuestion before starting: (1) how much of P3DH to
+wire into `reconcile.py` - chose EU KM1 only, not also EU LI1; (2) what to do about the 8
+pilot banks missing FY2024 ESEF - chose to investigate the subsidiary-LEI theory for all
+8; (3) whether to expand the pilot universe to the 8 non-S&P-50 banks with confirmed dual
+ESEF+P3DH coverage (2026-10-08 entry above) - chose yes, add all 8.
+
+**P3DH EU KM1 wired into `reconcile.get_financial_data()` as a third source.** Inspected
+a real cached export first (Erste Group Bank AG's `K_61.00` file) rather than guessing the
+schema: it's clean row/column fact data - `Row`/`Row Name` identify the metric (e.g.
+`0010` = "1. Common Equity Tier 1 (CET1) capital"), `Column`/`Column Name` identify
+`a. T` (the figure as of the export's own reference date) through `e. T-4` (4 quarters
+back), `FactValue` the number, and row 1 carries the export's `ReferenceDate`. Three rows
+map cleanly onto concepts the stress test already reports (`cet1_capital` = row `0010`,
+`total_risk_exposure_amount` = row `0040`, `cet1_ratio` = row `0050`), giving a genuine
+third, independent source for all three rather than new concepts. `EU LI1` was left out,
+per the scope decision - it's a reconciliation table between accounting and prudential
+consolidation scopes (a fundamentally different shape: mapping items between two scopes,
+not a single concept:value fact), not something that fits this module's per-item
+`CONCEPT_MAP` without its own design pass.
+
+Confirmed, not assumed, before trusting any of it:
+- **Quarterly column spacing**: Erste's 2025-09-30 export's own `a. T` value for
+  `total_risk_exposure_amount` (151,102,833,554.96) matches the 2025-12-31 export's
+  `b. T-1` value (151,102,833,555) almost to the cent - confirms each lookback column is
+  exactly one quarter back from the export's reference date, so a column's real calendar
+  period can be computed directly from the reference date.
+- **Units and cross-source agreement**: the 2025-12-31 export's `e. T-4` column (i.e. the
+  2024-12-31 quarter, read only for this one-off cross-check - the production code never
+  reads lookback columns, see below) gives `cet1_capital` = 23,995,665,203 raw EUR and
+  `cet1_ratio` = 0.152604637. Converting the capital figure to EUR millions (÷1,000,000)
+  gives 23995.665, against the stress test's own independently `reported_actual` figure
+  for the exact same bank/period: 23995.67254328 for capital, 0.15260468543714 for the
+  ratio - matching to within rounding on both. This validated the EUR→EUR-millions
+  conversion, that the ratio needs no conversion, and the reference-date→period mapping,
+  all from one real cross-source agreement rather than three separate guesses.
+
+**Deliberately only the `a. T` ("current") column is read, even though every export also
+discloses the same metric's previous 4 quarters.** Two reasons, both documented in
+`reconcile._p3dh_rows`'s docstring: a bank with several cached reference dates would
+otherwise produce multiple overlapping, near-duplicate rows for the same real calendar
+quarter (that quarter's own `T` value, plus every later export's backward-looking echo of
+it); and a later export's lookback column could silently carry a *restated* figure for an
+earlier quarter with no way to tag it as a restatement, unlike the stress test's own
+explicit Scenario 11 code. Using only `T` means every row is the figure originally filed
+for its own reference date.
+
+**Deliberately cache-only, never a live P3DH query from inside `reconcile.py`.**
+`esef_client.fetch_facts()` already fetches live on demand inside `reconcile._esef_rows`
+when a period isn't cached - that's a cheap bulk JSON download. P3DH's only real access
+path is a ~15-30s headless-browser Playwright scrape (`edap_scraper.py`); triggering that
+as a side effect of a DataFrame call would make this one source slow and flaky in a way
+none of the others are. `run_update.py` remains the only thing that ever triggers a live
+P3DH fetch - a bank/template `reconcile.py` has no cached export for simply returns no
+`p3dh` rows, not a fabricated `missing_from_source` (which would wrongly claim P3DH itself
+was checked and found lacking). Added 4 tests in `tests/test_reconcile.py` covering: one
+row per cached reference date, the cross-source untagged-as-one rule (same as the
+existing ESEF instance of this rule), and the no-cache-yet case.
+
+**ESEF-gap subsidiary-LEI investigation (5 German banks + Credit Mutuel + Societe
+Generale + Intesa Sanpaolo).** Checked `filings.xbrl.org`'s own country filter directly
+rather than guessing: `filter[country]=DE` returns **0** filings total, across every
+German entity, vs. 1179 for France and 873 for Italy at the same moment. This confirms the
+5 German pilot banks' gap (Deutsche Bank, Commerzbank, DZ Bank, LBBW, Bayerische
+Landesbank) is a **national coverage gap on this specific aggregator**, not an
+entity-identification problem - no subsidiary LEI, for any of them, could ever fix it,
+since the aggregator doesn't index Germany's OAM at all right now.
+
+Credit Mutuel is different, and this time the subsidiary-LEI theory is the real fix: GLEIF
+search for "Credit Industriel et Commercial" returns exactly one entity, CIC (LEI
+`N4JDFKKH2FTD8RKFXO39`, France, ACTIVE) - already confirmed present on P3DH under its own
+name (2026-10-07 entry). Checked its ESEF filing history directly:
+`https://filings.xbrl.org/api/entities/N4JDFKKH2FTD8RKFXO39/filings` returns real,
+processed filings for 2021-12-31, 2022-12-31, 2023-12-31, AND 2024-12-31. Added CIC as its
+own `entities.csv` row (not a replacement for Credit Mutuel's confederation LEI, which the
+S&P-50 rank and stress_test data are correctly keyed to - CIC is the group's actual
+disclosing entity, cross-referenced in both rows' notes).
+
+Societe Generale and Intesa Sanpaolo turned out NOT to be subsidiary-LEI issues. SocGen's
+own LEI (`O2RNE8IBXP4R0TD8PU41`, confirmed ACTIVE/ISSUED) has real filings for 2021, 2022,
+2023, and 2025 (filed 2026-03-18) - genuinely nothing for 2024-12-31 specifically, an
+isolated one-year gap under the correct LEI, not a naming mismatch; France overall is well
+covered (1179 filings), ruling out a national explanation too. Intesa Sanpaolo's own LEI
+(`2W8N8UU78PMDQKZENC08`, confirmed ACTIVE/ISSUED) **only has 2021-12-31 and 2022-12-31**
+on filings.xbrl.org (each listed twice, as duplicate submissions) - this corrects the
+prior record, which understated the gap as "missing just FY2024"; FY2023 onward is
+entirely absent. Searched GLEIF for every LEI under "Intesa Sanpaolo": the other active
+ones are foreign branches/subsidiaries (Netherlands, France, Luxembourg, Albania) or
+non-bank group entities (a foundation, an insurance arm) - none is an alternate
+consolidated-group reporter, so this LEI is confirmed the right one and no other LEI closes
+the gap. Italy overall is well covered (873 filings), so this is an isolated filer-specific
+gap, not national either.
+
+**Pilot universe expanded from 37 to 46 banks.** Added a `pilot_added` column to
+`entities.csv` and an `Entity.is_pilot` property to `entities.py` (true if either
+`sp50_2026_rank` or `pilot_added` is set) so a bank can join the pilot sample on a
+documented reason other than a fabricated S&P rank. Used it for CIC plus the 8 banks with
+confirmed dual ESEF+P3DH coverage from the 2026-10-08 entry above (HSBC Continental
+Europe, Jyske Bank A/S, Alpha Services and Holdings, National Bank of Greece, Bankinter,
+Piraeus Financial Holdings, Banco Comercial Portugues, Unicaja Banco). `run_update.py`'s
+`pilot_only` filter now checks `is_pilot` instead of `sp50_2026_rank` directly. Fetched
+ESEF 2021-2024 for all 9 newly-added banks: 32/36 succeeded; the 4 misses are real, not
+bugs - Jyske Bank genuinely has no ESEF filing before FY2024 (its first), and Bankinter
+genuinely has a one-year gap at FY2022 (2021/2023/2024 all present) - both noted in
+`entities.csv`.
+
+**`tasks.md` 4.4 (archive the `add-mvp-v1` change) closed out.** All blocking items were
+resolved by the above (1.1/1.3 already done by 2026-10-07; 1.4/1.5 earlier today; P3DH now
+wired in). Ran `openspec archive add-mvp-v1`, which moved the change to
+`openspec/changes/archive/2026-10-11-add-mvp-v1` and generated
+`openspec/specs/data-retrieval/spec.md` (4 requirements) from the change's own spec deltas
+- filled in its auto-created placeholder Purpose section by hand afterward.
+
+Sources checked (this update):
+- A real cached P3DH EU KM1 export, read directly with openpyxl, to learn the actual
+  schema before writing any parsing code against it
+- Erste's own 2025-09-30 and 2025-12-31 EU KM1 exports, cross-checked column-to-column, to
+  confirm the quarterly column spacing before relying on it
+- The stress test's own independently `reported_actual` cet1_capital/cet1_ratio figures
+  for Erste/FY2024, to validate the P3DH unit conversion and period mapping
+- `https://filings.xbrl.org/api/filings?filter[country]=DE/FR/IT` directly, to tell a
+  national coverage gap apart from an entity-specific one
+- `https://api.gleif.org/api/v1/lei-records` searches for "Credit Industriel et
+  Commercial" and "Intesa Sanpaolo", to find (and rule out) alternate reporting LEIs
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for CIC, Societe Generale, and
+  Intesa Sanpaolo's own LEIs directly
+- `openspec list --json` / `openspec archive` directly, rather than hand-editing
+  `tasks.md`'s checkboxes and assuming the spec-generation step would be unnecessary

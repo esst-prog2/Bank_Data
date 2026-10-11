@@ -135,7 +135,13 @@
       confirmed working for Erste Group Bank AG's FY2024 filing) with 2 more
       concepts (total assets, total equity) plus the *same* net interest
       income / profit-or-loss concepts as the stress test, from IFRS taxonomy
-      tags. P3DH is still not wired in.
+      tags.
+      — 2026-10-11: wired in P3DH's EU KM1 template too (`reconcile._p3dh_rows`),
+      a third source, reusing cet1_capital/cet1_ratio/total_risk_exposure_amount
+      - cache-only (reads what `run_update.py` has already fetched; never a live
+      P3DH query from inside this module - see that function's docstring for
+      why). EU LI1 (also scraped) deliberately not wired in - it's a scope-
+      reconciliation table, not simple concept:value facts.
 - [x] 3.2 Implement provenance tagging (reported actual vs.
       scenario-projected) and source traceability so every figure can be
       checked against its origin, including when multiple sources report the
@@ -161,13 +167,15 @@
       bank/period/concept (e.g. a reported actual and a stress-test scenario
       projection), each is tagged with its provenance and neither is
       combined into a single value
-      — `tests/test_reconcile.py::test_reported_actual_and_scenario_projection_both_returned_untagged_as_one`
-- [ ] 4.4 Archive this change into `openspec/specs/data-retrieval/` once the
+      — `tests/test_reconcile.py::test_reported_actual_and_scenario_projection_both_returned_untagged_as_one`,
+      `::test_two_independent_sources_report_same_concept_untagged_as_one` (ESEF),
+      and (2026-10-11) `::test_p3dh_and_stress_test_both_returned_untagged_as_one` (P3DH).
+- [x] 4.4 Archive this change into `openspec/specs/data-retrieval/` once the
       above pass
-      — not done: 1.1/1.3/1.4/1.5 (P3DH scraper verification, modules.txt,
-      run_update.py's not-yet-published distinction, non-December fiscal
-      year-ends) are still open, and only one source (eba_stress_test) is
-      wired into `reconcile.py` so far — deferred past this session's
-      deadline-driven scope on purpose (see AskUserQuestion confirmation,
-      2026-09-25). Archive once those are addressed or the change is
-      re-scoped to drop them.
+      — 2026-10-11: unblocked. 1.1/1.3 were already done by 2026-10-07; 1.4/1.5
+      closed out 2026-10-11 (see section 1 above); P3DH is now wired into
+      `reconcile.py` (EU KM1 only - deliberately re-scoped, not deferred: the
+      user chose "EU KM1 only" over also wiring EU LI1, 2026-10-11, since LI1
+      is a structurally different reconciliation table and was never actually
+      required by README section 3's MVP scope - the shape ("regulatory"
+      broadly) was already satisfied by the stress test). Archived.

@@ -105,16 +105,19 @@ def _load_modules() -> list[str]:
 
 
 def main(pilot_only: bool = True, limit: int | None = None) -> None:
-    """`pilot_only=True` (the default) restricts the run to entities with a non-empty
-    `sp50_2026_rank` in entities.csv - the 37-bank sample task 1.2 actually trimmed to,
-    not the full 64-bank discovery universe `eba_exercises.py` happened to surface. Each
-    attempt drives a real headless browser against the live P3DH page (~15-30s each,
-    longer on failure), so a full pass (pilot_only entities x all waves x all templates)
-    is real wall-clock time, not an instant bulk download - `limit` caps how many
-    entities are attempted, for a bounded test pass rather than the whole pilot sample."""
+    """`pilot_only=True` (the default) restricts the run to entities with `is_pilot` true
+    in entities.csv - the original 37-bank S&P-50 sample (task 1.2) plus, since
+    2026-10-11, the 9 banks added on other merits (`pilot_added` - 8 with confirmed dual
+    ESEF+P3DH coverage, plus Credit Industriel et Commercial as Credit Mutuel's real
+    reporting subsidiary) - not the full 64+-entity discovery universe `eba_exercises.py`
+    happened to surface. Each attempt drives a real headless browser against the live
+    P3DH page (~15-30s each, longer on failure), so a full pass (pilot entities x all
+    waves x all templates) is real wall-clock time, not an instant bulk download -
+    `limit` caps how many entities are attempted, for a bounded test pass rather than the
+    whole pilot sample."""
     entities = load_entities()
     if pilot_only:
-        entities = [e for e in entities if e.sp50_2026_rank]
+        entities = [e for e in entities if e.is_pilot]
     if limit is not None:
         entities = entities[:limit]
     modules = _load_modules()
@@ -192,7 +195,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--all-entities", action="store_true",
-                         help="check every discovered LEI in entities.csv, not just the sp50_2026_rank pilot sample")
+                         help="check every discovered LEI in entities.csv, not just the is_pilot pilot sample")
     parser.add_argument("--limit", type=int, default=None,
                          help="only attempt the first N entities - for a bounded test pass")
     args = parser.parse_args()

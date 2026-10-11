@@ -141,6 +141,61 @@ def test_esef_only_concept_has_no_stress_test_row(_esef_available):
     assert row["value"] > 0
 
 
+@pytest.fixture(scope="module")
+def _p3dh_available():
+    if not reconcile._cached_p3dh_files("Erste Group Bank AG", "K_61.00"):
+        pytest.skip(
+            "no cached P3DH EU KM1 export for Erste Group Bank AG - run "
+            "data_acquisition.run_update (or the scraper directly) first."
+        )
+
+
+def test_p3dh_concept_returns_one_row_per_cached_reference_date(_p3dh_available):
+    """2026-10-11: P3DH wiring (EU KM1 only). get_financial_data(period=None) should
+    return one p3dh row per cached reference date for this bank/template - cache-only,
+    never a live P3DH query (see reconcile._p3dh_rows's docstring)."""
+    df = reconcile.get_financial_data(_BANK_LEI, ["cet1_ratio"], period=None)
+    p3dh = df[df["source"] == "p3dh"]
+
+    assert len(p3dh) == len(reconcile._cached_p3dh_files("Erste Group Bank AG", "K_61.00"))
+    assert (p3dh["provenance"] == "reported_actual").all()
+    assert (p3dh["status"] == "ok").all()
+    # decimal fraction, same convention as stress_test's own cet1_ratio - not a percentage.
+    assert p3dh["value"].between(0, 1).all()
+
+
+def test_p3dh_and_stress_test_both_returned_untagged_as_one(_source_available, _p3dh_available):
+    """4.3 / spec, the P3DH instance of the same rule the ESEF test above covers.
+    P3DH's own cached reference dates (2025-06 onward, launched Jan 2026) don't overlap
+    the stress test's single reported_actual period (202412) - so at a period both
+    sources actually cover (202512), the stress test only has its own forward-looking
+    scenario projections, not a reported actual. Even so, neither source's figure is
+    combined with the other's - P3DH's real disclosure stays its own row, untagged as
+    one with the stress test's projections."""
+    df = reconcile.get_financial_data(_BANK_LEI, ["cet1_ratio"], period="202512")
+
+    sources = set(df["source"])
+    assert sources == {"eba_stress_test", "p3dh"}
+    p3dh_rows = df[df["source"] == "p3dh"]
+    assert len(p3dh_rows) == 1
+    assert p3dh_rows.iloc[0]["provenance"] == "reported_actual"
+    assert set(df[df["source"] == "eba_stress_test"]["provenance"]) == {"scenario_projection"}
+
+
+def test_p3dh_returns_no_rows_when_nothing_cached_for_bank():
+    """A bank run_update.py hasn't scraped P3DH for yet should return nothing for a
+    p3dh-sourced concept - not a fabricated missing_from_source row, since this module
+    never live-queries P3DH to confirm the value is actually absent there (see
+    reconcile._p3dh_rows's docstring on the cache-only asymmetry)."""
+    # HSBC Continental Europe - a real tracked LEI with no cached P3DH export as of
+    # 2026-10-11; skip (rather than assert a now-stale fact) if that's since changed.
+    lei = "F0HUI1NY1AZMJMD8LP67"
+    if reconcile._cached_p3dh_files(reconcile._p3dh_entity_name(lei), "K_61.00"):
+        pytest.skip("HSBC Continental Europe now has a cached P3DH export - case no longer applies")
+    df = reconcile.get_financial_data(lei, ["cet1_ratio"], period=None)
+    assert (df["source"] != "p3dh").all()
+
+
 def test_rwa_density_uses_reported_actual_trea(_source_available, _esef_available):
     """Homework 5, 2026-10-08. Finished sentence (PLANNING_LOG.md, decided by user): "A
     test would go red if the RWA density calculation ever used restated TREA instead of

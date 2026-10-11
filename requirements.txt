@@ -1,3 +1,5 @@
 requests>=2.31
 python-dateutil>=2.9
 playwright>=1.45   # needed for edap_scraper.py - after installing, run: playwright install chromium
+openpyxl>=3.1       # needed for reconcile.py's P3DH reader (data/raw/*.xlsx) and pandas' to_excel
+pandas>=2.0
