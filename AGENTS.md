@@ -102,11 +102,10 @@ Steps 1-2 and 5-6 below (P3DH scraper verification, populating `entities.csv`, s
 ESEF, the reconciliation logic itself) are done - see DATA_SOURCES_NOTES.md's 2026-10-06
 entries and PLANNING_LOG.md for what was actually found. What's left:
 
-1. **Extend `data/modules.txt`** past its one current entry (EU KM1, for Erste only) to the
-   other pilot banks and other templates `reconcile.py` might want - the real P3DH Template
-   option text, not a short module code (see `edap_downloader.py`'s docstring for why the
-   format changed). Then run `run_update.py` for a real pass and see what it actually does
-   against live P3DH data for more than one bank/template.
+1. `data/modules.txt` now has 2 templates (EU KM1, EU LI1) and a full 37-bank pilot run
+   against live P3DH is done (task 1.3, 2026-10-07: 364/592 combinations succeeded) - see
+   DATA_SOURCES_NOTES.md's matching entries. Still not the full ~100+ P3DH template list -
+   extend `modules.txt` further if `reconcile.py` needs another template.
 2. **Decide what to do about the 8 pilot banks with no FY2024 ESEF coverage** (5 German
    banks + Credit Mutuel have no filing at all; Societe Generale and Intesa Sanpaolo are
    indexed but missing specifically 2024 - see DATA_SOURCES_NOTES.md's 2026-10-06 ESEF
@@ -117,8 +116,12 @@ entries and PLANNING_LOG.md for what was actually found. What's left:
 3. **If EBA replies** to the bulk-access email: implement Option A in `edap_downloader.py`
    (a real HTTP call), keep the scraper as a fallback rather than deleting it, and update
    `DATA_SOURCES_NOTES.md`.
-4. Tasks 1.4 (not-yet-published vs. failed state in `run_update.py`) and 1.5 (non-December
-   fiscal year-ends in `waves.py`) remain open and untouched - see tasks.md.
+4. Tasks 1.4 and 1.5 are done (2026-10-11, see tasks.md and DATA_SOURCES_NOTES.md):
+   `run_update.py` failures now carry a `failure_type` (`config_missing_entity`,
+   `entity_not_found_on_p3dh`, `template_or_date_not_available`, `scraper_error`) instead
+   of a generic `status: "failed"`; and a direct `filings.xbrl.org` check confirmed zero
+   non-December `period_end` values across all 37 pilot banks, so the Dec-31-only
+   assumption in `waves.py`/`esef_client.py` needed no code change.
 5. See `openspec/changes/add-mvp-v1/` for the current MVP change proposal, derived from
    README section 3 ("The size").
 

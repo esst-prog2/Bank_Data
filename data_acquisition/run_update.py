@@ -28,11 +28,13 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
+from playwright.sync_api import TimeoutError as PWTimeoutError
+
 from data_acquisition import waves
-from data_acquisition.edap_downloader import fetch_module
+from data_acquisition.edap_downloader import BulkAccessNotConfirmed, fetch_module
 from data_acquisition.entities import load_entities
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -42,6 +44,42 @@ _ROOT = Path(__file__).resolve().parent.parent
 _STATE_FILE = _ROOT / "data" / "state" / "download_log.json"
 _MODULES_FILE = _ROOT / "data" / "modules.txt"
 _RAW_DIR = _ROOT / "data" / "raw"
+
+
+def _classify_failure(exc: Exception, wave: "waves.Wave") -> tuple[str, int | None]:
+    """Buckets a fetch_module() failure by its actual cause instead of the generic
+    "failed" every exception collapsed into before (task 1.4) - a live full-pilot run
+    already produced each of these for real, not just the EBA-calendar case the task
+    was originally written for:
+
+      - config_missing_entity: `lei` isn't in entities.csv at all (BulkAccessNotConfirmed) -
+        a tracking gap on our side, not a P3DH fact.
+      - entity_not_found_on_p3dh: the Entity slicer has no matching option - this bank
+        genuinely isn't (yet, or ever) on P3DH, or its name doesn't match (see
+        edap_scraper.py's entity-matching docstring).
+      - template_or_date_not_available: the Template or Reference date slicer had no
+        matching option for this entity. Deliberately NOT split further into "not yet
+        published" vs. "this entity/template doesn't disclose at this frequency" -
+        both produce the identical missing-option symptom and there's no reliable way
+        to tell them apart from the error alone (same limitation esef_client.find_filing's
+        docstring documents for its own tie-break: metadata isn't enough, only checking
+        an adjacent period's own data is certain). `days_overdue` (how long this wave's
+        deadline has already passed) is returned instead, as a hint a human can use: a
+        wave barely past deadline is more likely still pending; one months overdue is
+        more likely a genuine frequency/template mismatch.
+      - scraper_error: anything else - a real page/network break (iframe, export button,
+        download timeout) unrelated to any slicer not finding its value. This is the only
+        bucket that should alarm an operator; the other three are expected, routine outcomes.
+    """
+    if isinstance(exc, BulkAccessNotConfirmed):
+        return "config_missing_entity", None
+    msg = str(exc)
+    if isinstance(exc, PWTimeoutError) and "slicer 'entity'" in msg:
+        return "entity_not_found_on_p3dh", None
+    if isinstance(exc, PWTimeoutError) and ("slicer 'template'" in msg or "slicer 'reference_date'" in msg):
+        days_overdue = (date.today() - wave.earliest_expected_publication).days
+        return "template_or_date_not_available", days_overdue
+    return "scraper_error", None
 
 
 def _load_state() -> dict:
@@ -125,8 +163,11 @@ def main(pilot_only: bool = True, limit: int | None = None) -> None:
                     }
                     new_successes += 1
                 except Exception as exc:  # noqa: BLE001 - we want every failure recorded
+                    failure_type, days_overdue = _classify_failure(exc, wave)
                     state[key] = {
                         "status": "failed",
+                        "failure_type": failure_type,
+                        "days_overdue": days_overdue,
                         "error": str(exc),
                         "checked_at": datetime.now(timezone.utc).isoformat(),
                     }
@@ -136,6 +177,14 @@ def main(pilot_only: bool = True, limit: int | None = None) -> None:
 
     log.info("done: %d new successes, %d new failures, %d already-had skipped",
               new_successes, new_failures, skipped)
+    failure_types: dict[str, int] = {}
+    for entry in state.values():
+        if entry.get("status") == "failed":
+            failure_types[entry.get("failure_type", "unclassified")] = (
+                failure_types.get(entry.get("failure_type", "unclassified"), 0) + 1
+            )
+    if failure_types:
+        log.info("failures by type (all-time, not just this run): %s", failure_types)
 
 
 if __name__ == "__main__":

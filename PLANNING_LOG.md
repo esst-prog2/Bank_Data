@@ -542,3 +542,24 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   4.15% to a real 11.52%, making its 2021-2024 change +6.10pp - a strong
   but no-longer-anomalous result consistent with the sector-wide trend.
   Decided and carried out by agent.
+- 2026-10-11: Asked for the 3 most important next steps, then to do all 3.
+  Picked: regenerate docs/review.html (stale since 2026-09-25, predates the
+  ESEF period generalization), close out tasks.md 1.4 (failure
+  classification in run_update.py) and 1.5 (non-December fiscal year-end
+  check). Decided by user (which 3) and agent (how).
+- 2026-10-11: Regenerated docs/review.html's embedded DATA object directly
+  from a live get_financial_data() call rather than hand-editing the JSON
+  (54 rows now vs. 43 before, since Erste's ESEF data spans 2021-2024, not
+  just 2024). Verified with a headless Playwright render before publishing.
+  Decided and carried out by agent.
+- 2026-10-11: Implemented run_update._classify_failure() (tasks.md 1.4):
+  config_missing_entity / entity_not_found_on_p3dh /
+  template_or_date_not_available (carries days_overdue, deliberately not
+  split further into "not yet published" vs "wrong frequency" - no
+  reliable way to tell those apart from the error alone) / scraper_error.
+  Added tests/test_run_update.py. Decided and carried out by agent.
+- 2026-10-11: Closed out tasks.md 1.5: queried filings.xbrl.org directly for
+  all 37 pilot banks' real filed period_end values. Zero non-December
+  values found anywhere - confirmed the Dec-31-only assumption in waves.py
+  and esef_client.py is not a live limitation for any v1 pilot bank. No
+  code change needed. Decided and carried out by agent.

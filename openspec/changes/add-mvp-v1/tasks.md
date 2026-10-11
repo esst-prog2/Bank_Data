@@ -60,7 +60,7 @@
       absent/misidentified; EU LI1's confirmed semi-annual/annual-only
       frequency; per-bank submission-timing differences) are each checked
       and explained, not unexplained failures - see DATA_SOURCES_NOTES.md.
-- [ ] 1.4 In `run_update.py`'s state tracking, distinguish a wave that hasn't
+- [x] 1.4 In `run_update.py`'s state tracking, distinguish a wave that hasn't
       published yet (`not_yet_published`) from a genuine retrieval failure —
       currently both fall into the same generic `except Exception` branch and
       are recorded as `status: "failed"`. EBA confirmed the T+4/6/8 calendar
@@ -73,13 +73,41 @@
       template not disclosed at a given reference date's frequency) that are
       currently indistinguishable from a real scraper break in
       `download_log.json` without reading the full error string by hand.
-- [ ] 1.5 Confirm none of the v1 pilot banks report on a non-December fiscal
+      — 2026-10-11: implemented `run_update._classify_failure()`, keyed off the
+      specific exception type/message each cause actually produces (see that
+      function's docstring): `config_missing_entity` (LEI not in
+      `entities.csv`), `entity_not_found_on_p3dh` (Entity slicer had no match),
+      `template_or_date_not_available` (Template or Reference date slicer had
+      no match - deliberately NOT split further into "not yet published" vs.
+      "doesn't disclose at this frequency", since both produce the identical
+      symptom and there's no reliable way to tell them apart from the error
+      alone; a `days_overdue` figure is recorded instead as a human-readable
+      hint), and `scraper_error` (anything else - the only bucket that should
+      actually alarm an operator). Each `download_log.json` failure entry now
+      carries `failure_type` and `days_overdue`; the run's own summary log
+      prints an all-time failure-type breakdown. Tests in
+      `tests/test_run_update.py` pin all four buckets against the real
+      exception shapes `fetch_module()`/`edap_scraper._select_slicer()` raise.
+      Decided and carried out by agent.
+- [x] 1.5 Confirm none of the v1 pilot banks report on a non-December fiscal
       year-end. `waves.py`'s `_reference_dates_since()` only generates
       YEAR_END/YEAR_END_REMUNERATION waves for December reference dates, but
       EBA's FAQ B2 confirms non-December year-ends are also expected at
       "reference date + 6/8 months" (DATA_SOURCES_NOTES.md, 2026-09-22). If
       any pilot bank has one, extend `waves.py` to generate a YEAR_END wave
       for that bank's actual fiscal year-end month, not just December
+      — 2026-10-11: checked directly against filings.xbrl.org (ground truth -
+      real filed `period_end` values, not our own Dec-31 assumption) for all
+      37 `sp50_2026_rank` pilot banks. Result: zero non-December `period_end`
+      values found anywhere in the 31 banks that have any indexed ESEF data at
+      all (every value is `*-12-31`); the other 6 (Deutsche Bank, Commerzbank,
+      DZ Bank, LBBW, Bayerische Landesbank, Confederation Nationale Credit
+      Mutuel) have zero filings indexed - the pre-existing, separately
+      documented German/Credit Mutuel gap (AGENTS.md), not a fiscal-year-end
+      issue. Confirmed: the Dec-31-only assumption in `waves.py` and
+      `esef_client.py` is not a real limitation for any v1 pilot bank, based on
+      actual filed data rather than documentation. No code change needed.
+      Decided and carried out by agent.
 
 ## 2. Package surface
 

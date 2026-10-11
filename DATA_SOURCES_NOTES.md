@@ -998,3 +998,65 @@ Sources checked (this update):
   the possibility that this project's own LEI-to-bank mapping was the error
 - A full scan of every cached (bank, period) combination's filing-candidate list, to check
   whether the same kind of tie affected any other bank before concluding BBVA was isolated
+
+## Update 2026-10-11: tasks.md 1.4 and 1.5 closed out, and the review.html snapshot refreshed
+
+Followed up on the three items flagged as the most important remaining next steps
+(AGENTS.md's "Immediate next steps" #1-2 and tasks.md 1.4/1.5), now that the ESEF period
+generalization and DuPont work had moved past them.
+
+**`docs/review.html` regenerated.** The published snapshot (GitHub Pages) still reflected
+the pre-generalization `get_financial_data()` - FY2024-only ESEF rows, because that was all
+the code could return in September. With 2021-2024 ESEF now cached for Erste Group Bank AG
+(the snapshot's subject bank), the same function call for the same 7 concepts now returns
+54 rows instead of 43 (16 ESEF rows across 4 fiscal years instead of 4 rows for one), and
+"periods covered" goes from 4 to 7. Regenerated the embedded `DATA` object directly from a
+live `get_financial_data(ERSTE_LEI, concepts, period=None)` call rather than hand-editing
+the JSON, to avoid the same kind of transcription risk a test literal already caught once
+this project (see the 2026-10-08 DuPont entry). Verified the regenerated page with a
+headless Playwright load (no console/page errors, correct row/period counts) before
+committing - this is a static snapshot with no build step, so nothing else would have
+caught a malformed splice before a real visitor did.
+
+**tasks.md 1.4 (failure classification in `run_update.py`) implemented.** The task was
+originally written around one case (EBA's T+4/6/8 calendar being an expectation, not a
+guarantee) but the first live full-pilot run (2026-10-06) had already surfaced two more
+genuinely distinct causes that `except Exception` was collapsing into the same generic
+`status: "failed"`. Traced each cause back to the exact exception shape it produces:
+`edap_downloader.fetch_module()` raises `BulkAccessNotConfirmed` when the LEI isn't in
+`entities.csv` at all (a config gap, not a P3DH fact), and raises whatever
+`edap_scraper.export_data_points()` raises otherwise - which wraps every slicer failure as
+`playwright.sync_api.TimeoutError("Could not set slicer '<field>' to '<value>': ...")`,
+naming exactly which of the four slicers (`entity`, `template`, `module`, `reference_date`)
+had no matching option. That's enough to split "entity not on P3DH" from "template/date not
+available for this entity" without guessing - but NOT enough to further split "not yet
+published" from "doesn't disclose at this frequency", since both manifest as the identical
+missing-option symptom on the `template`/`reference_date` slicers. Rather than guess, that
+bucket instead carries `days_overdue` (how far past the wave's own expected-publication
+date, from `waves.py`) as a hint for a human reviewing the log, and the docstring says
+plainly why it isn't split further - the same honesty `esef_client.find_filing()`'s own
+tie-break docstring uses about its own limits. Anything else (a real page/network timeout
+unrelated to any slicer) falls into `scraper_error`, the one bucket meant to actually alarm
+an operator. Added `tests/test_run_update.py` covering all four buckets against the real
+exception text each cause produces.
+
+**tasks.md 1.5 (non-December fiscal year-end check) confirmed, no code change needed.**
+Queried `filings.xbrl.org`'s own `/entities/{lei}/filings` endpoint directly for all 37
+`sp50_2026_rank` pilot banks and collected every distinct `period_end` value each one has
+ever filed - real filed data, not this project's own Dec-31 assumption reflected back at
+itself. Result: of the 31 pilot banks with any indexed filing at all, every single
+`period_end` value is `*-12-31` with zero exceptions; the other 6 (Deutsche Bank,
+Commerzbank, DZ Bank, LBBW, Bayerische Landesbank, Confederation Nationale Credit Mutuel)
+return either a 404 (entity not indexed) or an empty filing list - the same German/Credit
+Mutuel gap already documented in AGENTS.md and the 2026-10-07 entry below, not a
+fiscal-year-end difference. So `waves.py`'s and `esef_client.py`'s calendar-year-only
+assumption is confirmed, from real data, to not be a live limitation for any v1 pilot bank -
+nothing to extend.
+
+Sources checked (this update):
+- `https://filings.xbrl.org/api/entities/{lei}/filings` for all 37 pilot banks, collecting
+  every distinct `attributes.period_end` value each has ever filed
+- `edap_scraper.py` and `edap_downloader.py`'s own docstrings, to confirm the exact
+  exception text each real failure cause produces before writing the classifier against it
+- A live headless Playwright render of the regenerated `docs/review.html` to check for
+  JS/console errors before publishing it

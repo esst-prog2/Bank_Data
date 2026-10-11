@@ -216,9 +216,9 @@
     <p class="subhead">
       Live output of <code class="mono">get_financial_data()</code> for one pilot bank, now pulling
       from <strong>two independent sources</strong>: the EBA EU-wide Stress Test 2025 (regulatory) and
-      the bank's own ESEF-tagged annual report (balance sheet &amp; income statement, via
-      <code class="mono">filings.xbrl.org</code>) &mdash; plus the edge cases the package is designed to
-      surface rather than hide.
+      the bank's own ESEF-tagged annual reports across four fiscal years, FY2021&ndash;FY2024
+      (balance sheet &amp; income statement, via <code class="mono">filings.xbrl.org</code>) &mdash;
+      plus the edge cases the package is designed to surface rather than hide.
     </p>
   </header>
 
@@ -283,9 +283,9 @@
 "bank_lei": "PQOH26KWDF7CG10L6792",
 "sources": {
 "eba_stress_test": "EBA EU-wide Stress Test 2025 (data_acquisition.eba_exercises, exercise=stress_test)",
-"esef": "ESEF FY2024 filing via filings.xbrl.org (data_acquisition.esef_client)"
+"esef": "ESEF filings FY2021-FY2024 via filings.xbrl.org (data_acquisition.esef_client)"
 },
-"generated": "2026-09-25",
+"generated": "2026-10-11",
 "concept_labels": {
 "cet1_ratio": "CET1 ratio (%)",
 "cet1_capital": "CET1 capital (EUR m)",
@@ -305,102 +305,6 @@
 "total_equity": "Balance sheet"
 },
 "rows": [
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202412",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "reported_actual",
-"scenario_label": "Actual",
-"value": 23995.67254328,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 1"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202412",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "restated_actual",
-"scenario_label": "Restated",
-"value": 24131.77121678,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 11"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202512",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 25253.197509054,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202512",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 21552.5765554318,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202612",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 27061.4342497508,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202612",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 21448.2684042435,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202712",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 27815.2184934092,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202712",
-"concept": "cet1_capital",
-"item": "2531006",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 20724.8204388645,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
-},
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
@@ -500,6 +404,198 @@
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 23995.67254328,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "restated_actual",
+"scenario_label": "Restated",
+"value": 24131.77121678,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 11"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 25253.197509054,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 21552.5765554318,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 27061.4342497508,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 21448.2684042435,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 27815.2184934092,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "cet1_capital",
+"item": "2531006",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 20724.8204388645,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531006, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "reported_actual",
+"scenario_label": "Actual",
+"value": 157240.732645547,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 1"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "restated_actual",
+"scenario_label": "Restated",
+"value": 150251.172801135,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 11"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 152805.75382822,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 162243.04531662,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 153267.512224067,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202612",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 165236.370139685,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Baseline",
+"value": 153207.97986616,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202712",
+"concept": "total_risk_exposure_amount",
+"item": "2531007",
+"source": "eba_stress_test",
+"provenance": "scenario_projection",
+"scenario_label": "Adverse",
+"value": 165885.214051741,
+"status": "ok",
+"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202412",
 "concept": "net_interest_income",
 "item": "2531001",
 "source": "eba_stress_test",
@@ -580,6 +676,42 @@
 "value": 7003.23223290703,
 "status": "ok",
 "origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531001, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202112",
+"concept": "net_interest_income",
+"item": "ifrs-full:InterestRevenueExpense",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 4975.7,
+"status": "ok",
+"origin": "ESEF filing (FY2021), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2021-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2021-12-31-de/reports/PQOH26KWDF7CG10L6792-2021-12-31-de.html, concept ifrs-full:InterestRevenueExpense"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202212",
+"concept": "net_interest_income",
+"item": "ifrs-full:InterestRevenueExpense",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 5950.6,
+"status": "ok",
+"origin": "ESEF filing (FY2022), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2022-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2022-12-31-de/reports/PQOH26KWDF7CG10L6792-2022-12-31-de.html, concept ifrs-full:InterestRevenueExpense"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202312",
+"concept": "net_interest_income",
+"item": "ifrs-full:InterestRevenueExpense",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 7228.0,
+"status": "ok",
+"origin": "ESEF filing (FY2023), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2023-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2023-12-31-de/reports/PQOH26KWDF7CG10L6792-2023-12-31-de.html, concept ifrs-full:InterestRevenueExpense"
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
@@ -679,6 +811,42 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202112",
+"concept": "profit_or_loss_for_the_year",
+"item": "ifrs-full:ProfitLoss",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 2408.1,
+"status": "ok",
+"origin": "ESEF filing (FY2021), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2021-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2021-12-31-de/reports/PQOH26KWDF7CG10L6792-2021-12-31-de.html, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202212",
+"concept": "profit_or_loss_for_the_year",
+"item": "ifrs-full:ProfitLoss",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 2666.3,
+"status": "ok",
+"origin": "ESEF filing (FY2022), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2022-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2022-12-31-de/reports/PQOH26KWDF7CG10L6792-2022-12-31-de.html, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202312",
+"concept": "profit_or_loss_for_the_year",
+"item": "ifrs-full:ProfitLoss",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 3921.0,
+"status": "ok",
+"origin": "ESEF filing (FY2023), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2023-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2023-12-31-de/reports/PQOH26KWDF7CG10L6792-2023-12-31-de.html, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
 "concept": "profit_or_loss_for_the_year",
 "item": "ifrs-full:ProfitLoss",
@@ -688,6 +856,42 @@
 "value": 3945.0,
 "status": "ok",
 "origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202112",
+"concept": "total_assets",
+"item": "ifrs-full:Assets",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 307428.2,
+"status": "ok",
+"origin": "ESEF filing (FY2021), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2021-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2021-12-31-de/reports/PQOH26KWDF7CG10L6792-2021-12-31-de.html, concept ifrs-full:Assets"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202212",
+"concept": "total_assets",
+"item": "ifrs-full:Assets",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 323865.0,
+"status": "ok",
+"origin": "ESEF filing (FY2022), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2022-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2022-12-31-de/reports/PQOH26KWDF7CG10L6792-2022-12-31-de.html, concept ifrs-full:Assets"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202312",
+"concept": "total_assets",
+"item": "ifrs-full:Assets",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 337155.0,
+"status": "ok",
+"origin": "ESEF filing (FY2023), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2023-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2023-12-31-de/reports/PQOH26KWDF7CG10L6792-2023-12-31-de.html, concept ifrs-full:Assets"
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
@@ -703,6 +907,42 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202112",
+"concept": "total_equity",
+"item": "ifrs-full:Equity",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 23513.4,
+"status": "ok",
+"origin": "ESEF filing (FY2021), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2021-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2021-12-31-de/reports/PQOH26KWDF7CG10L6792-2021-12-31-de.html, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202212",
+"concept": "total_equity",
+"item": "ifrs-full:Equity",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 25304.7,
+"status": "ok",
+"origin": "ESEF filing (FY2022), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2022-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2022-12-31-de/reports/PQOH26KWDF7CG10L6792-2022-12-31-de.html, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202312",
+"concept": "total_equity",
+"item": "ifrs-full:Equity",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 28502.0,
+"status": "ok",
+"origin": "ESEF filing (FY2023), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2023-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2023-12-31-de/reports/PQOH26KWDF7CG10L6792-2023-12-31-de.html, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
 "concept": "total_equity",
 "item": "ifrs-full:Equity",
@@ -712,102 +952,6 @@
 "value": 30767.0,
 "status": "ok",
 "origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:Equity"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202412",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "reported_actual",
-"scenario_label": "Actual",
-"value": 157240.732645547,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 1"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202412",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "restated_actual",
-"scenario_label": "Restated",
-"value": 150251.172801135,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 11"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202512",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 152805.75382822,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202512",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 162243.04531662,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202612",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 153267.512224067,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202612",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 165236.370139685,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202712",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Baseline",
-"value": 153207.97986616,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 2"
-},
-{
-"bank_lei": "PQOH26KWDF7CG10L6792",
-"period": "202712",
-"concept": "total_risk_exposure_amount",
-"item": "2531007",
-"source": "eba_stress_test",
-"provenance": "scenario_projection",
-"scenario_label": "Adverse",
-"value": 165885.214051741,
-"status": "ok",
-"origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
 }
 ],
 "missing_example": {
