@@ -108,9 +108,13 @@
       invocations, given the real multi-day scale) for every template approved in
       5.1, across the full pilot sample - verify via `data/state/download_log.json`
       success/failure counts and the run's own failure-type breakdown (task 1.4)
-- [ ] 5.3 Spot-check `reconcile.get_financial_data()` for a handful of banks across
+- [x] 5.3 Spot-check `reconcile.get_financial_data()` for a handful of banks across
       the newly-fetched templates - verify real, plausible `p3dh` rows come back,
       not just successful file downloads
+      - 2026-10-13: spot-checked 6 random pilot banks (Banco BPM, KBC, DZ Bank,
+        Rabobank, Nykredit, Intesa Sanpaolo) for credit_risk_rwa/
+        performing_exposures/total_risk_exposure_amount - all returned real `ok`
+        or correctly-reasoned `missing_from_source` p3dh rows, no crashes.
 
 ## 6. Close out
 

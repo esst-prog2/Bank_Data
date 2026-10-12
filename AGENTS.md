@@ -37,18 +37,35 @@ up or in progress:
   full 46-bank pilot sample (task 1.3). Its output is wired into
   `reconcile.get_financial_data()` as a third source (`reconcile._p3dh_rows`), cache-only -
   reading whatever `run_update.py` has already fetched, never a live P3DH query from inside
-  `reconcile.py` (see that function's docstring for why). Two templates now wired:
-  **EU KM1** (2026-10-11/12) - cet1_capital/tier1_capital/total_capital/cet1_ratio/
-  total_risk_exposure_amount/leverage_ratio/liquidity_coverage_ratio/nsfr_ratio, using fixed,
-  EBA-standardized row codes. **EU LI1** (2026-10-12) - only its two clean TOTAL rows
-  (Total Liabilities, Total shareholders' equity), each split by accounting-scope vs.
-  prudential-scope columns, giving total_equity a third source plus 3 new concepts
-  (total_equity_prudential_scope, total_liabilities, total_liabilities_prudential_scope).
-  LI1's other ~60 line items are identified by a per-bank "Open Key" string (confirmed: each
-  filer maps its own chart-of-accounts categories differently - BNP Paribas has no
-  "Total shareholders' equity" Open Key at all) rather than a fixed EBA row code, so they're
-  deliberately not wired - a missing Open Key for a given bank is `missing_from_source`, not
-  an error. `data_acquisition/waves.py` encodes the EBA publication calendar (T+4/6/8 months per
+  `reconcile.py` (see that function's docstring for why). `data/modules.txt` lists all 114
+  real P3DH templates (scraped 2026-10-12), but only 4 are actually wired - each inspected
+  against a real export first, per `extend-p3dh-template-coverage`'s own rule (now also a
+  `data-retrieval` spec requirement: never map a concept from a label that isn't the same,
+  bank-independent identifier for every filer):
+  - **EU KM1** (2026-10-11/12) - cet1_capital/tier1_capital/total_capital/cet1_ratio/
+    total_risk_exposure_amount/leverage_ratio/liquidity_coverage_ratio/nsfr_ratio, using
+    fixed, EBA-standardized row codes.
+  - **EU LI1** (2026-10-12) - only its two clean TOTAL rows (Total Liabilities, Total
+    shareholders' equity), giving total_equity a third source plus 3 new concepts
+    (total_equity_prudential_scope, total_liabilities, total_liabilities_prudential_scope).
+    **These are far sparser than they first looked**: checked 2026-10-13 against all 36
+    cached exports (not just the 2-bank Erste/BNP Paribas check) - only 1/36 (Erste) has
+    BOTH Open Keys at all; expect `missing_from_source` for roughly 35 of 36 pilot banks on
+    the 3 P3DH-only concepts. LI1's other ~60 line items stay unwired - no Open Key label
+    comes anywhere close to full-pilot coverage either (confirmed systematically, not
+    assumed).
+  - **EU OV1** (2026-10-12) - 5 new RWA-by-risk-type concepts (credit/CCR/CVA/market/
+    operational risk), plus its own TREA total mapped into the SAME total_risk_exposure_amount
+    concept KM1 already provides - revealing a real, unexplained ~1.5% gap between the two
+    independently-disclosed totals for the same bank/period, surfaced rather than reconciled.
+  - **EU CQ3** (2026-10-12) - performing_exposures/non_performing_exposures, feeding
+    `compute_npl_ratio()`. Its `Row` codes repeat across 3 internal sub-sheets - matched by
+    `Row Name` instead (still bank-independent, confirmed across 2 banks).
+  - **EU CC1** was inspected twice (2026-10-12, 2026-10-13) and confirmed NOT worth wiring:
+    its only clean headline rows exactly duplicate EU KM1's own figures (same COREP
+    submission, not an independent cross-check), and its other ~90 rows are granular
+    capital-deduction detail with no obvious curated subset.
+  `data_acquisition/waves.py` encodes the EBA publication calendar (T+4/6/8 months per
   Article 4 of the ITS), but EBA also confirmed this is "an EBA expectation rather than a
   strict legal publication requirement" - so a wave being past its expected date is a
   normal, expected outcome, not a failure (see DATA_SOURCES_NOTES.md's 2026-09-22 entry).
@@ -84,7 +101,11 @@ up or in progress:
   DATA_SOURCES_NOTES.md's 2026-10-06, 2026-10-07, and 2026-10-11 entries for the full
   per-bank breakdown and concept-coverage findings (net interest income and total equity
   are each genuinely untagged - not missing by bug - for several banks; see those entries
-  before assuming `missing_from_source` there is wrong).
+  before assuming `missing_from_source` there is wrong). **FY2025 filings are starting to
+  appear** - found by accident 2026-10-12 (a test incidentally triggered a live fetch);
+  checked deliberately 2026-10-13 (gap-esef-fy2025-check): 19/46 pilot banks have one
+  indexed and cached now, the other 27 plausibly just haven't filed yet (4 of those are the
+  German/Credit Mutuel national-gap entities).
 - **GLEIF** - used only to enrich/validate an LEI you already have (legal name, country,
   status), never to discover which banks are in scope. `data_acquisition/gleif_client.py`.
 - **Excluded**: ECB Supervisory Banking Statistics (SUP dataset) - checked directly,
@@ -144,25 +165,26 @@ read_only/openpyxl row-trimming bug found via the test suite) entries.
 
 ## Open change: extend-p3dh-template-coverage
 
-Created 2026-10-12 (`openspec/changes/extend-p3dh-template-coverage`, all 4 artifacts
-done, `openspec validate --strict` clean) - see its `tasks.md` for the live plan.
-`data/modules.txt` already has all 114 real P3DH templates (task 1.1, done); what's
-left is inspecting EU OV1/the EU CQ-series/EU CC1 against real exports before wiring
-anything, small-sample validation, then the real ~week-scale full-pilot fetch, batched
-via `run_update.py`'s existing `--limit` + idempotent state file. Pick this change back
-up (`/opsx:apply` or by hand) rather than starting new ad hoc edits for this work.
+Created 2026-10-12, all planning artifacts done; tasks 2-5 (inspect EU OV1/EU CQ3/EU CC1,
+wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) done
+2026-10-12/13 - see its `tasks.md` for the full trail. Only 6.1 (this file, done) and 6.2
+(archive once the full-pilot fetch's final numbers are confirmed) remain.
 
-## Possible next steps (none decided yet - ask before picking one)
+## Gap tasks (opened 2026-10-13, after reviewing what further data-gathering remained)
 
-- **Check other banks' EU LI1 Open Key vocabulary.** Confirmed (2026-10-12) that Erste's
-  and BNP Paribas's differ - BNP has no "Total shareholders' equity" Open Key at all.
-  Worth checking a few more pilot banks to see how common a clean "Total Liabilities"/
-  equity-total label actually is, versus how often `total_equity_prudential_scope` etc.
-  will come back `missing_from_source` in practice.
-- **Decide whether to run a full `run_update.py` pass** (all 46 pilot banks, not just
-  the 9 added 2026-10-12) against EU LI1 - it was fetched broadly for EU KM1 already
-  (task 1.3's 2026-10-07 pilot run), but EU LI1 coverage across the full pilot sample has
-  never been checked.
+- **gap-esef-fy2025-check** - done. 19/46 pilot banks now have FY2025 ESEF data cached.
+- **gap-li1-pilot-coverage** - done. 9/10 banks missing EU LI1 data are genuine P3DH
+  absences/non-disclosures; 1 (Danske Bank A/S) was a real fetch gap, retried and fixed.
+- **gap-li1-line-items** - done. Confirmed systematically (36 banks, not 2) that no more
+  EU LI1 line items are safe to wire, and that even the 2 already-wired totals are far
+  sparser than previously documented (1/36 banks has both).
+- **gap-cc1-revisit** - done. EU CC1 confirmed not worth wiring (see above).
+- **gap-p3dh-full-catalog** - starting. True full scope (46 banks x 110 remaining
+  templates) is ~9 days of continuous scraping - too large for one sitting. First
+  installment: all 114 templates for Erste alone (~5 hours), to see which of the
+  110 untried templates have any real content before deciding whether to extend further.
+  Resumable across however many future sessions it takes - same idempotent state file as
+  everything else.
 
 ## Working conventions established so far
 
