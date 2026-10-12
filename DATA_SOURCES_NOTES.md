@@ -1419,3 +1419,48 @@ Sources checked (this update):
   cross-checked against
 - BNP Paribas's own EU CQ3 export, to confirm `Row Name`'s wording generalizes before
   trusting it as the match key
+
+## Update 2026-10-13: EU LI1's real coverage is far sparser than the 2-bank check suggested
+
+gap-li1-line-items: before wiring any more of EU LI1's ~58 unwired line items, checked
+whether ANY Open Key label is common enough across the pilot sample to be worth it - and,
+separately, how common the 2 ALREADY-wired totals (`Total Liabilities`,
+`Total shareholders' equity`) actually are in practice, now that 36 pilot banks have a
+cached export instead of just the 2 (Erste, BNP Paribas) checked on 2026-10-12.
+
+**No Open Key label comes close to full-pilot coverage.** Checked Open Key frequency
+across all 36 cached exports: the single most common label, `Type of liabilities =
+Other liabilities`, appears in only 23/36 (64%); `Loans and advances to customers` - a
+label that sounds like a safe IFRS-standard caption - appears in just 7/36. Confirmed
+this is genuinely free-text per-filer wording, not a coding gap: the same real concept
+shows up under entirely different words depending on the filer, including different
+*languages* (a French-reporting bank's export uses `Type of assets = Immobilisations
+incorporelles` where others say "Intangible assets"). This closes the question task 2
+left open for LI1's non-total line items: none are safe to wire, confirmed systematically
+across the full cached pilot sample, not assumed from the 2-bank BNP check alone.
+
+**The 2 already-wired totals are far rarer than previously documented.** Only
+**1 of 36** cached banks (Erste) has BOTH `Total Liabilities` and
+`Total shareholders' equity` Open Keys. Only 4/36 have ANY row containing "total" at all,
+and even those don't agree on what's totaled: BNP Paribas has `TOTAL ASSETS` and
+`Total Liabilities` but no equity total; KBC has only `TOTAL ASSETS`; Deutsche Bank's 3
+"total"-labeled rows are unrelated fair-value sub-totals (`Total financial assets at fair
+value through OCI`, etc.), not a balance-sheet grand total at all. **Erste is the outlier
+in this pilot sample, not the typical case** - the 2026-10-12 entry's framing ("BNP lacks
+the equity total") understated this: it isn't one isolated gap, it's the near-universal
+state. The wiring itself is still correct (`missing_from_source` is exactly right for a
+bank that doesn't report this Open Key), and total_equity's OTHER source (ESEF) is
+unaffected - but anyone relying on `total_equity_prudential_scope`/`total_liabilities`/
+`total_liabilities_prudential_scope` for real cross-pilot analysis should expect
+`missing_from_source` for roughly 35 of 36 banks, not treat Erste's full coverage as
+representative.
+
+No code change from this - the existing `missing_from_source` behavior was already
+correct for every bank checked. This is a documentation correction: the true scale of
+EU LI1's Open Key sparsity was not known until checked against the full pilot sample
+rather than 2 banks.
+
+Sources checked (this update):
+- All 36 currently-cached EU LI1 (`K_64.01`) exports, read directly with openpyxl -
+  both for Open Key frequency across the whole set, and specifically for any
+  "total"-containing label, not just the 2 already wired

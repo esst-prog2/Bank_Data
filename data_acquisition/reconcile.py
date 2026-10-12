@@ -153,7 +153,19 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     # export, see _p3dh_rows()'s docstring), column "0020" is "b. Carrying values
     # under scope of prudential consolidation" (a genuinely new concept - exactly the
     # comparability-risk distinction README section 5 describes, not available from
-    # any other wired source).
+    # any other wired source). Checked 2026-10-13 (gap-li1-line-items) against all 36
+    # pilot banks with a cached export, not just Erste/BNP Paribas: these two Open
+    # Keys are NOT typical - only 1/36 (Erste) has BOTH; only 4/36 have ANY row
+    # containing "total" at all, and those don't agree on scope (BNP has asset/
+    # liability totals but no equity total; KBC has only an asset total; Deutsche
+    # Bank's "total" rows are unrelated fair-value sub-totals). Expect
+    # missing_from_source for roughly 35 of 36 pilot banks on these 3 P3DH-only
+    # concepts - Erste's full coverage is the outlier, not representative. No other
+    # Open Key comes anywhere close to full-pilot coverage either (the most common
+    # label, "Other liabilities", is only 23/36) - confirms none of LI1's other line
+    # items are safe to wire, this time checked systematically rather than assumed
+    # from the 2-bank BNP comparison alone. See DATA_SOURCES_NOTES.md's 2026-10-13
+    # entry for the full frequency breakdown.
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0010"): "total_equity",
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0020"): "total_equity_prudential_scope",
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total Liabilities::0010"): "total_liabilities",

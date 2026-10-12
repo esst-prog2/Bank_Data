@@ -261,6 +261,31 @@ def test_p3dh_li1_open_key_absent_for_bank_is_missing_not_failed():
     assert p3dh_rows["value"].isna().all()
 
 
+def test_p3dh_li1_totals_are_sparse_across_the_full_pilot_sample():
+    """2026-10-13 (gap-li1-line-items): checked across all pilot banks with a cached
+    EU LI1 export, not just the Erste/BNP Paribas pair - Erste turned out to be the
+    outlier, not representative. Most pilot banks have no "Total shareholders'
+    equity"/"Total Liabilities" Open Key at all. Pins that finding down as a fact
+    about this real data, not an assumption carried forward from a 2-bank check -
+    if P3DH's own disclosure patterns ever change this substantially, this test
+    should be the thing that notices."""
+    pilot = [e for e in reconcile.load_entities() if e.is_pilot]
+    checked = [e for e in pilot if reconcile._cached_p3dh_files(e.name, "K_64.01")]
+    if len(checked) < 10:
+        pytest.skip("fewer than 10 pilot banks have a cached EU LI1 export yet")
+
+    ok_count = 0
+    for entity in checked:
+        df = reconcile.get_financial_data(entity.lei, ["total_equity_prudential_scope"], period=None)
+        p3dh_rows = df[df["source"] == "p3dh"]
+        if not p3dh_rows.empty and (p3dh_rows["status"] == "ok").any():
+            ok_count += 1
+
+    # confirmed 2026-10-13: 1/36 banks (Erste) had it - a generous upper bound, not a
+    # tight pin, so this doesn't flake if P3DH gains one or two more complete filers.
+    assert ok_count <= len(checked) * 0.25
+
+
 @pytest.fixture(scope="module")
 def _p3dh_ov1_available():
     if not reconcile._cached_p3dh_files("Erste Group Bank AG", "K_60.00"):

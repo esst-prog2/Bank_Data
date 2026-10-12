@@ -721,3 +721,55 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   mostly just the 2025-12-31 annual date per bank (Erste/BNP/HSBC each
   got only that one date, consistent with an annual-only disclosure
   pattern, not a bug). Decided by agent.
+- 2026-10-13: A live run of the full 46-bank x 2-template (EU OV1/EU CQ3)
+  fetch hit a real environment outage mid-run (net::ERR_INTERNET_
+  DISCONNECTED) - 689 of 701 attempts failed almost instantly once
+  connectivity dropped, misleadingly classified as scraper_error at
+  volume. Confirmed root cause via the raw exception text in
+  download_log.json before accepting the result; confirmed connectivity
+  restored; re-ran the same idempotent script, which correctly retried
+  every non-"success" entry regardless of failure_type. Decided and
+  carried out by agent.
+- 2026-10-13: Asked what further data-gathering steps remain after the
+  current run, then to name and start working through all of them.
+  Assigned identifiers: gap-esef-fy2025-check (cheap existence check for
+  the other 45 pilot banks' FY2025 ESEF filing, Erste's was found by
+  accident 2026-10-12), gap-li1-pilot-coverage (only 36/46 pilot banks
+  have any cached EU LI1 data - separate genuine P3DH absence from real
+  fetch gaps, fill the latter), gap-li1-line-items (wire more of EU LI1's
+  ~58 still-unwired line items into CONCEPT_MAP - data already cached, a
+  code task not a fetch task), gap-cc1-revisit (EU CC1 was confirmed
+  mappable 2026-10-12 but deferred - repeat the small-sample-then-full-
+  pilot pattern extend-p3dh-template-coverage used for EU OV1/EU CQ3),
+  gap-p3dh-full-catalog (the other 110 of 114 P3DH templates have never
+  been fetched for anyone - the explicitly-deferred, ~week-scale
+  operation design.md flagged as this change's own non-goal). Decided by
+  user (do all of them) and agent (identifiers, execution order).
+- 2026-10-13: gap-esef-fy2025-check done. Checked all 45 other pilot
+  banks (lightweight /filings listing, not a full fetch) for a
+  2025-12-31 ESEF filing's existence: 18 have one indexed (the other 23
+  plausibly just haven't filed FY2025 yet; 4 are the already-documented
+  German/Credit Mutuel national-gap entities). Fetched real facts.json
+  for all 18 - 19/46 pilot banks now have FY2025 ESEF data cached
+  (Erste's was already there). Decided and carried out by agent.
+- 2026-10-13: gap-li1-pilot-coverage done. Classified all 10 pilot banks
+  with zero cached EU LI1 data using download_log.json's raw error text
+  (most predate the 2026-10-11 failure_type classifier). 9/10 are genuine:
+  3 already-documented P3DH absences (Societe Generale, Credit Agricole
+  SA, Credit Mutuel - a confederation body with no own disclosure), 4
+  genuine template_or_date_not_available (Rabobank, Swedbank, OP
+  Osuuskunta, DZ Bank - EU LI1 not disclosed at the dates tried), 2
+  already correctly classified from the 2026-10-12 nine-bank fetch (HSBC,
+  Piraeus). 1/10 (Danske Bank A/S) was a real fetch gap - its recorded
+  error was a plain page-load timeout, not a finding - retried and
+  succeeded. Decided and carried out by agent.
+- 2026-10-13: gap-li1-line-items done (see DATA_SOURCES_NOTES.md's
+  2026-10-13 entry for the full breakdown). Checked Open Key frequency
+  across all 36 cached EU LI1 exports: no label beyond the 2 already
+  wired comes close to full-pilot coverage (confirms no more line items
+  are safe to wire), and - a bigger finding than expected - even the 2
+  already-wired totals are far rarer than the earlier 2-bank check
+  suggested: only 1/36 banks (Erste) has both. Updated reconcile.py's
+  CONCEPT_MAP comment and added a test pinning this down. No code change
+  - the existing missing_from_source behavior was already correct.
+  Decided and carried out by agent.
