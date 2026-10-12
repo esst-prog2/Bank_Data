@@ -261,6 +261,98 @@ def test_p3dh_li1_open_key_absent_for_bank_is_missing_not_failed():
     assert p3dh_rows["value"].isna().all()
 
 
+@pytest.fixture(scope="module")
+def _p3dh_ov1_available():
+    if not reconcile._cached_p3dh_files("Erste Group Bank AG", "K_60.00"):
+        pytest.skip(
+            "no cached P3DH EU OV1 export for Erste Group Bank AG - run "
+            "data_acquisition.run_update (or the scraper directly) first."
+        )
+
+
+def test_p3dh_ov1_rwa_breakdown_concepts_are_new(_p3dh_ov1_available):
+    """2026-10-12 (extend-p3dh-template-coverage): EU OV1's risk-type breakdown -
+    credit/CCR/CVA/market/operational risk RWA - has no other wired source at all."""
+    concepts = [
+        "credit_risk_rwa", "counterparty_credit_risk_rwa", "cva_risk_rwa",
+        "market_risk_rwa", "operational_risk_rwa",
+    ]
+    df = reconcile.get_financial_data(_BANK_LEI, concepts, period="202512")
+
+    assert set(df["standardized_concept"]) == set(concepts)
+    assert set(df["source"]) == {"p3dh"}
+    assert (df["status"] == "ok").all()
+    assert (df["value"] > 0).all()
+
+
+def test_p3dh_ov1_total_rwa_is_untagged_as_one_with_km1s_own_total(_p3dh_available, _p3dh_ov1_available):
+    """4.3 / spec, a THIRD instance of the untagged-as-one rule, and the most
+    striking one found so far: EU OV1's own "29. Total" row maps to the SAME
+    total_risk_exposure_amount concept as EU KM1's row 0040 - and the two
+    independently-disclosed P3DH figures for the same bank/period do NOT agree
+    (confirmed 2026-10-12: a real ~1.5% gap, not yet explained) - exactly the kind
+    of disagreement this module is designed to surface, never silently resolve."""
+    df = reconcile.get_financial_data(_BANK_LEI, ["total_risk_exposure_amount"], period="202512")
+    p3dh_rows = df[df["source"] == "p3dh"]
+
+    assert len(p3dh_rows) == 2
+    assert (p3dh_rows["status"] == "ok").all()
+    assert (p3dh_rows["provenance"] == "reported_actual").all()
+    values = p3dh_rows["value"].tolist()
+    assert values[0] != values[1]
+    relative_gap = abs(values[0] - values[1]) / min(values)
+    assert 0.01 < relative_gap < 0.02  # confirmed ~1.5%, not a rounding artifact
+
+
+@pytest.fixture(scope="module")
+def _p3dh_cq3_available():
+    if not reconcile._cached_p3dh_files("Erste Group Bank AG", "K_82.00"):
+        pytest.skip(
+            "no cached P3DH EU CQ3 export for Erste Group Bank AG - run "
+            "data_acquisition.run_update (or the scraper directly) first."
+        )
+
+
+def test_p3dh_cq3_matches_by_row_name_not_ambiguous_row_code(_p3dh_cq3_available):
+    """2026-10-12: EU CQ3 reuses `Row` codes across 3 internal sub-sheets (on-balance,
+    off-balance, grand-total) - matching by `Row Name` instead (CONCEPT_MAP's CQ3
+    entries) must resolve to the grand-total sheet's real figures, not whichever
+    sub-sheet's same-numbered row happened to be read first."""
+    df = reconcile.get_financial_data(
+        _BANK_LEI, ["performing_exposures", "non_performing_exposures"], period="202512"
+    )
+    assert set(df["source"]) == {"p3dh"}
+    assert (df["status"] == "ok").all()
+    by_concept = df.set_index("standardized_concept")["value"]
+    # the grand-total sheet's performing exposures must exceed either of its own
+    # on-balance/off-balance components alone (confirmed on Erste's real export:
+    # on-balance ~24.16bn, off-balance ~79.29bn, grand total ~422.45bn) - a row
+    # mismatched to the wrong sub-sheet would come back far too small.
+    assert by_concept["performing_exposures"] > 400_000  # EUR m
+    assert by_concept["non_performing_exposures"] > 0
+
+
+def test_compute_npl_ratio_matches_hand_calculation(_p3dh_cq3_available):
+    """Expected values computed by hand from the same cached EU CQ3 export this
+    function reads, confirmed plausible for a real European bank (~1-2%) before
+    trusting the mapping - see CONCEPT_MAP's CQ3 comment and compute_npl_ratio's
+    own docstring."""
+    ratio = reconcile.compute_npl_ratio(_BANK_LEI, "202512")
+    assert ratio == pytest.approx(0.014214244401241994, rel=1e-9)
+
+
+def test_compute_npl_ratio_raises_when_not_cached():
+    """A bank with no cached EU CQ3 export must raise NplRatioError, never silently
+    compute from a missing/zero value (same discipline as compute_rwa_density)."""
+    # HSBC Continental Europe - a real tracked LEI, no cached CQ3 export as of
+    # 2026-10-12; skip (rather than assert a now-stale fact) if that's since changed.
+    lei = "F0HUI1NY1AZMJMD8LP67"
+    if reconcile._cached_p3dh_files(reconcile._p3dh_entity_name(lei), "K_82.00"):
+        pytest.skip("HSBC Continental Europe now has a cached EU CQ3 export - case no longer applies")
+    with pytest.raises(reconcile.NplRatioError):
+        reconcile.compute_npl_ratio(lei, "202512")
+
+
 def test_p3dh_returns_no_rows_when_nothing_cached_for_bank():
     """A bank run_update.py hasn't scraped P3DH for yet should return nothing for a
     p3dh-sourced concept - not a fabricated missing_from_source row, since this module

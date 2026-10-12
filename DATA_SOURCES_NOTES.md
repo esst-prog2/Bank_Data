@@ -1350,3 +1350,72 @@ Sources checked (this update):
 - `openspec validate --strict` and `openspec status` for the new change, to confirm
   all 4 artifacts are genuinely complete and internally consistent before reporting it
   as done
+
+## Update 2026-10-12 (third entry): EU OV1 and EU CQ3 wired, EU CC1 deliberately deferred
+
+Picked up `extend-p3dh-template-coverage`'s tasks (sections 2-3): inspect EU OV1, the
+EU CQ-series, and EU CC1 against real exports before wiring any of them, per the
+change's own core rule.
+
+**EU OV1 ("K_60.00 - EU OV1 - Overview of total risk exposure amounts") - confirmed
+KM1-shaped.** Fetched live for Erste (2025-12-31, no prior cache) and opened directly
+with openpyxl: 34 distinct, globally-unique `Row` codes (e.g. `0010` = "01. Credit risk
+(excluding CCR)", `0070` = "06. Counterparty credit risk - CCR", `0120` = "10. Credit
+valuation adjustments risk", `0260` = "20. Position, FX and commodities risks (market
+risk)", `0320` = "24. Operational risk", `0380` = "29. Total") - no per-filer vocabulary,
+same shape as EU KM1. Also found the template has 3 columns, not EU KM1's 5: `a`/`b` are
+TREA for `T`/`T-1`, `c` is "Total own funds requirements" for `T` only (confirmed:
+11,973.91 EUR m is exactly 8% of column `a`'s 149,673.86 EUR m TREA figure) - only column
+`a` is used, consistent with the project's existing "only `T`, never a lookback column"
+rule.
+
+**A real, unexplained ~1.5% gap between two independently-disclosed TREA totals for the
+same bank/period.** EU OV1's row `0380` ("29. Total") gives Erste's 2025-12-31 TREA as
+149,673.86 EUR m; EU KM1's row `0040` gives 147,487.07 EUR m for the identical
+bank/period. Rather than treat this as a mapping bug or silently pick one, mapped OV1's
+total to the SAME `total_risk_exposure_amount` concept EU KM1 already provides - this
+module's own "multiple sources report the same concept" rule means both now show up as
+separate rows, surfacing the gap rather than hiding it. Not yet explained (candidates not
+ruled out: the output-floor adjustment rows `0350`-`0370` OV1 reports separately, a timing
+difference within the same reference date's submission, or a genuine EBA-template-level
+reconciling item) - a real open question for whoever next has reason to dig into it,
+flagged rather than guessed at.
+
+**EU CQ3 ("K_82.00 - EU CQ3: Credit quality of performing and non-performing exposures by
+past due days") - a genuine structural wrinkle neither EU KM1 nor EU LI1 had.** Fetched
+live for Erste: `Row` codes are reused across 3 internal sub-sheets (confirmed via the
+`Cell` field's own prefix - `{K_82.00.a, r0010, ...}` for on-balance-sheet items,
+`.b` for off-balance-sheet, `.c` for the grand-total sheet) - the SAME `Row` code `0010`
+means "005 Cash balances at central banks..." on sheet `.a`, "150 Off-balance-sheet
+exposures" on sheet `.b`, and "220 Total" on sheet `.c`. Matching on `Row` alone (as EU
+KM1's mapping does) would have silently picked whichever sub-sheet's row the file
+happened to list first - a real risk this inspection step exists to catch. `Row Name`
+itself, however, is still a fixed, EBA-numbered caption, not per-filer prose - confirmed
+by fetching the same template for BNP Paribas and finding the exact same text ("220
+Total") at the exact same place. Wired `performing_exposures`/`non_performing_exposures`
+from EU CQ3's grand-total sheet, matched by `Row Name= 220 Total` instead of `Row=`
+- `reconcile._read_p3dh_fact()` needed NO code change for this, since its field-matching
+was already written generically over any real header column, not hardcoded to `Row`/
+`Open Key` - confirming the change's own design.md prediction. Added
+`compute_npl_ratio()` (gross NPL ratio = non-performing / (performing + non-performing)),
+mirroring `compute_rwa_density()`'s pattern. Checked for plausibility before trusting it
+(no independent source exists to cross-check against): Erste 2025-12-31 gives ~1.42%, BNP
+Paribas gives ~1.51% - both squarely in the normal range for a strong European bank, not
+a tagging artifact.
+
+**EU CC1 ("K_66.01 - EU CC1 - Composition of regulatory own funds") - confirmed
+KM1-shaped, deliberately NOT wired.** 94 distinct, globally-unique row codes, single
+`Open Key` value (`None`) throughout - structurally safe to map, same as EU KM1/EU OV1.
+Not wired anyway: it's a detailed CET1-capital-adjustment reconciliation (deductions for
+intangibles, expected-loss amounts, deferred tax assets, etc.) that would need its own
+curation pass to decide which of 94 lines are worth a standardized concept - the exact
+same reason most of EU LI1's ~60 line items stayed unwired. A real, available template,
+explicitly deferred rather than silently skipped.
+
+Sources checked (this update):
+- Live P3DH fetches of EU OV1, EU CQ3 (both banks), and EU CC1, each opened directly with
+  openpyxl before writing any `CONCEPT_MAP` entry against it
+- EU KM1's own cached Erste export, to get the independent TREA figure the OV1 total was
+  cross-checked against
+- BNP Paribas's own EU CQ3 export, to confirm `Row Name`'s wording generalizes before
+  trusting it as the match key

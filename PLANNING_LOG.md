@@ -698,3 +698,17 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   --limit flag and idempotent state file rather than new scheduling
   infrastructure. Validated clean via `openspec validate --strict`.
   Decided and carried out by agent.
+- 2026-10-12: Picked up extend-p3dh-template-coverage's tasks (sections
+  2-3). Inspected EU OV1, EU CQ3, and EU CC1 against real exports before
+  wiring any. EU OV1 and EU CQ3 confirmed safe to map (EU CQ3 needed
+  matching on Row Name instead of Row, due to a real structural wrinkle -
+  Row codes repeat across its 3 internal sub-sheets); EU CC1 confirmed
+  safe to map too but deliberately deferred (94-row detailed breakdown,
+  same reason as most of EU LI1). Wired EU OV1 (5 new RWA-by-risk-type
+  concepts, plus its own TREA total mapped to the existing
+  total_risk_exposure_amount concept - revealing a real, unexplained
+  ~1.5% gap against EU KM1's own TREA figure for the same bank/period,
+  surfaced rather than hidden) and EU CQ3 (performing_exposures/
+  non_performing_exposures, feeding a new compute_npl_ratio() function).
+  5 new tests, all passing (29 total, 1 skip). Decided and carried out by
+  agent.

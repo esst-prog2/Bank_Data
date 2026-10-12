@@ -16,7 +16,10 @@ Three real, verified sources are wired in:
   income-statement concepts, all `reported_actual`.
 - EBA Pillar 3 Data Hub (P3DH) - see `_p3dh_rows()`'s own docstring for exactly
   what's read and why it's cache-only (never a live P3DH query from inside
-  this function). Two templates, added incrementally:
+  this function). `data/modules.txt` lists all 114 real templates P3DH offers
+  (scraped 2026-10-12, see extend-p3dh-template-coverage), but only a few are
+  actually wired here - each one inspected against a real export first, never
+  wired from its name alone (see that change's design.md):
   - EU KM1 "Key metrics" (2026-10-11): cet1_capital, cet1_ratio,
     total_risk_exposure_amount - a genuine third source for concepts the
     stress test already reports - plus 5 genuinely new concepts the stress
@@ -34,6 +37,24 @@ Three real, verified sources are wired in:
     category) are deliberately NOT wired - that's a much larger, differently
     shaped undertaking than this module's per-item CONCEPT_MAP fits without
     its own design pass.
+  - EU OV1 "Overview of total risk exposure amounts" (2026-10-12): breaks
+    KM1's single TREA total down by risk type - credit_risk_rwa,
+    counterparty_credit_risk_rwa, cva_risk_rwa, market_risk_rwa,
+    operational_risk_rwa, all genuinely new, plus its own "29. Total" row
+    mapped to the SAME total_risk_exposure_amount concept KM1 already
+    provides (see CONCEPT_MAP's OV1 comment for the real ~1.5% gap between
+    the two independently-disclosed totals this surfaces, not yet explained).
+  - EU CQ3 "Credit quality of performing and non-performing exposures by past
+    due days" (2026-10-12): performing_exposures/non_performing_exposures,
+    feeding `compute_npl_ratio()`. A structural wrinkle neither KM1 nor LI1
+    had - its `Row` codes repeat across 3 internal sub-sheets, so these are
+    matched by `Row Name` instead (still a fixed EBA caption, confirmed
+    identical across two banks - see CONCEPT_MAP's CQ3 comment).
+  - EU CC1 "Composition of regulatory own funds" (`K_66.01`) was inspected
+    and confirmed KM1-shaped (94 fixed row codes, no per-filer vocabulary) but
+    deliberately NOT wired - it's a detailed capital-adjustment breakdown that
+    would need its own curation pass to pick which of 94 rows matter, the
+    same reason most of LI1's line items stayed unwired.
 
 Two of the standardized concepts (net_interest_income,
 profit_or_loss_for_the_year) are reported by BOTH the stress test and ESEF for
@@ -137,6 +158,40 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0020"): "total_equity_prudential_scope",
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total Liabilities::0010"): "total_liabilities",
     ("p3dh", "K_64.01::Open Key=Type of liabilities = Total Liabilities::0020"): "total_liabilities_prudential_scope",
+    # Added 2026-10-12 (extend-p3dh-template-coverage): EU OV1 ("K_60.00 - EU OV1 -
+    # Overview of total risk exposure amounts") - confirmed KM1-shaped on Erste's own
+    # export: 34 fixed, globally-unique row codes, no per-filer vocabulary. Breaks the
+    # single TREA total KM1 already reports down by risk type. Row 0380's own "29.
+    # Total" maps to the SAME total_risk_exposure_amount concept KM1's row 0040
+    # already provides - deliberately, not a mistake: confirmed on Erste's own
+    # 2025-12-31 data that the two independently-disclosed totals do NOT match
+    # exactly (OV1: 149,673.86 EUR m; KM1: 147,487.07 EUR m - a real ~1.5% gap, not
+    # yet explained), which this module's design surfaces as two untagged-as-one
+    # rows for the same concept/period/source rather than silently picking one or
+    # averaging them (the exact "Multiple sources report the same concept" behavior
+    # the rest of this module already follows for stress_test vs. ESEF/P3DH).
+    ("p3dh", "K_60.00::Row=0010::0010"): "credit_risk_rwa",
+    ("p3dh", "K_60.00::Row=0070::0010"): "counterparty_credit_risk_rwa",
+    ("p3dh", "K_60.00::Row=0120::0010"): "cva_risk_rwa",
+    ("p3dh", "K_60.00::Row=0260::0010"): "market_risk_rwa",
+    ("p3dh", "K_60.00::Row=0320::0010"): "operational_risk_rwa",
+    ("p3dh", "K_60.00::Row=0380::0010"): "total_risk_exposure_amount",
+    # Added 2026-10-12 (extend-p3dh-template-coverage): EU CQ3 ("K_82.00 - EU CQ3:
+    # Credit quality of performing and non-performing exposures by past due days").
+    # A real structural wrinkle neither KM1 nor LI1 had: this template's `Row` codes
+    # are NOT globally unique - they're reused across 3 internal sub-sheets (on-
+    # balance-sheet items, off-balance-sheet items, and a grand-total sheet), only
+    # disambiguated by `Row Name`'s text (confirmed via the `Cell` field's own
+    # ".a"/".b"/".c" sub-sheet prefix - matching on `Row` alone would have silently
+    # picked whichever sub-sheet's row happened to be found first). `Row Name` itself
+    # is still a fixed, EBA-numbered caption ("220 Total"), not per-filer prose like
+    # LI1's Open Key - confirmed identical wording on a second bank (BNP Paribas)
+    # before trusting it, per this change's own design rule. Reuses
+    # `_read_p3dh_fact()`'s existing generic field-matching unchanged (`match_field`
+    # can be any real header name, "Row Name" included) - no new code needed, only
+    # these entries, exactly as design.md predicted. Feeds compute_npl_ratio().
+    ("p3dh", "K_82.00::Row Name= 220 Total::0010"): "performing_exposures",
+    ("p3dh", "K_82.00::Row Name= 220 Total::0040"): "non_performing_exposures",
 }
 
 # Whether an ESEF concept is a balance-sheet instant (as-of a date) or an
@@ -326,10 +381,16 @@ def _read_p3dh_fact(
 ) -> tuple[datetime, str | None, str | None, float | None]:
     """Pulls one (ReferenceDate, row/member description, column description, FactValue)
     out of a cached P3DH Data Points Report export - row 1 carries ReferenceDate, row 2
-    is the real header, data rows follow (see module docstring). `match_field` is either
-    "Row" (EU KM1's fixed, EBA-standardized row codes) or "Open Key" (EU LI1's
-    breakdown-member strings - that template has no row code of its own, see
-    CONCEPT_MAP's LI1 comment).
+    is the real header, data rows follow (see module docstring). `match_field` is
+    whichever of that header's own column names actually identifies a fact
+    bank-independently for the template at hand - "Row" for EU KM1/EU OV1's fixed,
+    EBA-standardized row codes; "Open Key" for EU LI1's breakdown-member strings
+    (that template has no row code of its own, see CONCEPT_MAP's LI1 comment);
+    "Row Name" for EU CQ3, where `Row` alone is ambiguous (reused across its 3
+    internal sub-sheets) but the Row Name caption is still bank-independent (see
+    CONCEPT_MAP's CQ3 comment) - deliberately generic rather than special-cased per
+    template, since a template not yet inspected may need yet another one of its
+    own real header columns as the safe match key.
 
     The last three return values are None, not an exception, when the fact genuinely
     isn't in this export: confirmed real on BNP Paribas's own LI1 file, which has no
@@ -556,6 +617,38 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
     if assets.empty or assets.iloc[0]["status"] != "ok":
         raise RwaDensityError(f"{bank_lei}/{period}: no total_assets available")
     return float(trea.iloc[0]["value"]) / float(assets.iloc[0]["value"])
+
+
+class NplRatioError(ValueError):
+    """Gross NPL ratio could not be computed for this bank/period - no cached EU CQ3
+    data (performing_exposures/non_performing_exposures) available."""
+
+
+def compute_npl_ratio(bank_lei: str, period: str) -> float:
+    """Gross non-performing-loans ratio = non_performing_exposures /
+    (performing_exposures + non_performing_exposures), for one bank/period - both
+    concepts from EU CQ3's own grand-total sub-sheet (reconcile._p3dh_rows, added
+    2026-10-12, extend-p3dh-template-coverage). Confirmed plausible on real data
+    before trusting the mapping: Erste 2025-12-31 gives ~1.42%, BNP Paribas
+    2025-12-31 gives ~1.51% - both in the normal range for a strong European bank,
+    not a tagging artifact.
+
+    Raises NplRatioError if either figure isn't cached for this bank/period, same
+    "never silently compute from a partial result" discipline as
+    compute_rwa_density - P3DH is cache-only (see _p3dh_rows()'s docstring), so a
+    missing figure here means "not yet fetched for this bank/period", not "EU CQ3
+    reports zero credit exposure".
+    """
+    df = get_financial_data(bank_lei, ["performing_exposures", "non_performing_exposures"], period=period)
+    performing = df[df["standardized_concept"] == "performing_exposures"]
+    non_performing = df[df["standardized_concept"] == "non_performing_exposures"]
+    if performing.empty or performing.iloc[0]["status"] != "ok":
+        raise NplRatioError(f"{bank_lei}/{period}: no performing_exposures available")
+    if non_performing.empty or non_performing.iloc[0]["status"] != "ok":
+        raise NplRatioError(f"{bank_lei}/{period}: no non_performing_exposures available")
+    performing_value = float(performing.iloc[0]["value"])
+    non_performing_value = float(non_performing.iloc[0]["value"])
+    return non_performing_value / (performing_value + non_performing_value)
 
 
 class DuPontError(ValueError):
