@@ -1295,3 +1295,58 @@ Sources checked (this update):
 - The project's own test suite (`pytest tests/`), which caught both the Open Key mismatch
   and the row-trimming bug as real failures, not found by separate manual inspection
 - A live headless Playwright render of the regenerated `docs/review.html`
+
+## Update 2026-10-12 (second entry): the real P3DH Template catalog, and a new openspec change
+
+Revisited the earlier 7-step list; asked to tackle items 5 (extend `data/modules.txt`
+beyond EU KM1/EU LI1) and 6 (start a new openspec change for the next batch of P3DH
+work). Offered two curated next-template candidates (EU OV1 for RWA-by-risk-type, the
+EU CQ-series for asset quality) before doing anything live-fetch-related, the same way
+the EU KM1-vs-LI1 scope was decided earlier - the user instead chose to make ALL P3DH
+templates available, a materially bigger scope than either offered option.
+
+**The full P3DH Template list had never actually been captured - only estimated.**
+`run_update.py`'s own docstring said "~100+ entries" without ever having scraped it.
+Wrote a one-off script (`list_p3dh_templates.py`) reusing `edap_scraper.py`'s own
+selectors: open the Template slicer's popup, then repeatedly scroll its (virtualized)
+options container and collect every option's text into a set, stopping once 6
+consecutive scrolls add nothing new. Result: **116 distinct options**, 2 of which
+aren't real data templates (`"Select all"`, the slicer's own select-all control, and
+`X_01.00`, a contact-person registration template, not a data disclosure) - **114 real
+templates**. Wrote all 114 to `data/modules.txt`, replacing the 2-template list.
+
+**Flagged the real scale before treating "make all templates available" as "fetch all
+templates now."** `run_update.py`'s loop is entity-outer, module-inner, deduplicated
+per (lei, reference_date, module) - so a full pass is 46 pilot banks x 114 templates x
+4 currently-distinct reference dates = **~21,000 real Playwright-driven browser
+fetches**. At the ~30-45s/fetch observed in the 2026-10-12 nine-bank run, that's on the
+order of a week of continuous scraping - not something to start silently inside one
+session. `data/modules.txt`'s expansion is configuration only; no live fetch against
+the expanded list has been run yet.
+
+**Created `openspec/changes/extend-p3dh-template-coverage`** (all 4 spec-driven
+artifacts) to plan the remaining work properly instead of continuing as ad hoc edits -
+`add-mvp-v1` is archived, so this was the first change created since. Its core
+contribution beyond a task list: a new, explicit `data-retrieval` requirement
+generalizing what the EU LI1 work already learned in practice - a source item is only
+mapped to a standardized concept when it's identified the same, bank-independent way
+for every filer (a fixed template row/item code); a per-filer-chosen breakdown label
+is never auto-mapped or guessed at, even where it happens to work for one bank. This
+turns the EU LI1 lesson from a code comment into a testable product rule that will
+govern every one of the 114 templates going forward, not just the ones already
+inspected. Tasks cover, in order: inspecting EU OV1/EU CQ-series/EU CC1 against real
+cached exports (never wiring from a template's name alone); wiring whichever turn out
+KM1-shaped; documenting the exclusion of whichever turn out LI1-shaped; a small-sample
+validation fetch (2-3 banks) before committing to any full-pilot fetch for a newly
+wired template; and the full acquisition itself, deliberately NOT given new scheduling
+infrastructure - `run_update.py`'s existing `--limit` flag plus its idempotent state
+file are enough to run it across however many separate invocations the real multi-day
+scale needs. Validated clean via `openspec validate extend-p3dh-template-coverage
+--strict`.
+
+Sources checked (this update):
+- The live P3DH Template slicer itself, scraped directly for its full option list
+  rather than continuing to rely on the earlier "~100+" estimate
+- `openspec validate --strict` and `openspec status` for the new change, to confirm
+  all 4 artifacts are genuinely complete and internally consistent before reporting it
+  as done

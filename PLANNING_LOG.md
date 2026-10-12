@@ -673,3 +673,28 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   missing_from_source for CIC's total_equity_prudential_scope (no "Total
   shareholders' equity" Open Key on its one cached LI1 date). Decided and
   carried out by agent.
+- 2026-10-12: Revisited the 7-step list, asked to tackle items 5 and 6
+  (extend data/modules.txt; start a new openspec change). Offered EU OV1
+  and the EU CQ-series as curated next-template candidates; user instead
+  chose to make ALL P3DH templates available. Decided by user.
+- 2026-10-12: Scraped the live P3DH Template slicer's full option list
+  directly (it had only ever been estimated at "~100+") - 116 entries, 114
+  of them real data templates (excluding "Select all" and the X_01.00
+  contact-person metadata template). Wrote all 114 to data/modules.txt,
+  replacing the 2-template list. Flagged, not silently absorbed: actually
+  running run_update.py against all 46 pilot banks x 114 templates is
+  ~21,000 real browser-driven fetches - roughly a week of continuous
+  scraping at observed per-fetch timing, not something to start without
+  explicit scheduling. Decided and carried out by agent.
+- 2026-10-12: Created openspec change `extend-p3dh-template-coverage`
+  (all 4 artifacts: proposal, specs delta, design, tasks) to plan item 5's
+  remaining work properly rather than as more ad hoc edits. Adds a new
+  data-retrieval requirement generalizing the EU LI1 lesson (concept
+  mapping only from fixed, bank-independent source codes, never inferred
+  from per-filer vocabulary) into an explicit, testable spec rule. Tasks
+  cover: inspecting EU OV1/EU CQ-series/EU CC1 against real exports before
+  wiring anything; small-sample validation before any full-pilot fetch;
+  and the full acquisition itself, batched via run_update.py's existing
+  --limit flag and idempotent state file rather than new scheduling
+  infrastructure. Validated clean via `openspec validate --strict`.
+  Decided and carried out by agent.

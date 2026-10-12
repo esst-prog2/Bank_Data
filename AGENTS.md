@@ -108,7 +108,9 @@ data_acquisition/
 data/
     entities.csv        - tracked banks (lei, name, country, sp50_2026_rank, pilot_added, notes) -
                           not committed empty, see .example; is_pilot = sp50_2026_rank OR pilot_added
-    modules.txt          - P3DH Template option text to fetch per entity/period (create before running run_update)
+    modules.txt          - P3DH Template option text to fetch per entity/period; since 2026-10-12
+                          holds all 114 real templates (scraped directly from the live slicer,
+                          not just EU KM1/EU LI1) - config only, not yet fetched at that scale
     raw/                - downloaded files land here, organized by source
     state/download_log.json - what's already been fetched, keyed by lei|wave|module
 openspec/            - spec-driven development: specs/ (current behavior, now includes data-retrieval,
@@ -140,12 +142,18 @@ especially 2026-10-08 (BBVA/Sabadell data error), 2026-10-11 (P3DH/EU KM1 wiring
 ESEF-gap investigation), and 2026-10-12 (EU LI1 wiring, EU KM1 extended, a real
 read_only/openpyxl row-trimming bug found via the test suite) entries.
 
+## Open change: extend-p3dh-template-coverage
+
+Created 2026-10-12 (`openspec/changes/extend-p3dh-template-coverage`, all 4 artifacts
+done, `openspec validate --strict` clean) - see its `tasks.md` for the live plan.
+`data/modules.txt` already has all 114 real P3DH templates (task 1.1, done); what's
+left is inspecting EU OV1/the EU CQ-series/EU CC1 against real exports before wiring
+anything, small-sample validation, then the real ~week-scale full-pilot fetch, batched
+via `run_update.py`'s existing `--limit` + idempotent state file. Pick this change back
+up (`/opsx:apply` or by hand) rather than starting new ad hoc edits for this work.
+
 ## Possible next steps (none decided yet - ask before picking one)
 
-- **Fetch P3DH data for other templates/concepts.** Only EU KM1 and (partially) EU LI1
-  are ever fetched by `run_update.py` - the full P3DH Template list has ~100+ entries
-  (see `edap_scraper.py`'s docstring for how to find the exact option text). Extend
-  `data/modules.txt` if a new concept needs one neither covers.
 - **Check other banks' EU LI1 Open Key vocabulary.** Confirmed (2026-10-12) that Erste's
   and BNP Paribas's differ - BNP has no "Total shareholders' equity" Open Key at all.
   Worth checking a few more pilot banks to see how common a clean "Total Liabilities"/
@@ -155,8 +163,6 @@ read_only/openpyxl row-trimming bug found via the test suite) entries.
   the 9 added 2026-10-12) against EU LI1 - it was fetched broadly for EU KM1 already
   (task 1.3's 2026-10-07 pilot run), but EU LI1 coverage across the full pilot sample has
   never been checked.
-- **Start a new openspec change** for whichever of the above (or something else) is next -
-  `add-mvp-v1` is archived, so there's no open change right now.
 
 ## Working conventions established so far
 
