@@ -164,6 +164,25 @@ def test_p3dh_concept_returns_one_row_per_cached_reference_date(_p3dh_available)
     assert p3dh["value"].between(0, 1).all()
 
 
+def test_p3dh_km1_new_concepts_not_covered_by_any_other_source(_p3dh_available):
+    """2026-10-12: tier1_capital/total_capital/leverage_ratio/liquidity_coverage_ratio/
+    nsfr_ratio - 5 EU KM1 rows with no stress_test or ESEF equivalent at all, so these
+    should come back p3dh-only, all "ok", with the ratios as decimal fractions (not
+    percentages - LCR/NSFR are both typically >100% disclosed, i.e. > 1.0 as a fraction,
+    unlike cet1_ratio/leverage_ratio which are typically < 1.0)."""
+    concepts = ["tier1_capital", "total_capital", "leverage_ratio", "liquidity_coverage_ratio", "nsfr_ratio"]
+    df = reconcile.get_financial_data(_BANK_LEI, concepts, period="202512")
+
+    assert set(df["standardized_concept"]) == set(concepts)
+    assert set(df["source"]) == {"p3dh"}
+    assert (df["status"] == "ok").all()
+    by_concept = df.set_index("standardized_concept")["value"]
+    assert by_concept["total_capital"] > by_concept["tier1_capital"] > 0
+    assert 0 < by_concept["leverage_ratio"] < 1
+    assert by_concept["liquidity_coverage_ratio"] > 1  # LCR is disclosed well above 100%
+    assert by_concept["nsfr_ratio"] > 1  # same for NSFR
+
+
 def test_p3dh_and_stress_test_both_returned_untagged_as_one(_source_available, _p3dh_available):
     """4.3 / spec, the P3DH instance of the same rule the ESEF test above covers.
     P3DH's own cached reference dates (2025-06 onward, launched Jan 2026) don't overlap
@@ -180,6 +199,66 @@ def test_p3dh_and_stress_test_both_returned_untagged_as_one(_source_available, _
     assert len(p3dh_rows) == 1
     assert p3dh_rows.iloc[0]["provenance"] == "reported_actual"
     assert set(df[df["source"] == "eba_stress_test"]["provenance"]) == {"scenario_projection"}
+
+
+@pytest.fixture(scope="module")
+def _p3dh_li1_available():
+    if not reconcile._cached_p3dh_files("Erste Group Bank AG", "K_64.01"):
+        pytest.skip(
+            "no cached P3DH EU LI1 export for Erste Group Bank AG - run "
+            "data_acquisition.run_update (or the scraper directly) first."
+        )
+
+
+def test_p3dh_li1_total_equity_is_a_third_source(_esef_available, _p3dh_li1_available):
+    """2026-10-12: EU LI1 wiring. Its "a" column (carrying value as reported in
+    published financial statements) is the SAME accounting basis ESEF's total_equity
+    already reports - so total_equity should now have a THIRD independent source for
+    any period both are cached for, still returned as separate, untagged-as-one rows."""
+    df = reconcile.get_financial_data(_BANK_LEI, ["total_equity"], period="202512")
+    p3dh_rows = df[df["source"] == "p3dh"]
+
+    assert len(p3dh_rows) == 1
+    assert p3dh_rows.iloc[0]["status"] == "ok"
+    assert p3dh_rows.iloc[0]["provenance"] == "reported_actual"
+    assert p3dh_rows.iloc[0]["value"] > 0
+
+
+def test_p3dh_li1_prudential_scope_concepts_are_new_and_distinct(_p3dh_li1_available):
+    """total_equity_prudential_scope/total_liabilities/total_liabilities_prudential_scope
+    have no other wired source - this is the only place they can come from - and the
+    prudential-scope figure should be close to, but not identical to, the accounting-
+    scope one (the whole point of this template: a real, usually small, consolidation-
+    scope difference, not a second copy of the same number)."""
+    df = reconcile.get_financial_data(
+        _BANK_LEI,
+        ["total_equity", "total_equity_prudential_scope", "total_liabilities", "total_liabilities_prudential_scope"],
+        period="202512",
+    )
+    df = df[df["source"] == "p3dh"]  # total_equity also has an esef row - not what this test is about
+    assert (df["status"] == "ok").all()
+    by_concept = df.set_index("standardized_concept")["value"]
+    assert by_concept["total_equity"] != by_concept["total_equity_prudential_scope"]
+    relative_gap = abs(by_concept["total_equity"] - by_concept["total_equity_prudential_scope"]) / by_concept["total_equity"]
+    assert relative_gap < 0.01
+    # a real leverage sanity check, not just two independently-plausible numbers: a
+    # bank's liabilities dominate its balance sheet relative to equity.
+    assert by_concept["total_liabilities"] > by_concept["total_equity"] * 5
+
+
+def test_p3dh_li1_open_key_absent_for_bank_is_missing_not_failed():
+    """BNP Paribas's own LI1 export (confirmed 2026-10-12) genuinely has no "Total
+    shareholders' equity" Open Key at all - it maps its own chart-of-accounts
+    categories into this template differently than Erste does. This must surface as
+    missing_from_source, never a DataSourceError crash or a silently skipped row."""
+    lei = "R0MUWSFPU8MPRO8K5P83"  # BNP Paribas
+    if not reconcile._cached_p3dh_files("BNP PARIBAS", "K_64.01"):
+        pytest.skip("no cached P3DH EU LI1 export for BNP Paribas")
+    df = reconcile.get_financial_data(lei, ["total_equity_prudential_scope"], period=None)
+    p3dh_rows = df[df["source"] == "p3dh"]
+    assert len(p3dh_rows) >= 1
+    assert (p3dh_rows["status"] == "missing_from_source").all()
+    assert p3dh_rows["value"].isna().all()
 
 
 def test_p3dh_returns_no_rows_when_nothing_cached_for_bank():

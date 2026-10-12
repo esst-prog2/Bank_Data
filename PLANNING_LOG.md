@@ -611,3 +611,53 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   never actually required P3DH specifically). Filled in the auto-created
   data-retrieval spec's placeholder Purpose section. Decided and carried
   out by agent.
+- 2026-10-12: User confirmed the EBA bulk-access question is now resolved -
+  EBA has nothing to offer (no bulk/API access coming). The Playwright
+  scraper (edap_scraper.py / edap_downloader.py) is therefore the permanent
+  P3DH access method, not a stopgap pending EBA's reply. Closes the
+  "if EBA replies" item from the 2026-10-11 next-steps list. Confirmed by
+  user.
+- 2026-10-12: Asked for the next 7 most important steps, then to do points
+  1-4 (regenerate docs/review.html again; map EU KM1's other cached rows to
+  new concepts; fetch P3DH for the 9 newly-added pilot banks; wire EU LI1
+  into reconcile.py). Decided by user (which points) and agent (how).
+- 2026-10-12: Wired EU LI1 into reconcile.py (point 4) - discovered while
+  investigating it that its ~60 line items are identified by a per-bank
+  "Open Key" string (each filer's own chart-of-accounts label), NOT a fixed
+  EBA row code like EU KM1 - confirmed directly (BNP Paribas's own LI1
+  export has no "Total shareholders' equity" Open Key at all; it maps its
+  categories differently than Erste). Scoped down to the template's two
+  genuinely clean TOTAL rows (Total Liabilities, Total shareholders'
+  equity), each split by the template's own accounting-scope/prudential-
+  scope columns: a third source for total_equity, plus 3 new concepts
+  (total_equity_prudential_scope, total_liabilities,
+  total_liabilities_prudential_scope). A missing Open Key for a given bank
+  is status missing_from_source, not a crash - confirmed via BNP Paribas.
+  Decided and carried out by agent.
+- 2026-10-12: Mapped 5 more already-cached EU KM1 rows to new concepts
+  (point 2): tier1_capital, total_capital, leverage_ratio,
+  liquidity_coverage_ratio, nsfr_ratio - all decimal fractions already
+  (confirmed on Erste's own export), no unit conversion needed for the 3
+  ratios. Decided and carried out by agent.
+- 2026-10-12: Found and fixed a real row-length bug surfaced by the LI1
+  work: openpyxl's read_only iter_rows() trims a row's tuple to its last
+  non-empty cell, so BNP Paribas's own LI1 export (genuinely shorter rows
+  where trailing columns are blank) crashed with IndexError instead of
+  being read as blank. Fixed with a bounds-checked cell() accessor in
+  reconcile._read_p3dh_fact. Found via the project's own test suite, not a
+  manual investigation. Decided and carried out by agent.
+- 2026-10-12: Started a live P3DH fetch (both templates, all currently
+  expected waves) for the 9 banks added to the pilot sample 2026-10-11
+  (point 3) - run in the background, ~70 real browser-driven fetches,
+  writing into the same data/state/download_log.json run_update.py uses.
+  Decided and carried out by agent.
+- 2026-10-12: Regenerated docs/review.html again (point 1), now reflecting
+  EU LI1 plus the new EU KM1 concepts - 71 rows (was 54), 3 sources shown
+  instead of 2. Added P3DH's own color/badge/label to the page's CSS/JS
+  (previously only stress_test/esef had one). Discovered, as a side effect
+  of running the new LI1 test suite (period="202512" triggered a live ESEF
+  fetch that wasn't cached yet), that Erste's real FY2025 ESEF filing now
+  exists on filings.xbrl.org - not there as of the 2026-10-08 DuPont work.
+  Verified the regenerated page with a headless Playwright render (71 rows,
+  no console errors, P3DH badge/pill render correctly) before publishing.
+  Decided and carried out by agent.

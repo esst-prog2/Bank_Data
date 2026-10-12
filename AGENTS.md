@@ -30,16 +30,25 @@ up or in progress:
   public bulk API found (confirmed by direct inspection - it's an anonymous-access Power BI
   embed). Emailed P3DH@eba.europa.eu asking about bulk/API access; EBA replied 2026-09-22:
   bulk download/API access is "currently ongoing" discussion internally, with no commitment
-  or timeline either way. The Playwright UI scraper (`data_acquisition/edap_scraper.py`) is
-  the access method for the foreseeable future, not a stopgap - verified end to end
+  or timeline either way - **resolved 2026-10-12: EBA has nothing further to offer, no bulk
+  access is coming.** The Playwright UI scraper (`data_acquisition/edap_scraper.py`) is
+  therefore the permanent P3DH access method, not a stopgap pending a reply - verified end to end
   2026-10-06 (real filter selection, navigation, export, download) and exercised across the
-  full 46-bank pilot sample (task 1.3). As of 2026-10-11, its EU KM1 output is also wired
-  into `reconcile.get_financial_data()` as a third source (`reconcile._p3dh_rows`) for
-  cet1_capital/cet1_ratio/total_risk_exposure_amount - cache-only, reading whatever
-  `run_update.py` has already fetched, never a live P3DH query from inside `reconcile.py`
-  (see that function's docstring for why). EU LI1 is scraped but deliberately not wired into
-  `reconcile.py` - it's a scope-reconciliation table, not simple concept:value facts.
-  `data_acquisition/waves.py` encodes the EBA publication calendar (T+4/6/8 months per
+  full 46-bank pilot sample (task 1.3). Its output is wired into
+  `reconcile.get_financial_data()` as a third source (`reconcile._p3dh_rows`), cache-only -
+  reading whatever `run_update.py` has already fetched, never a live P3DH query from inside
+  `reconcile.py` (see that function's docstring for why). Two templates now wired:
+  **EU KM1** (2026-10-11/12) - cet1_capital/tier1_capital/total_capital/cet1_ratio/
+  total_risk_exposure_amount/leverage_ratio/liquidity_coverage_ratio/nsfr_ratio, using fixed,
+  EBA-standardized row codes. **EU LI1** (2026-10-12) - only its two clean TOTAL rows
+  (Total Liabilities, Total shareholders' equity), each split by accounting-scope vs.
+  prudential-scope columns, giving total_equity a third source plus 3 new concepts
+  (total_equity_prudential_scope, total_liabilities, total_liabilities_prudential_scope).
+  LI1's other ~60 line items are identified by a per-bank "Open Key" string (confirmed: each
+  filer maps its own chart-of-accounts categories differently - BNP Paribas has no
+  "Total shareholders' equity" Open Key at all) rather than a fixed EBA row code, so they're
+  deliberately not wired - a missing Open Key for a given bank is `missing_from_source`, not
+  an error. `data_acquisition/waves.py` encodes the EBA publication calendar (T+4/6/8 months per
   Article 4 of the ITS), but EBA also confirmed this is "an EBA expectation rather than a
   strict legal publication requirement" - so a wave being past its expected date is a
   normal, expected outcome, not a failure (see DATA_SOURCES_NOTES.md's 2026-09-22 entry).
@@ -118,30 +127,31 @@ requirements.txt
 The `add-mvp-v1` change (README section 3's "first useful version") is DONE and archived
 (2026-10-11, `openspec/changes/archive/2026-10-11-add-mvp-v1`, requirements now live in
 `openspec/specs/data-retrieval/spec.md`). `get_financial_data()` returns real data from 3
-wired sources (EBA Stress Test 2025, ESEF, P3DH's EU KM1) for a 46-bank pilot sample (the
-original 37 S&P-50 banks plus 9 added 2026-10-11 on their own documented merits - see
-`entities.csv`'s `pilot_added` column). All of AGENTS.md's original "immediate next steps"
-(P3DH scraper verification, populating entities.csv, starting ESEF, the reconciliation
-logic, tasks.md 1.1-1.5 and 4.4) are done - see PLANNING_LOG.md and DATA_SOURCES_NOTES.md
-for what was actually found at each step, especially the 2026-10-08 (BBVA/Sabadell data
-error) and 2026-10-11 (P3DH wiring, ESEF-gap investigation) entries.
+wired sources (EBA Stress Test 2025, ESEF, P3DH's EU KM1 + partial EU LI1) across 15
+standardized concepts, for a 46-bank pilot sample (the original 37 S&P-50 banks plus 9
+added 2026-10-11 on their own documented merits - see `entities.csv`'s `pilot_added`
+column). The EBA bulk-access question is also closed (2026-10-12, confirmed by the user:
+EBA has nothing further to offer) - the Playwright scraper is permanent, not a stopgap.
+See PLANNING_LOG.md and DATA_SOURCES_NOTES.md for what was actually found at each step,
+especially 2026-10-08 (BBVA/Sabadell data error), 2026-10-11 (P3DH/EU KM1 wiring,
+ESEF-gap investigation), and 2026-10-12 (EU LI1 wiring, EU KM1 extended, a real
+read_only/openpyxl row-trimming bug found via the test suite) entries.
 
 ## Possible next steps (none decided yet - ask before picking one)
 
-- **Wire EU LI1 into `reconcile.py`.** Already scraped (`data/modules.txt`) but
-  deliberately not wired in 2026-10-11 - it's a reconciliation table between accounting
-  and prudential consolidation scopes, not simple concept:value facts, and needs its own
-  design (new row-shape handling, possibly new DataFrame columns) rather than reusing
-  `_p3dh_rows()`'s per-item shape.
-- **Fetch P3DH data for the 9 newly-added pilot banks.** Their ESEF data is cached
-  (2026-10-11), but `run_update.py` hasn't been run against live P3DH for them yet - do
-  that to actually get `p3dh`-sourced rows for them via `reconcile.py`.
-- **Extend `data/modules.txt`** past its 2 current templates (EU KM1, EU LI1) if a new
-  concept needs a P3DH template neither covers - the full P3DH Template list has ~100+
-  entries (see `edap_scraper.py`'s docstring for how to find the exact option text).
-- **If EBA replies** to the bulk-access email: implement Option A in `edap_downloader.py`
-  (a real HTTP call), keep the scraper as a fallback rather than deleting it, and update
-  `DATA_SOURCES_NOTES.md`.
+- **Fetch P3DH data for other templates/concepts.** Only EU KM1 and (partially) EU LI1
+  are ever fetched by `run_update.py` - the full P3DH Template list has ~100+ entries
+  (see `edap_scraper.py`'s docstring for how to find the exact option text). Extend
+  `data/modules.txt` if a new concept needs one neither covers.
+- **Check other banks' EU LI1 Open Key vocabulary.** Confirmed (2026-10-12) that Erste's
+  and BNP Paribas's differ - BNP has no "Total shareholders' equity" Open Key at all.
+  Worth checking a few more pilot banks to see how common a clean "Total Liabilities"/
+  equity-total label actually is, versus how often `total_equity_prudential_scope` etc.
+  will come back `missing_from_source` in practice.
+- **Decide whether to run a full `run_update.py` pass** (all 46 pilot banks, not just
+  the 9 added 2026-10-12) against EU LI1 - it was fetched broadly for EU KM1 already
+  (task 1.3's 2026-10-07 pilot run), but EU LI1 coverage across the full pilot sample has
+  never been checked.
 - **Start a new openspec change** for whichever of the above (or something else) is next -
   `add-mvp-v1` is archived, so there's no open change right now.
 

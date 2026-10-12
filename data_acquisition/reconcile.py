@@ -14,21 +14,36 @@ Three real, verified sources are wired in:
 - ESEF financial statements via filings.xbrl.org (esef_client.py) - one bank's own
   filing for one fiscal year, IFRS-taxonomy-tagged balance-sheet and
   income-statement concepts, all `reported_actual`.
-- EBA Pillar 3 Data Hub (P3DH), EU KM1 "Key metrics" template only, added
-  2026-10-11 - see `_p3dh_rows()`'s own docstring for exactly what's read and why
-  it's cache-only (never a live P3DH query from inside this function). EU LI1
-  (also scraped by run_update.py) is deliberately NOT wired in here yet - it's a
-  reconciliation table between accounting and prudential consolidation scopes,
-  not simple concept:value facts, and needs its own design rather than reusing
-  this module's per-item CONCEPT_MAP shape.
+- EBA Pillar 3 Data Hub (P3DH) - see `_p3dh_rows()`'s own docstring for exactly
+  what's read and why it's cache-only (never a live P3DH query from inside
+  this function). Two templates, added incrementally:
+  - EU KM1 "Key metrics" (2026-10-11): cet1_capital, cet1_ratio,
+    total_risk_exposure_amount - a genuine third source for concepts the
+    stress test already reports - plus 5 genuinely new concepts the stress
+    test doesn't cover at all (2026-10-12): tier1_capital, total_capital,
+    leverage_ratio, liquidity_coverage_ratio, nsfr_ratio.
+  - EU LI1 "Differences between the accounting scope and the scope of
+    prudential consolidation..." (2026-10-12): only its two clean TOTAL rows
+    are wired (Total Liabilities, Total shareholders' equity), each split by
+    the template's own "a" (accounting scope) / "b" (prudential scope)
+    columns - giving a third source for total_equity (column "a", same basis
+    as ESEF's), plus three genuinely new concepts
+    (total_equity_prudential_scope, total_liabilities,
+    total_liabilities_prudential_scope). LI1's other ~60 line items
+    (a full accounting-vs-prudential reconciliation per balance-sheet
+    category) are deliberately NOT wired - that's a much larger, differently
+    shaped undertaking than this module's per-item CONCEPT_MAP fits without
+    its own design pass.
 
 Two of the standardized concepts (net_interest_income,
 profit_or_loss_for_the_year) are reported by BOTH the stress test and ESEF for
 the same bank and period; three more (cet1_ratio, cet1_capital,
-total_risk_exposure_amount) are now reported by BOTH the stress test and P3DH -
-each source's own figure is returned as its own row, never combined into one
-value (spec's "Multiple sources report the same concept" scenario). total_assets/
-total_equity remain ESEF-only (no equivalent line in either regulatory source).
+total_risk_exposure_amount) are now reported by BOTH the stress test and P3DH,
+and total_equity by BOTH ESEF and P3DH - each source's own figure is returned
+as its own row, never combined into one value (spec's "Multiple sources report
+the same concept" scenario). total_assets remains ESEF-only; the P3DH-only
+concepts (total_equity_prudential_scope, total_liabilities,
+total_liabilities_prudential_scope) have no equivalent in either other source.
 """
 
 from __future__ import annotations
@@ -92,10 +107,36 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     # confirmed against Erste Group Bank AG's own cached exports - see _p3dh_rows()'s
     # docstring for the cross-check against the stress test's independent figure for
     # the same bank/period that validated both the row mapping and the unit/period
-    # handling below.
-    ("p3dh", "K_61.00:0010"): "cet1_capital",
-    ("p3dh", "K_61.00:0040"): "total_risk_exposure_amount",
-    ("p3dh", "K_61.00:0050"): "cet1_ratio",
+    # handling below. Item code format: "<template>::Row=<row code>::<column code>" -
+    # column "0010" is EU KM1's "a. T" (current reference date), see _p3dh_rows().
+    ("p3dh", "K_61.00::Row=0010::0010"): "cet1_capital",
+    ("p3dh", "K_61.00::Row=0020::0010"): "tier1_capital",
+    ("p3dh", "K_61.00::Row=0030::0010"): "total_capital",
+    ("p3dh", "K_61.00::Row=0040::0010"): "total_risk_exposure_amount",
+    ("p3dh", "K_61.00::Row=0050::0010"): "cet1_ratio",
+    # Added 2026-10-12: same template, 3 more rows - all decimal fractions already
+    # (confirmed on Erste's own export: leverage ratio 0.0823, LCR 1.4824, NSFR 1.4220 -
+    # i.e. 8.23%/148.24%/142.20%), so _P3DH_RATIO_CONCEPTS below, not a unit conversion.
+    ("p3dh", "K_61.00::Row=0220::0010"): "leverage_ratio",
+    ("p3dh", "K_61.00::Row=0320::0010"): "liquidity_coverage_ratio",
+    ("p3dh", "K_61.00::Row=0350::0010"): "nsfr_ratio",
+    # Added 2026-10-12: EU LI1 ("K_64.01 - EU LI1 - Differences between the accounting
+    # scope and the scope of prudential consolidation..."). Unlike EU KM1 (fixed row
+    # codes), LI1's ~60 line items are identified by an "Open Key" breakdown-member
+    # string, not a Row code - item code format here is
+    # "<template>::Open Key=<open key string>::<column code>". Only the template's two
+    # genuinely clean TOTAL rows are wired, not its full line-item breakdown (deliberate
+    # scope choice, see reconcile.py's module docstring) - column "0010" is "a. Carrying
+    # values as reported in published financial statements" (accounting scope, the
+    # SAME basis ESEF's own total_equity reports - confirmed against Erste's own
+    # export, see _p3dh_rows()'s docstring), column "0020" is "b. Carrying values
+    # under scope of prudential consolidation" (a genuinely new concept - exactly the
+    # comparability-risk distinction README section 5 describes, not available from
+    # any other wired source).
+    ("p3dh", "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0010"): "total_equity",
+    ("p3dh", "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0020"): "total_equity_prudential_scope",
+    ("p3dh", "K_64.01::Open Key=Type of liabilities = Total Liabilities::0010"): "total_liabilities",
+    ("p3dh", "K_64.01::Open Key=Type of liabilities = Total Liabilities::0020"): "total_liabilities_prudential_scope",
 }
 
 # Whether an ESEF concept is a balance-sheet instant (as-of a date) or an
@@ -263,10 +304,9 @@ def _esef_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
     return rows
 
 
-# The column code for EU KM1's "a. T" column - the figure as originally filed for an
-# export's OWN reference date. See _p3dh_rows()'s docstring for why the T-1..T-4
-# lookback columns the template also discloses are deliberately not read.
-_P3DH_CURRENT_COLUMN = "0010"
+# Which standardized concepts are already decimal fractions (no EUR->EUR-millions
+# conversion needed) - everything else read from P3DH is a balance-sheet/capital amount.
+_P3DH_RATIO_CONCEPTS = frozenset({"cet1_ratio", "leverage_ratio", "liquidity_coverage_ratio", "nsfr_ratio"})
 
 
 def _p3dh_entity_name(bank_lei: str) -> str | None:
@@ -281,14 +321,26 @@ def _cached_p3dh_files(bank_name: str, template_prefix: str) -> list[Path]:
     return sorted((_ROOT / "data" / "raw").glob(f"{safe_name}_{template_prefix}*.xlsx"))
 
 
-def _read_p3dh_fact(path: Path, row_code: str, column_code: str) -> tuple[datetime, str, float]:
-    """Pulls one (ReferenceDate, Row Name, FactValue) triple out of a cached P3DH Data
-    Points Report export - see module docstring's "Export" sheet layout: row 1 carries
-    ReferenceDate, row 2 is the real header, data rows follow. Raises DataSourceError if
-    the file is malformed or the requested row/column genuinely isn't in it - EU KM1 is
-    a fixed, complete EBA template, so a correctly-identified KM1 export missing one of
-    its own standard rows means something is wrong with the file, not that the bank
-    didn't disclose that line."""
+def _read_p3dh_fact(
+    path: Path, match_field: str, match_value: str, column_code: str
+) -> tuple[datetime, str | None, str | None, float | None]:
+    """Pulls one (ReferenceDate, row/member description, column description, FactValue)
+    out of a cached P3DH Data Points Report export - row 1 carries ReferenceDate, row 2
+    is the real header, data rows follow (see module docstring). `match_field` is either
+    "Row" (EU KM1's fixed, EBA-standardized row codes) or "Open Key" (EU LI1's
+    breakdown-member strings - that template has no row code of its own, see
+    CONCEPT_MAP's LI1 comment).
+
+    The last three return values are None, not an exception, when the fact genuinely
+    isn't in this export: confirmed real on BNP Paribas's own LI1 file, which has no
+    "Total shareholders' equity" Open Key at all (it maps its own chart-of-accounts
+    categories into LI1 differently than Erste does) - unlike EU KM1's row codes,
+    EU LI1's Open Key strings are each filer's OWN vocabulary, not a fixed EBA-wide
+    list, so "not found" there is a genuine, expected per-bank difference, never
+    evidence the file itself is malformed. DataSourceError is still raised for an
+    actual read/parse failure (a corrupt file, or one missing ReferenceDate/the
+    expected header row entirely) - that distinction is why this doesn't just return
+    None to mean "nothing usable" across the board."""
     import warnings
 
     try:
@@ -302,66 +354,115 @@ def _read_p3dh_fact(path: Path, row_code: str, column_code: str) -> tuple[dateti
         rows_iter = ws.iter_rows(values_only=True)
         header1 = next(rows_iter)
         reference_date = next((c for c in header1 if isinstance(c, datetime)), None)
+        if reference_date is None:
+            raise DataSourceError(f"{path}: no ReferenceDate found in row 1 - malformed export?")
         header2 = next(rows_iter)
         idx = {name: i for i, name in enumerate(header2)}
+        for required in ("Row", "Open Key", "Column", "Column Name", "Row Name", "FactValue"):
+            if required not in idx:
+                raise DataSourceError(f"{path}: expected header {required!r} not found - malformed export?")
+
+        def cell(r: tuple, name: str):
+            # openpyxl's read_only iter_rows() trims a row's tuple to its last non-empty
+            # cell, so a row whose trailing columns are genuinely blank (confirmed on
+            # BNP Paribas's own LI1 export) is SHORTER than the header - a plain r[i]
+            # would raise IndexError on those columns rather than reading them as blank.
+            i = idx[name]
+            return r[i] if i < len(r) else None
+
         for r in rows_iter:
-            if r[idx["Row"]] == row_code and r[idx["Column"]] == column_code:
-                return reference_date, str(r[idx["Row Name"]]).strip(), float(r[idx["FactValue"]])
+            if cell(r, match_field) == match_value and cell(r, "Column") == column_code:
+                fact_value = cell(r, "FactValue")
+                if fact_value is None:
+                    continue  # this exact (member, column) combination is genuinely blank
+                row_desc = cell(r, "Row Name")
+                description = str(row_desc).strip() if row_desc is not None else match_value
+                column_desc = str(cell(r, "Column Name") or "").strip()
+                return reference_date, description, column_desc, float(fact_value)
     except (OSError, KeyError, StopIteration, ValueError) as exc:
         raise DataSourceError(f"failed to read {path}: {exc}") from exc
-    raise DataSourceError(f"{path}: row {row_code!r}/column {column_code!r} not found - malformed export?")
+    return reference_date, None, None, None
 
 
 def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) -> list[dict]:
-    """item_code is "<template prefix>:<row code>", e.g. "K_61.00:0010" for EU KM1's
-    CET1 capital row. Reads cached P3DH Data Points Report exports only - run_update.py
-    (via edap_scraper's real Playwright export) is the only thing that ever triggers a
-    live P3DH fetch; unlike esef_client.fetch_facts (a cheap bulk JSON download),
-    triggering a ~15-30s headless-browser scrape as a side effect of a DataFrame call
-    would make this function slow and flaky in a way none of its other sources are, so
-    get_financial_data() deliberately returns nothing for a bank/template run_update.py
-    hasn't fetched yet, rather than scrape on demand. This is a real, documented
-    asymmetry versus esef_client/eba_exercises, not an oversight.
+    """item_code is "<template prefix>::<Row or Open Key>=<match value>::<column code>",
+    e.g. "K_61.00::Row=0010::0010" for EU KM1's CET1 capital row, or
+    "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0020" for EU
+    LI1's prudential-scope equity total. Reads cached P3DH Data Points Report exports
+    only - run_update.py (via edap_scraper's real Playwright export) is the only thing
+    that ever triggers a live P3DH fetch; unlike esef_client.fetch_facts (a cheap bulk
+    JSON download), triggering a ~15-30s headless-browser scrape as a side effect of a
+    DataFrame call would make this function slow and flaky in a way none of its other
+    sources are, so get_financial_data() deliberately returns nothing for a bank/template
+    run_update.py hasn't fetched yet, rather than scrape on demand. This is a real,
+    documented asymmetry versus esef_client/eba_exercises, not an oversight.
 
-    Only the "a. T" column is read, even though EU KM1 also discloses the same metric's
-    previous four quarters (T-1..T-4) in every export. Deliberately not read: (1) a bank
-    with several cached reference dates would otherwise produce multiple overlapping,
+    For EU KM1, CONCEPT_MAP only ever uses column "0010" ("a. T", the figure as of the
+    export's own reference date), even though every export also discloses the same
+    metric's previous four quarters (T-1..T-4). Deliberately not read: (1) a bank with
+    several cached reference dates would otherwise produce multiple overlapping,
     near-duplicate rows for the same real calendar quarter (that quarter's own "T" value
-    from its own file, plus every later file's backward-looking echo of the same figure),
-    and (2) a later file's lookback column could silently carry a RESTATED figure for an
-    earlier quarter with no way to tag it as a restatement (unlike the stress test's own
-    explicit Scenario 11 "Restated" code) - using only "T" means every row this function
-    returns is the figure originally filed for its own reference date.
+    from its own file, plus every later file's backward-looking echo of the same
+    figure), and (2) a later file's lookback column could silently carry a RESTATED
+    figure for an earlier quarter with no way to tag it as a restatement (unlike the
+    stress test's own explicit Scenario 11 "Restated" code) - using only "T" means every
+    KM1 row this function returns is the figure originally filed for its own reference
+    date. EU LI1 has no such lookback columns - its "0010"/"0020" are two DIFFERENT
+    concepts (accounting scope vs. prudential scope), not a time series, so both are
+    legitimately read.
 
-    Capital/exposure rows convert EUR -> EUR millions, matching this module's existing
-    convention; ratio rows are left as decimal fractions, already matching stress_test's
-    cet1_ratio. Confirmed, not assumed: Erste Group Bank AG's 2025-12-31 KM1 export's own
-    T-4 column (2024-12-31, for cross-check only - not what this function reads) gives
+    Capital/exposure/balance-sheet amounts convert EUR -> EUR millions, matching this
+    module's existing convention; concepts in `_P3DH_RATIO_CONCEPTS` are left as decimal
+    fractions, already matching stress_test's cet1_ratio. Confirmed,
+    not assumed: Erste Group Bank AG's 2025-12-31 KM1 export's own T-4 column
+    (2024-12-31, for cross-check only - not what this function reads) gives
     cet1_capital 23995.665 (EUR m) and cet1_ratio 0.152605 against the stress test's
     independently reported_actual figures for the exact same bank/period, 23995.673 and
     0.152605 - matching almost exactly, which validated both the unit conversion and the
-    reference-date -> period mapping below before trusting either.
+    reference-date -> period mapping before trusting either. The LI1 wiring was checked
+    for internal plausibility instead (no ESEF data cached for the same 2025-12-31
+    reference date to cross-check against): Erste's own 2025-12-31 LI1 export gives
+    Total Liabilities 333,908.98 (EUR m) + Total shareholders' equity 34,665.16 (EUR m)
+    = 368,574.14 (EUR m) - a plausible total-assets figure given its FY2024 (ESEF) total
+    assets of 353,736m, consistent with continued balance-sheet growth into 2025.
     """
-    template_prefix, row_code = item_code.split(":")
+    template_prefix, match_expr, column_code = item_code.split("::")
+    match_field, match_value = match_expr.split("=", 1)
     bank_name = _p3dh_entity_name(bank_lei)
     if bank_name is None:
         return []
 
     rows: list[dict] = []
     for path in _cached_p3dh_files(bank_name, template_prefix):
-        reference_date, row_name, raw_value = _read_p3dh_fact(path, row_code, _P3DH_CURRENT_COLUMN)
+        reference_date, description, column_desc, raw_value = _read_p3dh_fact(
+            path, match_field, match_value, column_code
+        )
         our_period = reference_date.strftime("%Y%m")
         if period is not None and our_period != period:
             continue
-        value = raw_value if concept == "cet1_ratio" else raw_value / 1_000_000
+        if raw_value is None:
+            # genuinely not in THIS bank's export (see _read_p3dh_fact's docstring on
+            # Open Key being per-filer vocabulary, not a fixed EBA-wide list) - missing
+            # from source, never a fabricated value or a processing failure.
+            rows.append({
+                "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
+                "source_reporting_item": item_code, "source": "p3dh",
+                "provenance": None, "value": None, "status": "missing_from_source",
+                "origin_reference": (
+                    f"EBA Pillar 3 Data Hub, {bank_name}, template {template_prefix}, "
+                    f"{match_field}={match_value!r}/column {column_code!r} not reported in "
+                    f"this export, reference date {reference_date.date().isoformat()}"
+                ),
+            })
+            continue
+        value = raw_value if concept in _P3DH_RATIO_CONCEPTS else raw_value / 1_000_000
         rows.append({
             "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "p3dh",
             "provenance": "reported_actual", "value": value, "status": "ok",
             "origin_reference": (
-                f"EBA Pillar 3 Data Hub, {bank_name}, {template_prefix} - EU KM1 - Key "
-                f"metrics template, row {row_code} ({row_name}), "
-                f"reference date {reference_date.date().isoformat()}"
+                f"EBA Pillar 3 Data Hub, {bank_name}, template {template_prefix}, "
+                f"{description} ({column_desc}), reference date {reference_date.date().isoformat()}"
             ),
         })
     return rows

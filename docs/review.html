@@ -19,6 +19,7 @@
     --s-baseline: #1baf7a;
     --s-adverse: #eda100;
     --s-esef: #e87ba4;
+    --s-p3dh: #8a5cf5;
 
     --good: #0ca30c;
     --warning: #b8790f;
@@ -46,6 +47,7 @@
       --s-baseline: #199e70;
       --s-adverse: #c98500;
       --s-esef: #d55181;
+      --s-p3dh: #a481f9;
 
       --good: #0ca30c;
       --warning: #fab219;
@@ -70,6 +72,7 @@
     --s-baseline: #199e70;
     --s-adverse: #c98500;
     --s-esef: #d55181;
+    --s-p3dh: #a481f9;
 
     --good: #0ca30c;
     --warning: #fab219;
@@ -174,6 +177,7 @@
   .badge.prov-baseline { background: color-mix(in srgb, var(--s-baseline) 14%, transparent); color: var(--s-baseline); }
   .badge.prov-adverse { background: color-mix(in srgb, var(--s-adverse) 18%, transparent); color: var(--s-adverse); }
   .badge.prov-esef { background: color-mix(in srgb, var(--s-esef) 20%, transparent); color: var(--s-esef); }
+  .badge.prov-p3dh { background: color-mix(in srgb, var(--s-p3dh) 18%, transparent); color: var(--s-p3dh); }
   .badge.status-ok { background: var(--good-bg); color: var(--good); }
   .badge.status-missing { background: var(--warning-bg); color: var(--warning); }
   .badge .dot.d-ok { background: var(--good); }
@@ -211,14 +215,16 @@
 
 <main>
   <header class="page">
-    <div class="eyebrow">add-mvp-v1 &middot; data_acquisition.reconcile</div>
+    <div class="eyebrow">data-retrieval spec &middot; data_acquisition.reconcile</div>
     <h1>Reconciliation output review</h1>
     <p class="subhead">
       Live output of <code class="mono">get_financial_data()</code> for one pilot bank, now pulling
-      from <strong>two independent sources</strong>: the EBA EU-wide Stress Test 2025 (regulatory) and
-      the bank's own ESEF-tagged annual reports across four fiscal years, FY2021&ndash;FY2024
-      (balance sheet &amp; income statement, via <code class="mono">filings.xbrl.org</code>) &mdash;
-      plus the edge cases the package is designed to surface rather than hide.
+      from <strong>three independent sources</strong>: the EBA EU-wide Stress Test 2025 (regulatory,
+      scenario-projected), the bank's own ESEF-tagged annual reports across four fiscal years,
+      FY2021&ndash;FY2024 (balance sheet &amp; income statement, via
+      <code class="mono">filings.xbrl.org</code>), and the EBA Pillar 3 Data Hub's EU KM1 template
+      (live regulatory disclosures, 2025-06-30 onward) &mdash; plus the edge cases the package is
+      designed to surface rather than hide.
     </p>
   </header>
 
@@ -239,7 +245,7 @@
     <h2>All returned rows</h2>
     <p class="section-note">
       Every row <code class="mono">get_financial_data()</code> returned for this bank across 7
-      standardized concepts and 2 sources &mdash; the package's actual DataFrame schema, one row per
+      standardized concepts and 3 sources &mdash; the package's actual DataFrame schema, one row per
       period &times; concept &times; source.
     </p>
     <div class="controls">
@@ -283,9 +289,10 @@
 "bank_lei": "PQOH26KWDF7CG10L6792",
 "sources": {
 "eba_stress_test": "EBA EU-wide Stress Test 2025 (data_acquisition.eba_exercises, exercise=stress_test)",
-"esef": "ESEF filings FY2021-FY2024 via filings.xbrl.org (data_acquisition.esef_client)"
+"esef": "ESEF filings FY2021-FY2024 via filings.xbrl.org (data_acquisition.esef_client)",
+"p3dh": "EBA Pillar 3 Data Hub, EU KM1 template, reference dates 2025-06-30 to 2026-03-31 (data_acquisition.edap_scraper)"
 },
-"generated": "2026-10-11",
+"generated": "2026-10-12",
 "concept_labels": {
 "cet1_ratio": "CET1 ratio (%)",
 "cet1_capital": "CET1 capital (EUR m)",
@@ -296,9 +303,9 @@
 "total_equity": "Total equity (EUR m)"
 },
 "concept_statement": {
-"cet1_ratio": "Regulatory (stress test)",
-"cet1_capital": "Regulatory (stress test)",
-"total_risk_exposure_amount": "Regulatory (stress test)",
+"cet1_ratio": "Regulatory",
+"cet1_capital": "Regulatory",
+"total_risk_exposure_amount": "Regulatory",
 "net_interest_income": "Income statement",
 "profit_or_loss_for_the_year": "Income statement",
 "total_assets": "Balance sheet",
@@ -403,6 +410,54 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202506",
+"concept": "cet1_ratio",
+"item": "K_61.00::Row=0050::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 0.174483304,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 5. Common Equity Tier\u00a01 ratio (%) (a. T), reference date 2025-06-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202509",
+"concept": "cet1_ratio",
+"item": "K_61.00::Row=0050::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 0.175016207,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 5. Common Equity Tier\u00a01 ratio (%) (a. T), reference date 2025-09-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202603",
+"concept": "cet1_ratio",
+"item": "K_61.00::Row=0050::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 0.144357001,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 5. Common Equity Tier\u00a01 ratio (%) (a. T), reference date 2026-03-31"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_ratio",
+"item": "K_61.00::Row=0050::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 0.193399586,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 5. Common Equity Tier\u00a01 ratio (%) (a. T), reference date 2025-12-31"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
 "concept": "cet1_capital",
 "item": "2531006",
@@ -499,6 +554,54 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202506",
+"concept": "cet1_capital",
+"item": "K_61.00::Row=0010::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 26623.771909149997,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 1. Common Equity Tier\u00a01 (CET1) capital (a. T), reference date 2025-06-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202509",
+"concept": "cet1_capital",
+"item": "K_61.00::Row=0010::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 26445.444720500003,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 1. Common Equity Tier\u00a01 (CET1) capital (a. T), reference date 2025-09-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202603",
+"concept": "cet1_capital",
+"item": "K_61.00::Row=0010::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 26490.671603279996,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 1. Common Equity Tier\u00a01 (CET1) capital (a. T), reference date 2026-03-31"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "cet1_capital",
+"item": "K_61.00::Row=0010::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 28523.937380029998,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 1. Common Equity Tier\u00a01 (CET1) capital (a. T), reference date 2025-12-31"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
 "concept": "total_risk_exposure_amount",
 "item": "2531007",
@@ -592,6 +695,54 @@
 "value": 165885.214051741,
 "status": "ok",
 "origin": "EBA EU-wide Stress Test 2025, Erste Group Bank AG (PQOH26KWDF7CG10L6792), item 2531007, scenario 3"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202506",
+"concept": "total_risk_exposure_amount",
+"item": "K_61.00::Row=0040::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 152586.35852545002,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 4. Total risk-weighted exposure amount (a. T), reference date 2025-06-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202509",
+"concept": "total_risk_exposure_amount",
+"item": "K_61.00::Row=0040::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 151102.83355496,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 4. Total risk-weighted exposure amount (a. T), reference date 2025-09-30"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202603",
+"concept": "total_risk_exposure_amount",
+"item": "K_61.00::Row=0040::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 183508.04884641,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 4. Total risk-weighted exposure amount (a. T), reference date 2026-03-31"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_risk_exposure_amount",
+"item": "K_61.00::Row=0040::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 147487.06510115,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_61.00, 4. Total risk-weighted exposure amount (a. T), reference date 2025-12-31"
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
@@ -727,6 +878,18 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "net_interest_income",
+"item": "ifrs-full:InterestRevenueExpense",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 7788.0,
+"status": "ok",
+"origin": "ESEF filing (FY2025), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2025-12-31/ESEF/AT/1/egb-2025-12-31-0-de/reports/egb-2025-12-31-0-de.xhtml, concept ifrs-full:InterestRevenueExpense"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202412",
 "concept": "profit_or_loss_for_the_year",
 "item": "2531004",
@@ -859,6 +1022,18 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "profit_or_loss_for_the_year",
+"item": "ifrs-full:ProfitLoss",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 4297.0,
+"status": "ok",
+"origin": "ESEF filing (FY2025), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2025-12-31/ESEF/AT/1/egb-2025-12-31-0-de/reports/egb-2025-12-31-0-de.xhtml, concept ifrs-full:ProfitLoss"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202112",
 "concept": "total_assets",
 "item": "ifrs-full:Assets",
@@ -907,6 +1082,18 @@
 },
 {
 "bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_assets",
+"item": "ifrs-full:Assets",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 368574.0,
+"status": "ok",
+"origin": "ESEF filing (FY2025), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2025-12-31/ESEF/AT/1/egb-2025-12-31-0-de/reports/egb-2025-12-31-0-de.xhtml, concept ifrs-full:Assets"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
 "period": "202112",
 "concept": "total_equity",
 "item": "ifrs-full:Equity",
@@ -952,6 +1139,30 @@
 "value": 30767.0,
 "status": "ok",
 "origin": "ESEF filing (FY2024), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2024-12-31/ESEF/AT/0/PQOH26KWDF7CG10L6792-2024-12-31-0-de/reports/PQOH26KWDF7CG10L6792-2024-12-31-0-de.html, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_equity",
+"item": "ifrs-full:Equity",
+"source": "esef",
+"provenance": "reported_actual",
+"scenario_label": "ESEF actual",
+"value": 34665.0,
+"status": "ok",
+"origin": "ESEF filing (FY2025), https://filings.xbrl.org/PQOH26KWDF7CG10L6792/2025-12-31/ESEF/AT/1/egb-2025-12-31-0-de/reports/egb-2025-12-31-0-de.xhtml, concept ifrs-full:Equity"
+},
+{
+"bank_lei": "PQOH26KWDF7CG10L6792",
+"period": "202512",
+"concept": "total_equity",
+"item": "K_64.01::Open Key=Type of liabilities = Total shareholders' equity::0010",
+"source": "p3dh",
+"provenance": "reported_actual",
+"scenario_label": "P3DH actual",
+"value": 34665.162379,
+"status": "ok",
+"origin": "EBA Pillar 3 Data Hub, ERSTE GROUP BANK AG, template K_64.01, Type of liabilities = Total shareholders' equity (a Carrying values as reported in published financial statements), reference date 2025-12-31"
 }
 ],
 "missing_example": {
@@ -970,21 +1181,25 @@
     "Restated": "var(--s-restated)",
     "Baseline": "var(--s-baseline)",
     "Adverse": "var(--s-adverse)",
-    "ESEF actual": "var(--s-esef)"
+    "ESEF actual": "var(--s-esef)",
+    "P3DH actual": "var(--s-p3dh)"
   };
-  var SCENARIO_ORDER = ["Actual", "Restated", "Baseline", "Adverse", "ESEF actual"];
+  var SCENARIO_ORDER = ["Actual", "Restated", "Baseline", "Adverse", "ESEF actual", "P3DH actual"];
   var PROV_BADGE_CLASS = {
     "Actual": "prov-actual", "Restated": "prov-restated", "Baseline": "prov-baseline",
-    "Adverse": "prov-adverse", "ESEF actual": "prov-esef"
+    "Adverse": "prov-adverse", "ESEF actual": "prov-esef", "P3DH actual": "prov-p3dh"
   };
-  var SOURCE_LABEL = { eba_stress_test: "Stress Test", esef: "ESEF" };
+  var SOURCE_LABEL = { eba_stress_test: "Stress Test", esef: "ESEF", p3dh: "P3DH" };
   var STATEMENT_GROUP = {
-    cet1_ratio: "Regulatory (stress test)", cet1_capital: "Regulatory (stress test)",
-    total_risk_exposure_amount: "Regulatory (stress test)",
+    // "(stress test)" dropped 2026-10-12 - cet1_ratio/cet1_capital/total_risk_exposure_amount
+    // are now ALSO reported by P3DH, so the old label was no longer accurate to the group's
+    // actual sources, just to where this page's data happened to originate first.
+    cet1_ratio: "Regulatory", cet1_capital: "Regulatory",
+    total_risk_exposure_amount: "Regulatory",
     net_interest_income: "Income statement", profit_or_loss_for_the_year: "Income statement",
     total_assets: "Balance sheet", total_equity: "Balance sheet"
   };
-  var GROUP_ORDER = ["Regulatory (stress test)", "Income statement", "Balance sheet"];
+  var GROUP_ORDER = ["Regulatory", "Income statement", "Balance sheet"];
 
   function fmtValue(concept, value) {
     if (value === null || value === undefined) return "—";
@@ -1314,8 +1529,8 @@
     var p1 = document.createElement("div");
     p1.textContent = "Sources: " + Object.values(DATA.sources).join("  •  ");
     var p2 = document.createElement("div");
-    p2.innerHTML = "Code: <code>data_acquisition/reconcile.py</code>, <code>eba_exercises.py</code>, <code>esef_client.py</code>. " +
-      "P3DH is still open — see AGENTS.md. Generated " + DATA.generated + ".";
+    p2.innerHTML = "Code: <code>data_acquisition/reconcile.py</code>, <code>eba_exercises.py</code>, " +
+      "<code>esef_client.py</code>, <code>edap_scraper.py</code>. Generated " + DATA.generated + ".";
     f.appendChild(p1); f.appendChild(p2);
   })();
 })();

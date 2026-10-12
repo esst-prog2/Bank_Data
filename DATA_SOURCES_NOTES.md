@@ -1191,3 +1191,107 @@ Sources checked (this update):
   Intesa Sanpaolo's own LEIs directly
 - `openspec list --json` / `openspec archive` directly, rather than hand-editing
   `tasks.md`'s checkboxes and assuming the spec-generation step would be unnecessary
+
+## Update 2026-10-12: EU LI1 wired in, EU KM1 extended, a real row-length bug found and fixed
+
+Asked for the next 7 most important steps, then to do 4 of them: regenerate
+`docs/review.html` again; map EU KM1's other already-cached rows to new concepts; fetch
+P3DH for the 9 newly-added pilot banks; wire EU LI1 into `reconcile.py`. Point 7
+(watching for an EBA reply on bulk access) was separately confirmed resolved by the
+user - EBA has nothing further to offer.
+
+**EU LI1's real shape, discovered by actually reading a cached export rather than
+guessing from its name.** Opened Erste's own `K_64.01` file directly: its `Open Key`
+column holds strings like `"Type of assets = Cash and cash balances"` or
+`"Type of liabilities = Total shareholders' equity"` - one of ~60 distinct values for
+Erste, each a balance-sheet line item - crossed with 7 columns: `a` ("Carrying values as
+reported in published financial statements" - accounting scope), `b` ("Carrying values
+under scope of prudential consolidation" - prudential scope), and `c`-`g` (that
+prudential figure broken down by risk framework: credit risk, CCR, securitisation,
+market risk, not-subject-to-own-funds). This is a full accounting-vs-prudential
+reconciliation per balance-sheet category, not simple concept:value facts the way EU
+KM1's fixed row codes are - confirming the scope note already in `reconcile.py`'s module
+docstring, now with the actual structure behind it.
+
+**Open Key strings are each filer's OWN vocabulary, not a fixed EBA-wide list - a real
+finding, not an assumption.** Checked BNP Paribas's own `K_64.01` export directly: it has
+`"Type of assets = TOTAL ASSETS"` (a label Erste's export doesn't use at all) and
+`"Type of liabilities = Total Liabilities"` (same wording as Erste), but **no
+`"Total shareholders' equity"` Open Key whatsoever** - confirmed by listing all 34 of
+BNP's distinct Open Key values directly, not just checking the one string. BNP maps its
+own chart-of-accounts categories into this template differently than Erste does. This
+caused a real crash the first time: hardcoding Erste's exact Open Key string in
+`CONCEPT_MAP` raised a `DataSourceError` for BNP (a `test_compute_dupont_...` test caught
+this immediately, since `compute_dupont()` requests `total_equity`, which is now also
+P3DH-sourced). Fixed by having `reconcile._read_p3dh_fact()` return "not found" instead
+of raising when an Open Key genuinely isn't in a given bank's own export - surfaced by
+`_p3dh_rows()` as `status: "missing_from_source"`, never a crash or a silently skipped
+row. EU KM1's row codes remain genuinely fixed (EBA-standardized), so a KM1 miss still
+indicates a real processing problem, not a per-bank vocabulary difference - the two
+templates are handled by the same function but the "not found" case means something
+different for each, and the docstring says so.
+
+**A second real bug, same investigation: openpyxl's `read_only` row-trimming.**
+`ws.iter_rows(values_only=True)` in read-only mode trims each row's tuple to its last
+non-empty cell - confirmed directly on BNP's own LI1 file, where rows with blank trailing
+columns are shorter than the header row. A plain `row[fixed_index]` crashed with
+`IndexError` on those columns instead of reading them as blank. Fixed with a
+bounds-checked `cell()` accessor in `_read_p3dh_fact`. Found via the project's own test
+suite failing, not a separate manual check - exactly the kind of thing a real test run
+catches that a one-off inspection of a single "good" file (Erste's) wouldn't.
+
+**Scoped the LI1 wiring to just the two clean TOTAL rows**, not the full ~60-item
+breakdown - a deliberate, documented scope choice (see `reconcile.py`'s module and
+`_p3dh_rows()` docstrings), not a limitation discovered after the fact. This gives:
+`total_equity` a THIRD source (LI1's own "a" column is the exact same accounting-scope
+basis ESEF's `total_equity` already reports), plus 3 genuinely new concepts no other
+wired source has at all: `total_equity_prudential_scope`, `total_liabilities`,
+`total_liabilities_prudential_scope` - directly the comparability-risk distinction
+README section 5 describes, not a contrived addition. Checked for internal plausibility
+(no ESEF data was cached yet for the same 2025-12-31 reference date to cross-check
+against directly): Erste's own LI1 export gives Total Liabilities 333,908.98 (EUR m) +
+Total shareholders' equity 34,665.16 (EUR m) = 368,574.14 (EUR m), a plausible scale
+given its FY2024 (ESEF) total assets of 353,736m.
+
+**EU KM1 extended with 5 more already-cached rows**: `tier1_capital`, `total_capital`,
+`leverage_ratio`, `liquidity_coverage_ratio`, `nsfr_ratio` - all confirmed as decimal
+fractions already on Erste's own export (leverage ratio 0.0823, LCR 1.4824, NSFR 1.4220 -
+i.e. 8.23%/148.24%/142.20%), so no unit conversion needed, unlike the capital amounts.
+
+**P3DH data fetched for the 9 pilot banks added 2026-10-11** (HSBC Continental Europe,
+Jyske Bank A/S, Alpha Services and Holdings, National Bank of Greece, Bankinter, Piraeus
+Financial Holdings, Banco Comercial Portugues, Unicaja Banco, Credit Industriel et
+Commercial) - their ESEF data was already cached, P3DH wasn't. Ran a scoped version of
+`run_update.py`'s own loop (same state file, same per-date dedup) restricted to these 9
+LEIs, both templates, all currently-expected waves - a real, ~70-fetch, ~1-hour
+background job, not an instant bulk operation.
+
+**`docs/review.html` regenerated again** - it was last refreshed earlier on 2026-10-11,
+before this session's EU LI1 wiring and EU KM1 extension, so it was already stale by the
+time this session started. Now shows 71 rows (was 54) across 3 sources (was 2) for the
+same 7 original concepts. Added P3DH's own CSS color/badge class and JS label
+(`SOURCE_LABEL`, `SCENARIO_ORDER`, `PROV_BADGE_CLASS`, `STATEMENT_GROUP` - the last
+renamed from "Regulatory (stress test)" to plain "Regulatory", since that group's
+concepts are now also P3DH-sourced and the old label was no longer accurate). Verified
+with a headless Playwright render (71 rows, no console errors, P3DH pill/badge render
+with the right color, the search box correctly filters to the 13 P3DH rows) before
+publishing.
+
+**A genuine, serendipitous discovery, not a bug**: running the new LI1 test suite
+(`period="202512"` for `total_equity`, which has no cached ESEF for that period yet)
+triggered `esef_client.fetch_facts()`'s own live-fetch-on-demand path - and it succeeded,
+because Erste's real FY2025 annual report is now filed and indexed on `filings.xbrl.org`,
+which it wasn't as of the 2026-10-08 DuPont work. Erste's ESEF coverage is now
+2021-2025 (5 fiscal years), not 2021-2024, purely as a side effect of writing a test for
+something unrelated.
+
+Sources checked (this update):
+- Erste's own cached `K_64.01` (EU LI1) export, read directly with openpyxl, to learn
+  the real Open Key/column structure before writing any CONCEPT_MAP entries against it
+- BNP Paribas's own cached `K_64.01` export, to check whether Erste's exact Open Key
+  strings generalize to another bank - they don't, confirmed by listing all 34 of BNP's
+  own distinct Open Key values directly
+- Erste's own cached `K_61.00` (EU KM1) export, for the 5 new rows' real values and units
+- The project's own test suite (`pytest tests/`), which caught both the Open Key mismatch
+  and the row-trimming bug as real failures, not found by separate manual inspection
+- A live headless Playwright render of the regenerated `docs/review.html`
