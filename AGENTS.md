@@ -130,7 +130,10 @@ The `add-mvp-v1` change (README section 3's "first useful version") is DONE and 
 wired sources (EBA Stress Test 2025, ESEF, P3DH's EU KM1 + partial EU LI1) across 15
 standardized concepts, for a 46-bank pilot sample (the original 37 S&P-50 banks plus 9
 added 2026-10-11 on their own documented merits - see `entities.csv`'s `pilot_added`
-column). The EBA bulk-access question is also closed (2026-10-12, confirmed by the user:
+column). All 9 now have real P3DH data too (fetched 2026-10-12: 88 successes, 0 scraper
+errors, 0 entity-matching failures - every one of the 9 banks' names resolved against
+P3DH's Entity search on the first attempt). The EBA bulk-access question is also closed
+(2026-10-12, confirmed by the user:
 EBA has nothing further to offer) - the Playwright scraper is permanent, not a stopgap.
 See PLANNING_LOG.md and DATA_SOURCES_NOTES.md for what was actually found at each step,
 especially 2026-10-08 (BBVA/Sabadell data error), 2026-10-11 (P3DH/EU KM1 wiring,

@@ -661,3 +661,15 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   Verified the regenerated page with a headless Playwright render (71 rows,
   no console errors, P3DH badge/pill render correctly) before publishing.
   Decided and carried out by agent.
+- 2026-10-12: The 9-bank P3DH fetch (point 3) finished - 88 new successes,
+  56 new failures (all classified template_or_date_not_available, 0
+  scraper_error, 0 entity_not_found_on_p3dh - entity-name matching worked
+  for all 9 on the first try). Every bank got at least some EU KM1 data
+  (2-4 of 4 reference dates each); 7/9 got one EU LI1 success, always the
+  2025-12-31 date only (consistent with EU LI1's confirmed semi-annual/
+  annual-only frequency, 2026-10-07 entry); HSBC Continental Europe got
+  zero EU LI1 data at any date. Verified end to end via reconcile.py for
+  HSBC and CIC - real p3dh rows returned, including a correct
+  missing_from_source for CIC's total_equity_prudential_scope (no "Total
+  shareholders' equity" Open Key on its one cached LI1 date). Decided and
+  carried out by agent.
