@@ -1464,3 +1464,35 @@ Sources checked (this update):
 - All 36 currently-cached EU LI1 (`K_64.01`) exports, read directly with openpyxl -
   both for Open Key frequency across the whole set, and specifically for any
   "total"-containing label, not just the 2 already wired
+
+## Update 2026-10-13 (second entry): EU CC1's headline rows are duplicates of EU KM1, not an independent cross-check - confirmed not worth wiring
+
+gap-cc1-revisit: EU CC1 (`K_66.01`) was confirmed KM1-shaped on 2026-10-12 (94 fixed
+row codes) but deferred as "would need its own curation pass." Found CC1's own clean,
+unambiguous summary rows before deciding whether that curation was worth doing: row
+`0370` ("29. Common Equity Tier 1 (CET1) capital"), `0550` ("45. Tier 1 capital"),
+`0720` ("59. Total capital"), and `0730` ("60. Total Risk exposure amount") - the exact
+same 4 figures EU KM1 already reports.
+
+**Checked whether these are an independent cross-check (like EU OV1's TREA turned out
+to be) before wiring them - they are not.** All 4 values match Erste's own EU KM1
+figures to the cent (28,523,937,380.03 EUR, 32,012,718,456.33 EUR, 36,538,863,419.37
+EUR, 147,487,065,101.15 EUR - identical, not merely close). Unlike EU OV1's TREA (a
+genuinely different ~1.5% figure, because OV1 and KM1 are reported as part of different
+sub-templates with their own calculation paths), EU CC1's and EU KM1's totals come from
+the exact same single COREP own-funds calculation restated across two templates in the
+same submission - wiring them would add rows with zero new information, not a second
+opinion.
+
+**Decision: EU CC1 stays unwired, now for a concrete, checked reason rather than a
+deferred "maybe."** Its only unambiguous, low-effort rows turned out to be duplicates;
+its other ~90 rows are granular CRR capital-deduction detail (e.g. "8. Intangible
+assets... negative amount", "12. Negative amounts resulting from the calculation of
+expected loss amounts...") that would need the same kind of per-row curation judgment
+LI1's abandoned full breakdown would have, for an unknown payoff until actually done -
+not attempted without a more specific target than "see what's in there." No code
+change.
+
+Sources checked (this update):
+- Erste's own cached EU CC1 export's 4 headline rows, compared directly against its
+  own cached EU KM1 figures for the same reference date

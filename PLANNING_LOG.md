@@ -773,3 +773,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   CONCEPT_MAP comment and added a test pinning this down. No code change
   - the existing missing_from_source behavior was already correct.
   Decided and carried out by agent.
+- 2026-10-13: gap-cc1-revisit done. Found EU CC1's own clean headline
+  rows (final CET1/Tier1/Total capital, TREA) before deciding whether to
+  wire them - they exactly duplicate EU KM1's own figures to the cent
+  (same COREP submission, restated across templates), not an
+  independent cross-check like EU OV1's TREA turned out to be. Decision:
+  EU CC1 stays unwired - a concrete, checked reason now, not a deferred
+  "maybe." No code change. Decided and carried out by agent.
