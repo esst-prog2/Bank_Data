@@ -84,18 +84,26 @@
 
 ## 4. Small-sample validation fetch (depends on: P3DH scraper)
 
-- [ ] 4.1 For each newly-wired template, fetch it for 2-3 sample pilot banks
+- [x] 4.1 For each newly-wired template, fetch it for 2-3 sample pilot banks
       (Erste, plus one bank with strong EU LI1 coverage and one with weak
       coverage) across the currently-expected waves, before committing to a
       full-pilot fetch - verify via `reconcile.get_financial_data()` returning
       real `p3dh` rows (status `ok` or correctly-reasoned `missing_from_source`)
       for each sample bank
+      - 2026-10-12: fetched for Erste, BNP Paribas, HSBC Continental Europe
+        (weak EU LI1 coverage) across all 4 currently-expected reference
+        dates - 35 successes, 13 failures (all template_or_date_not_available).
+        Verified real `ok` p3dh rows for credit_risk_rwa/performing_exposures
+        for all 3 banks. See PLANNING_LOG.md 2026-10-12.
 
 ## 5. Full pilot acquisition (depends on: P3DH scraper)
 
-- [ ] 5.1 Decide, per newly-wired template, whether the small-sample result
+- [x] 5.1 Decide, per newly-wired template, whether the small-sample result
       justifies a full 46-bank fetch - verify by a one-line decision recorded in
       PLANNING_LOG.md per template (fetch fully / not worth it, and why)
+      - 2026-10-12: both approved. EU OV1 - strong coverage (Erste 4/4 dates,
+        BNP 3/4, HSBC 2/4). EU CQ3 - sparser (mostly the 2025-12-31 annual
+        date per bank) but real and worth fetching fully regardless.
 - [ ] 5.2 Run `run_update.py` (optionally in `--limit`-sized chunks across several
       invocations, given the real multi-day scale) for every template approved in
       5.1, across the full pilot sample - verify via `data/state/download_log.json`

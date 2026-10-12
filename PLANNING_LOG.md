@@ -712,3 +712,12 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   non_performing_exposures, feeding a new compute_npl_ratio() function).
   5 new tests, all passing (29 total, 1 skip). Decided and carried out by
   agent.
+- 2026-10-12: Small-sample validation fetch (task 4.1) for EU OV1/EU CQ3
+  across Erste, BNP Paribas, and HSBC Continental Europe (weak LI1
+  coverage), all 4 currently-expected reference dates: 35 successes, 13
+  failures (all template_or_date_not_available). Decision (task 5.1): EU
+  OV1 - fetch fully for the 46-bank pilot (strong coverage: Erste 4/4
+  dates, BNP 3/4, even HSBC 2/4). EU CQ3 - fetch fully too, but expect
+  mostly just the 2025-12-31 annual date per bank (Erste/BNP/HSBC each
+  got only that one date, consistent with an annual-only disclosure
+  pattern, not a bug). Decided by agent.
