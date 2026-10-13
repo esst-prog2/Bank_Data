@@ -1,7 +1,7 @@
 """Package surface: given a bank + reporting period(s) + requested concepts, return
 a reconciled pandas DataFrame of standardized financial/regulatory figures, each
 tagged with enough source/provenance metadata to check it against the original
-publication (see openspec/changes/add-mvp-v1/specs/data-retrieval/spec.md).
+publication (see openspec/specs/data-retrieval/spec.md).
 
 Three real, verified sources are wired in:
 
@@ -388,6 +388,18 @@ def _cached_p3dh_files(bank_name: str, template_prefix: str) -> list[Path]:
     return sorted((_ROOT / "data" / "raw").glob(f"{safe_name}_{template_prefix}*.xlsx"))
 
 
+def _row_cell(row: tuple, idx: dict[str, int], name: str):
+    """openpyxl's read_only iter_rows() trims a row's tuple to its last non-empty
+    cell, so a row whose trailing columns are genuinely blank (confirmed on BNP
+    Paribas's own LI1 export) is SHORTER than the header - a plain row[i] would
+    raise IndexError on those columns rather than reading them as blank. Extracted
+    to module level (homework 6 review 8) so this bounds-checking logic has a direct
+    unit test with hand-built tuples, not only indirect coverage through whichever
+    bank's cached export happens to still have a short row today."""
+    i = idx[name]
+    return row[i] if i < len(row) else None
+
+
 def _read_p3dh_fact(
     path: Path, match_field: str, match_value: str, column_code: str
 ) -> tuple[datetime, str | None, str | None, float | None]:
@@ -436,12 +448,7 @@ def _read_p3dh_fact(
                 raise DataSourceError(f"{path}: expected header {required!r} not found - malformed export?")
 
         def cell(r: tuple, name: str):
-            # openpyxl's read_only iter_rows() trims a row's tuple to its last non-empty
-            # cell, so a row whose trailing columns are genuinely blank (confirmed on
-            # BNP Paribas's own LI1 export) is SHORTER than the header - a plain r[i]
-            # would raise IndexError on those columns rather than reading them as blank.
-            i = idx[name]
-            return r[i] if i < len(r) else None
+            return _row_cell(r, idx, name)
 
         for r in rows_iter:
             if cell(r, match_field) == match_value and cell(r, "Column") == column_code:
