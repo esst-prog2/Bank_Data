@@ -104,10 +104,18 @@
       - 2026-10-12: both approved. EU OV1 - strong coverage (Erste 4/4 dates,
         BNP 3/4, HSBC 2/4). EU CQ3 - sparser (mostly the 2025-12-31 annual
         date per bank) but real and worth fetching fully regardless.
-- [ ] 5.2 Run `run_update.py` (optionally in `--limit`-sized chunks across several
+- [x] 5.2 Run `run_update.py` (optionally in `--limit`-sized chunks across several
       invocations, given the real multi-day scale) for every template approved in
       5.1, across the full pilot sample - verify via `data/state/download_log.json`
       success/failure counts and the run's own failure-type breakdown (task 1.4)
+      - 2026-10-13: ran the full 46-bank x 2-template fetch. Hit a genuine
+        environment outage mid-run (net::ERR_INTERNET_DISCONNECTED, confirmed via
+        the raw exception text, not assumed) - retried after connectivity was
+        restored, since the idempotent state file only skips "success" entries.
+        Final result: 485 successes, 251 failures, ALL cleanly explained
+        (203 template_or_date_not_available, 48 entity_not_found_on_p3dh) - the
+        12 transient scraper_error timeouts from the retry were individually
+        re-fetched and now correctly reclassified. Zero unexplained failures.
 - [x] 5.3 Spot-check `reconcile.get_financial_data()` for a handful of banks across
       the newly-fetched templates - verify real, plausible `p3dh` rows come back,
       not just successful file downloads

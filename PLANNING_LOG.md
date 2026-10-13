@@ -780,3 +780,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   independent cross-check like EU OV1's TREA turned out to be. Decision:
   EU CC1 stays unwired - a concrete, checked reason now, not a deferred
   "maybe." No code change. Decided and carried out by agent.
+- 2026-10-13: Full 46-bank EU OV1/EU CQ3 fetch (task 5.2) finished, after
+  retrying through a real mid-run connectivity outage and then 12
+  genuine transient timeouts. Final: 485 successes, 251 failures, all
+  cleanly explained (203 template_or_date_not_available, 48
+  entity_not_found_on_p3dh), zero unexplained scraper_error entries
+  remaining. Spot-checked (task 5.3) across 6 random pilot banks - real,
+  correct rows. Decided and carried out by agent.
