@@ -815,5 +815,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   per-file skip only printed, no logger, invisible to a non-interactive
   caller. Review 6 (unchosen dependencies/dead code): no dead code, no
   hallucinated packages, but pytest was imported by the test suite and
-  never declared in requirements.txt at all - fixed. Decided and
-  carried out by agent.
+  never declared in requirements.txt at all - fixed. Review 7 (quiet
+  defaults): eba_exercises.discover_full_database_files() silently
+  returned [] when both live scraping and the hardcoded fallback found
+  nothing, indistinguishable from a real (impossible) empty result -
+  now raises ExerciseDataUnavailable instead. Decided and carried out
+  by agent.

@@ -158,3 +158,27 @@ silently relied on the environment already having. A clean `pip install -r
 requirements.txt` followed by `pytest` would fail with `ModuleNotFoundError`.
 
 **Fixed:** added `pytest>=8.0` to `requirements.txt`.
+
+## 7. The quiet default (a missing value silently becomes a decision)
+
+Grepped every `.get(key, default)` call in `data_acquisition/` (24 total) and
+checked each one: is the key's absence a real, expected possibility the caller
+already handles, or would a missing key actually be a bug masquerading as a
+normal case?
+
+**Found:** 23 are reading untrusted external JSON (filings.xbrl.org/GLEIF API
+responses) or a state file whose entries may predate a schema field, both genuine
+"this key's absence is expected and already handled downstream" cases. One real
+quiet default: `eba_exercises.discover_full_database_files()`'s
+`_KNOWN_FULL_DATABASE_FILES.get((exercise, year), [])` - if live scraping found
+nothing (e.g. EBA redesigned the landing page) AND no hardcoded fallback exists
+for that year, this silently returned `[]`. `download_full_database()` would then
+just write zero files with no error, and the caller has no way to tell "this
+exercise/year genuinely has zero files" (which never actually happens - every
+exercise year has some) apart from "both lookup paths failed". The missing key
+became a decision - "proceed as if there's nothing to fetch" - nobody actually
+made.
+
+**Fixed:** added `ExerciseDataUnavailable`, raised when neither live scraping nor
+the fallback list produces anything, instead of returning `[]`. Added
+`test_discover_full_database_files_raises_when_nothing_found`.

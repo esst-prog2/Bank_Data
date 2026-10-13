@@ -135,6 +135,13 @@ class Participant:
     year: int
 
 
+class ExerciseDataUnavailable(RuntimeError):
+    """Neither live scraping of the landing page nor the hardcoded fallback list
+    found any full-database files for a requested exercise/year - a genuine problem
+    to investigate, never silently treated as "nothing to download" (see
+    discover_full_database_files's docstring)."""
+
+
 def _get_html(url: str) -> str:
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0 (research script)"})
     resp.raise_for_status()
@@ -144,7 +151,14 @@ def _get_html(url: str) -> str:
 def discover_full_database_files(exercise: str, year: int) -> list[str]:
     """Scrape the landing page for this exercise/year and return every full-database
     CSV/XLSX link found. Falls back to the hardcoded list above if scraping finds nothing
-    (e.g. the page structure changed) and a fallback is known for that year."""
+    (e.g. the page structure changed) and a fallback is known for that year.
+
+    Raises ExerciseDataUnavailable if NEITHER source has anything - every real
+    exercise/year has full-database files, so an empty result here always means
+    scraping broke or a fallback hasn't been added yet, never "this year genuinely
+    has zero files" (homework 6 review 7: this used to return `[]` silently via
+    `_KNOWN_FULL_DATABASE_FILES.get(..., [])`, indistinguishable from a real,
+    expected empty result - there is no such thing for this data)."""
     url = EXERCISES[exercise][year]
     try:
         html = _get_html(url)
@@ -153,7 +167,15 @@ def discover_full_database_files(exercise: str, year: int) -> list[str]:
             return links
     except requests.RequestException:
         pass
-    return _KNOWN_FULL_DATABASE_FILES.get((exercise, year), [])
+    fallback = _KNOWN_FULL_DATABASE_FILES.get((exercise, year), [])
+    if not fallback:
+        raise ExerciseDataUnavailable(
+            f"no full-database files found for {exercise} {year}, via live scraping "
+            f"of {url} or the hardcoded fallback list - either the landing page's "
+            "structure changed, or this exercise/year has no known fallback yet. "
+            "Check the landing page by hand before assuming this is a real gap."
+        )
+    return fallback
 
 
 def discover_participants(exercise: str, year: int) -> list[Participant]:
