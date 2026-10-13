@@ -3,7 +3,7 @@
 `python -m data_acquisition.eba_exercises stress_test 2025` first.
 
 Covers tasks.md section 4's acceptance criteria and the corresponding scenarios in
-openspec/changes/add-mvp-v1/specs/data-retrieval/spec.md.
+openspec/specs/data-retrieval/spec.md.
 """
 
 from __future__ import annotations
