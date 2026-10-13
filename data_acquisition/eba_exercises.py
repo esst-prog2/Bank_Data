@@ -195,18 +195,32 @@ def download_full_database(exercise: str, year: int, out_dir: Path | None = None
     return written
 
 
+_BASE_ENTITY_FIELDNAMES = ["lei", "name", "country", "notes"]
+
+
 def build_entities_csv(exercise: str, year: int, out_path: Path | None = None) -> Path:
     """Write data/entities.csv from a real exercise's participant list. Names aren't in the
     URL, so the "name" column is left blank for you to fill in (or cross-reference against
     GLEIF with gleif_client.get_lei_record) - the LEI and country are the authoritative part.
     Re-running for a different exercise/year appends new LEIs without duplicating existing
-    ones."""
+    ones.
+
+    Preserves whatever columns an existing out_path already has (e.g. entities.py's
+    `sp50_2026_rank`/`pilot_added`, added after this function was first written) rather than
+    rewriting the file down to just this function's own 4 base columns - confirmed 2026-10-13
+    (homework 6 review 3) that the old hardcoded fieldnames list would crash
+    (csv.DictWriter's default extrasaction='raise') the moment this ran again against the
+    real, already-evolved entities.csv, since DictReader's rows for existing data carry keys
+    this function's writer didn't know about."""
     out_path = out_path or _ROOT / "data" / "entities.csv"
     existing_leis: set[str] = set()
     rows: list[dict] = []
+    fieldnames = _BASE_ENTITY_FIELDNAMES
     if out_path.exists():
         with out_path.open(newline="", encoding="utf-8") as f:
-            rows = list(csv.DictReader(f))
+            reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames or fieldnames
+            rows = list(reader)
             existing_leis = {r["lei"] for r in rows}
 
     for p in discover_participants(exercise, year):
@@ -220,7 +234,7 @@ def build_entities_csv(exercise: str, year: int, out_path: Path | None = None) -
             existing_leis.add(p.lei)
 
     with out_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["lei", "name", "country", "notes"])
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
     return out_path
