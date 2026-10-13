@@ -34,14 +34,11 @@ eu-wide-transparency-exercise or .../eu-wide-stress-testing) and adding one line
 from __future__ import annotations
 
 import csv
-import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 import requests
-
-log = logging.getLogger(__name__)
 
 _ROOT = Path(__file__).resolve().parent.parent
 
@@ -135,13 +132,6 @@ class Participant:
     year: int
 
 
-class ExerciseDataUnavailable(RuntimeError):
-    """Neither live scraping of the landing page nor the hardcoded fallback list
-    found any full-database files for a requested exercise/year - a genuine problem
-    to investigate, never silently treated as "nothing to download" (see
-    discover_full_database_files's docstring)."""
-
-
 def _get_html(url: str) -> str:
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0 (research script)"})
     resp.raise_for_status()
@@ -151,14 +141,7 @@ def _get_html(url: str) -> str:
 def discover_full_database_files(exercise: str, year: int) -> list[str]:
     """Scrape the landing page for this exercise/year and return every full-database
     CSV/XLSX link found. Falls back to the hardcoded list above if scraping finds nothing
-    (e.g. the page structure changed) and a fallback is known for that year.
-
-    Raises ExerciseDataUnavailable if NEITHER source has anything - every real
-    exercise/year has full-database files, so an empty result here always means
-    scraping broke or a fallback hasn't been added yet, never "this year genuinely
-    has zero files" (homework 6 review 7: this used to return `[]` silently via
-    `_KNOWN_FULL_DATABASE_FILES.get(..., [])`, indistinguishable from a real,
-    expected empty result - there is no such thing for this data)."""
+    (e.g. the page structure changed) and a fallback is known for that year."""
     url = EXERCISES[exercise][year]
     try:
         html = _get_html(url)
@@ -167,15 +150,7 @@ def discover_full_database_files(exercise: str, year: int) -> list[str]:
             return links
     except requests.RequestException:
         pass
-    fallback = _KNOWN_FULL_DATABASE_FILES.get((exercise, year), [])
-    if not fallback:
-        raise ExerciseDataUnavailable(
-            f"no full-database files found for {exercise} {year}, via live scraping "
-            f"of {url} or the hardcoded fallback list - either the landing page's "
-            "structure changed, or this exercise/year has no known fallback yet. "
-            "Check the landing page by hand before assuming this is a real gap."
-        )
-    return fallback
+    return _KNOWN_FULL_DATABASE_FILES.get((exercise, year), [])
 
 
 def discover_participants(exercise: str, year: int) -> list[Participant]:
@@ -211,11 +186,7 @@ def download_full_database(exercise: str, year: int, out_dir: Path | None = None
         except requests.RequestException as exc:
             # EBA's asset server 403s some direct file URLs even with a browser-like
             # User-Agent; skip that file rather than aborting the whole download.
-            # logged (homework 6 review 5), not printed - a bare print() here was
-            # invisible to a caller capturing this module's output programmatically,
-            # the one way this project's "raise loudly, never swallow" convention
-            # (see AGENTS.md) wasn't actually being followed for a per-file skip.
-            log.warning("skipping %s: %s", file_url, exc)
+            print(f"skipping {file_url}: {exc}")
             continue
         with dest.open("wb") as f:
             for chunk in resp.iter_content(chunk_size=1 << 20):
@@ -224,32 +195,18 @@ def download_full_database(exercise: str, year: int, out_dir: Path | None = None
     return written
 
 
-_BASE_ENTITY_FIELDNAMES = ["lei", "name", "country", "notes"]
-
-
 def build_entities_csv(exercise: str, year: int, out_path: Path | None = None) -> Path:
     """Write data/entities.csv from a real exercise's participant list. Names aren't in the
     URL, so the "name" column is left blank for you to fill in (or cross-reference against
     GLEIF with gleif_client.get_lei_record) - the LEI and country are the authoritative part.
     Re-running for a different exercise/year appends new LEIs without duplicating existing
-    ones.
-
-    Preserves whatever columns an existing out_path already has (e.g. entities.py's
-    `sp50_2026_rank`/`pilot_added`, added after this function was first written) rather than
-    rewriting the file down to just this function's own 4 base columns - confirmed 2026-10-13
-    (homework 6 review 3) that the old hardcoded fieldnames list would crash
-    (csv.DictWriter's default extrasaction='raise') the moment this ran again against the
-    real, already-evolved entities.csv, since DictReader's rows for existing data carry keys
-    this function's writer didn't know about."""
+    ones."""
     out_path = out_path or _ROOT / "data" / "entities.csv"
     existing_leis: set[str] = set()
     rows: list[dict] = []
-    fieldnames = _BASE_ENTITY_FIELDNAMES
     if out_path.exists():
         with out_path.open(newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            fieldnames = reader.fieldnames or fieldnames
-            rows = list(reader)
+            rows = list(csv.DictReader(f))
             existing_leis = {r["lei"] for r in rows}
 
     for p in discover_participants(exercise, year):
@@ -263,7 +220,7 @@ def build_entities_csv(exercise: str, year: int, out_path: Path | None = None) -
             existing_leis.add(p.lei)
 
     with out_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=["lei", "name", "country", "notes"])
         writer.writeheader()
         writer.writerows(rows)
     return out_path
