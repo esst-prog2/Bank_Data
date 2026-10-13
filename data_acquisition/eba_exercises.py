@@ -34,11 +34,14 @@ eu-wide-transparency-exercise or .../eu-wide-stress-testing) and adding one line
 from __future__ import annotations
 
 import csv
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 import requests
+
+log = logging.getLogger(__name__)
 
 _ROOT = Path(__file__).resolve().parent.parent
 
@@ -186,7 +189,11 @@ def download_full_database(exercise: str, year: int, out_dir: Path | None = None
         except requests.RequestException as exc:
             # EBA's asset server 403s some direct file URLs even with a browser-like
             # User-Agent; skip that file rather than aborting the whole download.
-            print(f"skipping {file_url}: {exc}")
+            # logged (homework 6 review 5), not printed - a bare print() here was
+            # invisible to a caller capturing this module's output programmatically,
+            # the one way this project's "raise loudly, never swallow" convention
+            # (see AGENTS.md) wasn't actually being followed for a per-file skip.
+            log.warning("skipping %s: %s", file_url, exc)
             continue
         with dest.open("wb") as f:
             for chunk in resp.iter_content(chunk_size=1 << 20):

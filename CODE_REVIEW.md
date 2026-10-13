@@ -111,3 +111,32 @@ was written early and never revisited as the package grew.
 
 **Fixed:** updated `__init__.py`'s module list to name all 9 modules. No behavior
 change.
+
+## 5. Errors that disappear (swallowed exceptions)
+
+Grepped every `except` clause in `data_acquisition/` (14 total) for the slide's
+`except Exception: return None`/`except: pass` pattern.
+
+**Found:** 13 of 14 `except` clauses either re-raise as one of this project's own
+loud error types (`DataSourceError`, `EsefDataError`, ...) or deliberately
+represent a documented "missing from source, not a failure" outcome the spec
+itself requires (e.g. `reconcile.py`'s `EsefNotFoundError` -> `missing_from_source`
+row). `run_update.py`'s one broad `except Exception` is intentional and already
+justified inline (`# noqa: BLE001 - we want every failure recorded`): it still
+classifies and persists every failure to the state file rather than discarding it,
+matching AGENTS.md's own stated convention ("every acquisition module raises
+loudly on failure... run_update.py's per-item try/except records failures in the
+state file instead of swallowing them").
+
+One real gap: `eba_exercises.download_full_database()`'s per-file
+`except requests.RequestException` skip (a deliberate, documented choice - EBA's
+asset server 403s some URLs, and one bad file shouldn't abort the whole batch) only
+surfaced via a bare `print()`, with no logger set up in that module at all (unlike
+`run_update.py`, which already uses `logging`). A caller invoking this
+programmatically rather than watching a terminal would lose every skip silently -
+the written-files count would just come back short with no way to tell why.
+
+**Fixed:** added a module logger (matching `run_update.py`'s convention) and
+replaced the `print()` with `log.warning(...)`. The skip-and-continue behavior
+itself is unchanged - it's correct, not the thing that was swallowed - only its
+visibility to a non-interactive caller is.
