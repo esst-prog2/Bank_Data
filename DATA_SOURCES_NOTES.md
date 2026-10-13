@@ -1496,3 +1496,40 @@ change.
 Sources checked (this update):
 - Erste's own cached EU CC1 export's 4 headline rows, compared directly against its
   own cached EU KM1 figures for the same reference date
+
+## Update 2026-10-13 (third entry): gap-p3dh-full-catalog's first installment - 79/114 templates have real content for Erste
+
+Ran the first installment of gap-p3dh-full-catalog: all 114 `data/modules.txt` templates
+for Erste Group Bank AG alone (912 combinations - 1 bank x 114 templates x 8 waves), to
+see which of the 110 never-tried templates have any real content before deciding whether
+extending to the full 46-bank pilot is worth it.
+
+**Result: 79/114 templates (69%) have at least one real disclosure for Erste** - far more
+than assumed going in. 382 new successes, 506 failures (not yet broken down by cause the
+way the OV1/EU CQ3 fetch was - that classification work hasn't been done for this larger
+set yet), 24 already-cached from earlier work. This is a much richer dataset than the 4
+templates wired so far (KM1, LI1, OV1, CQ3) suggested was available.
+
+**Genuinely new categories with real data, not yet inspected for wiring potential:**
+EU LIQ1/EU LIQ2 (`K_73.00`/`K_74.00` - detailed LCR/NSFR components, more granular than
+KM1's single ratio), EU AE1/EU AE2 (`K_20.01`/`K_20.02` - asset encumbrance), EU IRRBB1
+(`K_68.00` - interest rate risk in the banking book), EU CC2 (`K_66.02` - reconciliation
+of regulatory own funds to the balance sheet - unlike EU CC1, this ISN'T necessarily a
+duplicate of KM1, since it's explicitly a cross-statement reconciliation, not a restated
+total; worth checking), EU CR1/EU CR2 (`K_21.01`/`K_22.01` - a different, more detailed
+non-performing-exposures template than EU CQ3), the 5 climate-risk templates
+(`K_41.00`-`K_45.00`), 4 of the 5 EU REM remuneration templates, EU INS1 (insurance
+participations), and about a dozen Section 1-13 shadow-banking-monitoring templates
+(`K_100.00`-`K_112.00`).
+
+**Deliberately not inspected or wired yet - this is a finding, not a decision.** Properly
+evaluating even a handful of these the way EU OV1/EU CQ3/EU CC1 were (open a real export,
+check Row vs. Open Key shape, cross-check a second bank, decide what's worth it) is
+realistic, multi-template work, not something to do in the same pass as the fetch itself -
+the whole point of "inspect before wire" is that it takes real time per template. Reported
+back to the user with this finding before picking which (if any) to inspect next, rather
+than guessing at what's valuable.
+
+Sources checked (this update):
+- A full live fetch of all 114 `data/modules.txt` templates for Erste Group Bank AG,
+  across all 4 currently-expected reference dates

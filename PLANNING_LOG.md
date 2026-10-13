@@ -787,3 +787,11 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   entity_not_found_on_p3dh), zero unexplained scraper_error entries
   remaining. Spot-checked (task 5.3) across 6 random pilot banks - real,
   correct rows. Decided and carried out by agent.
+- 2026-10-13: gap-p3dh-full-catalog's first installment (all 114
+  templates for Erste alone) finished - 79/114 templates (69%) have
+  real content, far more than assumed. Deliberately stopped here rather
+  than inspecting/wiring any of the newly-found templates or extending
+  the fetch to the other 45 pilot banks - both are substantial next
+  decisions, reported to the user rather than guessed at. See
+  DATA_SOURCES_NOTES.md's 2026-10-13 (third) entry for the full list of
+  genuinely new categories found. Decided and carried out by agent.
