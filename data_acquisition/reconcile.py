@@ -1,7 +1,7 @@
 """Package surface: given a bank + reporting period(s) + requested concepts, return
 a reconciled pandas DataFrame of standardized financial/regulatory figures, each
 tagged with enough source/provenance metadata to check it against the original
-publication (see openspec/changes/add-mvp-v1/specs/data-retrieval/spec.md).
+publication (see openspec/specs/data-retrieval/spec.md).
 
 Three real, verified sources are wired in:
 
