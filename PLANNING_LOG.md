@@ -806,3 +806,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   hardcoded entities.csv's old 4-column schema, 2 columns short of its
   real current one; calling it again would have crashed. Decided and
   carried out by agent.
+- 2026-10-13: Homework 6 review 4 (duplicate modules): no duplicate
+  modules found, but data_acquisition/__init__.py's module list was
+  stale (named 5 of 9 modules, missing eba_exercises/esef_client/
+  edap_scraper/reconcile) - fixed. Decided and carried out by agent.
