@@ -809,4 +809,8 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
 - 2026-10-13: Homework 6 review 4 (duplicate modules): no duplicate
   modules found, but data_acquisition/__init__.py's module list was
   stale (named 5 of 9 modules, missing eba_exercises/esef_client/
-  edap_scraper/reconcile) - fixed. Decided and carried out by agent.
+  edap_scraper/reconcile) - fixed. Review 5 (swallowed errors): 13/14
+  except clauses already loud or a documented missing_from_source case;
+  fixed the one real gap - eba_exercises.download_full_database()'s
+  per-file skip only printed, no logger, invisible to a non-interactive
+  caller. Decided and carried out by agent.
