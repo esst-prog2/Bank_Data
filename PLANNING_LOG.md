@@ -821,3 +821,13 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   nothing, indistinguishable from a real (impossible) empty result -
   now raises ExerciseDataUnavailable instead. Decided and carried out
   by agent.
+- 2026-10-13: Homework 6 review 8 (testing gaps): test_reconcile.py's
+  24 tests are all integration-style (real cached files, 10 skip
+  without them); reconcile.py's own processing logic had zero
+  cache-independent coverage. Added test_reconcile_unit.py with
+  hand-built, frozen-input unit tests for _read_p3dh_fact and the
+  period helpers, and extracted the row-trimming bounds-check into a
+  standalone _row_cell() so the 2026-10-12 openpyxl bug fix has a
+  direct regression test. Partial, scoped fix - flagged the rest of
+  reconcile.py's logic as still integration-only. Decided and carried
+  out by agent.
