@@ -800,4 +800,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   Review 1 (spec drift): fixed 3 stale pointers to the archived
   add-mvp-v1 change path. Review 2 (unchosen names): no findings - every
   non-obvious name in data_acquisition/ traces to a dated decision or a
-  checked finding already. Decided and carried out by agent.
+  checked finding already. Review 3 (patched where it broke, not where
+  it's wrong): no symptom-patch chains in commit history, but found and
+  fixed a real latent crash - eba_exercises.build_entities_csv() still
+  hardcoded entities.csv's old 4-column schema, 2 columns short of its
+  real current one; calling it again would have crashed. Decided and
+  carried out by agent.

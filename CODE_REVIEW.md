@@ -48,3 +48,37 @@ schema grew in `entities.py` without `eba_exercises.py`'s writer being updated t
 match), not a naming one.
 
 **Fixed:** nothing in this review - no findings to act on.
+
+## 3. Patched where it broke, not where it's wrong (symptom patches vs. root-cause fixes)
+
+Read the full commit history on `main` (34 commits) looking for the slide's pattern:
+an assumption that's wrong from commit 1, with each later commit patching the next
+symptom it causes instead of revisiting the assumption itself.
+
+**Found:** no such chain in the history - every "fix" commit (`93e90be`, `ea88a7a`,
+`c8d86db`) is a single, root-cause fix for a separately investigated bug, confirmed
+against real data before being trusted (matches this project's established
+discipline of checking a 2-bank finding against the full sample before relying on
+it, e.g. the EU LI1 sparsity re-check in `PLANNING_LOG.md`'s 2026-10-13 entries).
+
+Comparing modules against each other instead of against history surfaced a
+same-shaped problem, though: `data_acquisition/entities.py`'s `Entity` dataclass and
+`data/entities.csv` grew two columns (`sp50_2026_rank`, `pilot_added`) on
+2026-10-11, but `eba_exercises.py`'s `build_entities_csv()` - which reads and
+rewrites that same CSV - was never updated to match. It hardcoded
+`fieldnames=["lei", "name", "country", "notes"]`; calling it again against the
+*current* entities.csv would read rows carrying the two newer keys and then crash
+in `csv.DictWriter.writerow()` (`ValueError`, default `extrasaction='raise'`) on
+the first row, silently destroying nothing (it fails before writing) but making the
+function completely unusable without anyone having noticed, since nothing calls it
+in the normal run_update.py workflow. Same root cause as the slide's pattern - one
+part of the code changed without revisiting an assumption a different part of the
+code depended on - just surfacing as an unmaintained function instead of a chain of
+commits.
+
+**Fixed:** `build_entities_csv()` now reads the existing file's own header as its
+fieldnames (falling back to the 4 base columns only when there's no existing file),
+so it preserves whatever columns `entities.csv` actually has instead of hardcoding
+a stale list. Added `tests/test_eba_exercises.py` - a regression test against a
+6-column entities.csv (the real current shape) that would have failed with the old
+code's `ValueError`.
