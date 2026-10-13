@@ -813,4 +813,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   except clauses already loud or a documented missing_from_source case;
   fixed the one real gap - eba_exercises.download_full_database()'s
   per-file skip only printed, no logger, invisible to a non-interactive
-  caller. Decided and carried out by agent.
+  caller. Review 6 (unchosen dependencies/dead code): no dead code, no
+  hallucinated packages, but pytest was imported by the test suite and
+  never declared in requirements.txt at all - fixed. Decided and
+  carried out by agent.

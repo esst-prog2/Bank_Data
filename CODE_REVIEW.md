@@ -140,3 +140,21 @@ the written-files count would just come back short with no way to tell why.
 replaced the `print()` with `log.warning(...)`. The skip-and-continue behavior
 itself is unchanged - it's correct, not the thing that was swallowed - only its
 visibility to a non-interactive caller is.
+
+## 6. Things nobody chose (unchosen dependencies, dead code)
+
+Checked every package `requirements.txt` lists against actual imports (is it
+used?), checked actual imports against what's declared (is everything used
+actually declared?), and scanned every public and private function/class in
+`data_acquisition/` for zero references outside its own definition.
+
+**Found:** every package in `requirements.txt` is genuinely used (no hallucinated
+or abandoned entries), and every function/class in the package is referenced at
+least once elsewhere (no dead code). But the reverse check caught a real gap:
+`tests/test_reconcile.py` imports `pytest` directly, and the whole suite is run
+via `python -m pytest` - yet `pytest` was never in `requirements.txt` at all.
+Nobody chose to leave it out; it's just a dependency the test suite has always
+silently relied on the environment already having. A clean `pip install -r
+requirements.txt` followed by `pytest` would fail with `ModuleNotFoundError`.
+
+**Fixed:** added `pytest>=8.0` to `requirements.txt`.
