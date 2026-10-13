@@ -182,3 +182,46 @@ made.
 **Fixed:** added `ExerciseDataUnavailable`, raised when neither live scraping nor
 the fallback list produces anything, instead of returning `[]`. Added
 `test_discover_full_database_files_raises_when_nothing_found`.
+
+## 8. Testing gaps (unit vs. integration balance)
+
+Read `tests/test_reconcile.py` and `tests/test_run_update.py` end to end and
+classified every test by the slides' own definition: unit (hand-invented, frozen
+inputs, checks the logic) vs. integration (the real source, checks the pieces
+connect).
+
+**Found:** a real, significant imbalance. `test_run_update.py`'s 5 tests are all
+genuine unit tests (hand-built exception objects, no I/O). But every one of
+`test_reconcile.py`'s 24 tests calls `get_financial_data()` (or a `compute_*`
+wrapper around it) against real cached files under `data/raw/`, and 10 of them
+`pytest.skip()` outright when that cache is missing. That's the right call for
+checking "do the pieces connect to the real source" - and this project is unusually
+careful about pinning expected values to independently-sourced references before
+trusting them (e.g. the RWA density test's externally-sourced 44.5%). But it means
+**reconcile.py's own processing logic has zero coverage that doesn't depend on a
+real cached file being present** - the unit half of the slide's table is empty for
+this module. A fresh clone with no `data/` cache runs almost none of
+`test_reconcile.py` and still goes green; CI could pass while checking nothing of
+`reconcile.py`'s actual parsing/conversion logic.
+
+**Fixed (partial, scoped):** added `tests/test_reconcile_unit.py` - real unit tests
+with hand-built, frozen inputs, no cache or network dependency:
+- `_read_p3dh_fact`'s happy path and its malformed-export error path, against a
+  synthetic `.xlsx` built in `tmp_path`.
+- Extracted `_read_p3dh_fact`'s nested `cell()` bounds-checking closure to a
+  module-level `_row_cell()` specifically so the real openpyxl row-trimming bug fix
+  (2026-10-12) has a direct unit test with a hand-built short tuple - confirmed this
+  test fails with `IndexError` on the pre-fix plain-indexing logic, and confirmed
+  (while building the fixture) that openpyxl's own writer doesn't actually reproduce
+  the real trimming behavior, so a file-based version of this specific test would
+  have silently tested nothing.
+- `_period_to_esef_period_end`/`_esef_period_end_to_period`'s round-trip and its
+  non-December rejection.
+
+This covers the two riskiest, most-recently-buggy pieces of pure logic, not the
+whole module - `_stress_test_rows`/`_esef_rows`/`_p3dh_rows`'s branching, the
+EUR->EUR-millions conversion, and `get_financial_data()`'s own DataFrame assembly
+are still only covered by the integration suite. Flagged, not silently left for
+"later" - a fuller unit-test pass for the rest of `reconcile.py`'s logic is real,
+scoped follow-up work this review surfaced but didn't attempt to finish in one
+commit.
