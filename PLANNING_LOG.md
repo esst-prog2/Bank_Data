@@ -795,3 +795,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   decisions, reported to the user rather than guessed at. See
   DATA_SOURCES_NOTES.md's 2026-10-13 (third) entry for the full list of
   genuinely new categories found. Decided and carried out by agent.
+- 2026-10-13: Homework 6 (whole-codebase review) started on branch
+  hw6-code-review - see CODE_REVIEW.md for the full per-review log.
+  Review 1 (spec drift): fixed 3 stale pointers to the archived
+  add-mvp-v1 change path. Review 2 (unchosen names): no findings - every
+  non-obvious name in data_acquisition/ traces to a dated decision or a
+  checked finding already. Decided and carried out by agent.
