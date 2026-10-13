@@ -831,3 +831,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   direct regression test. Partial, scoped fix - flagged the rest of
   reconcile.py's logic as still integration-only. Decided and carried
   out by agent.
+- 2026-10-13: Homework 6 review 9 (what shouldn't be in git): checked
+  full history (git log --all --diff-filter=A, git rev-list --objects
+  --all + cat-file --batch-check), not just the current tree - no raw
+  data files, no .env/secrets, no blob over 200KB ever committed on any
+  branch. Genuinely clean, nothing to fix. All 9 reviews now done - see
+  CODE_REVIEW.md's summary table. Decided and carried out by agent.

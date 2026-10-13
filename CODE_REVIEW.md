@@ -225,3 +225,51 @@ are still only covered by the integration suite. Flagged, not silently left for
 "later" - a fuller unit-test pass for the rest of `reconcile.py`'s logic is real,
 scoped follow-up work this review surfaced but didn't attempt to finish in one
 commit.
+
+## 9. What should not be in git
+
+Checked for the slide's three categories directly, across the full history on
+`main` (34 commits), not just the current tree: large raw data files, keys/`.env`,
+real people's data.
+
+- `git ls-files | grep ^data/` -> only `data/entities.csv`, `data/entities.csv.example`,
+  `data/modules.txt` - all small, intentionally-committed config/reference data (the
+  tracked LEI universe and template list), not raw downloads. `data/raw/` and
+  `data/state/` are both in `.gitignore` and have zero history of ever being
+  committed (`git log --all --diff-filter=A --name-only` across every commit on
+  every branch finds nothing under either path, or matching `.env`/`secret`/
+  `credential`/`password`/`token`/`apikey` anywhere, ever).
+- `git rev-list --objects --all` + `cat-file --batch-check` across every blob ever
+  created in this repo's history: nothing over 200KB. No large file was committed
+  and later just `.gitignore`'d (which, per the slide, wouldn't actually remove it
+  from history anyway) - it was never there to begin with.
+- No `.env` file exists on disk, tracked or untracked.
+- `.pytest_cache/` isn't in the root `.gitignore`, but doesn't need to be - pytest
+  writes its own `.pytest_cache/.gitignore` (`*`) on first run, which Git honors as
+  a nested ignore rule. Confirmed via `git status --untracked-files=all` showing
+  nothing from it despite real files existing on disk under it.
+
+**Fixed:** nothing - genuinely clean, both in the current tree and across all of
+history. No findings to act on.
+
+## Summary
+
+| # | Review | Findings | Fixed |
+|---|---|---|---|
+| 1 | Spec drift | 3 stale paths to the archived change | yes |
+| 2 | Unchosen names | none | n/a |
+| 3 | Patched where it broke | `build_entities_csv()` schema drift, would crash | yes |
+| 4 | Duplicate modules | none; stale `__init__.py` module list | yes (doc) |
+| 5 | Errors that disappear | one swallowed per-file skip, print not logged | yes |
+| 6 | Unchosen dependencies / dead code | `pytest` used but never declared | yes |
+| 7 | The quiet default | silent `[]` masking a scraping/fallback failure | yes |
+| 8 | Testing gaps | `reconcile.py` logic had zero unit coverage | partial, scoped |
+| 9 | What shouldn't be in git | none | n/a |
+
+Three of nine reviews (2, 4, 9) found nothing needing a fix in their primary
+category; each still surfaced or confirmed something while looking (a stale
+`__init__.py` docstring under review 4, a thorough history check under review 9) -
+recorded as a real result rather than skipped, per this log's own opening note.
+All fixes are covered by the existing test suite (38 passed, 2 skipped - the 2 are
+pre-existing, data-dependent integration tests whose premises haven't yet been
+exercised by a live fetch this session, unrelated to this review).
