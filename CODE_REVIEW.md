@@ -226,6 +226,42 @@ are still only covered by the integration suite. Flagged, not silently left for
 scoped follow-up work this review surfaced but didn't attempt to finish in one
 commit.
 
+**Follow-up (2026-10-19), from feedback on this review:** the flagged gap was real
+in exactly the way predicted. The two `compute_*` tests this review's summary
+implied were adequate turned out not to be:
+- `test_compute_npl_ratio_matches_hand_calculation`'s expected value
+  (`0.014214244401241994`) was computed BY RUNNING `compute_npl_ratio` itself -
+  `DATA_SOURCES_NOTES.md` has no independent source for Erste's NPL ratio. A wrong
+  EU CQ3 row/column mapping would simply have produced a different number that this
+  test would then agree with, so it can only catch a regression, never a wrong
+  mapping.
+- `test_compute_dupont_roe_equals_net_income_over_equity` checks
+  `ROE == Profit Margin x Asset Utilization x Equity Multiplier == Net Income /
+  Total Equity` - an algebraic identity that holds for ANY inputs by construction
+  (the three factors' numerators/denominators telescope). It guards against the
+  three factors drifting out of sync with each other, but never checks any of them
+  against a known-correct value.
+
+Added `test_compute_npl_ratio_hand_calculation`/`test_compute_dupont_hand_calculation`
+to `test_reconcile_unit.py`: both monkeypatch `reconcile.get_financial_data` to
+return small, hand-built DataFrames with independently-known inputs (e.g.
+performing=980/non-performing=20 -> NPL ratio must be exactly 0.02; net income
+100/total assets 2000/total equity 200/total revenue 250 -> each DuPont factor
+checked individually against its hand-calculated value, not just the identity).
+
+Also ran the full suite with `data/raw/stress_test/2025/TRA_OTH.csv` temporarily
+moved aside, simulating a fresh clone with no cached data - this turned up 7 tests
+in `test_reconcile.py` (more than the 4 initially spotted by inspection) that
+crashed with `DataSourceError` instead of skipping: each requests a concept
+(`cet1_ratio`, `net_interest_income`, `total_risk_exposure_amount`, or
+`profit_or_loss_for_the_year`) that also has a `stress_test`-mapped item, so
+`get_financial_data()` eagerly loads the stress-test CSV regardless of which
+source's data the test actually cares about - and each test's existing fixture
+(`_p3dh_available`, `_esef_available`, or none) doesn't guard against that. Added
+the `_source_available` fixture to all 7. Re-ran the same fresh-clone simulation
+after the fix: 26 passed, 16 skipped, 0 failures - a genuinely green run this time,
+confirmed by actually hiding the file rather than assumed from the skip markers.
+
 ## 9. What should not be in git
 
 Checked for the slide's three categories directly, across the full history on
@@ -263,7 +299,7 @@ history. No findings to act on.
 | 5 | Errors that disappear | one swallowed per-file skip, print not logged | yes |
 | 6 | Unchosen dependencies / dead code | `pytest` used but never declared | yes |
 | 7 | The quiet default | silent `[]` masking a scraping/fallback failure | yes |
-| 8 | Testing gaps | `reconcile.py` logic had zero unit coverage | partial, scoped |
+| 8 | Testing gaps | `reconcile.py` logic had zero unit coverage | partial, scoped; `compute_*` gap closed 2026-10-19 |
 | 9 | What shouldn't be in git | none | n/a |
 
 Three of nine reviews (2, 4, 9) found nothing needing a fix in their primary

@@ -25,6 +25,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import openpyxl
+import pandas as pd
 import pytest
 
 from data_acquisition import reconcile
@@ -102,3 +103,56 @@ def test_period_to_esef_period_end_round_trips(period, expected):
 def test_period_to_esef_period_end_rejects_non_december_year_end():
     with pytest.raises(ValueError):
         reconcile._period_to_esef_period_end("202409")
+
+
+# Homework 6 review feedback (2026-10-19): test_reconcile.py's own compute_npl_ratio/
+# compute_dupont tests either check the function against a value computed by RUNNING
+# the function itself (no independent source exists, so a wrong CQ3 mapping would
+# simply agree with itself), or check an algebraic identity that holds for ANY inputs
+# (ROE = Profit Margin x Asset Utilization x Equity Multiplier reduces to Net Income /
+# Total Equity by construction). Neither can catch a wrong formula or a wrong mapping
+# against a value an outsider could check. These monkeypatch get_financial_data with
+# small, hand-built, independently-known inputs so the expected outputs are computed
+# on paper, not by running the code under test.
+
+def test_compute_npl_ratio_hand_calculation(monkeypatch):
+    def fake_get_financial_data(bank_lei, concepts, period=None, csv_path=None):
+        return pd.DataFrame([
+            {"standardized_concept": "performing_exposures", "status": "ok", "value": 980.0},
+            {"standardized_concept": "non_performing_exposures", "status": "ok", "value": 20.0},
+        ])
+
+    monkeypatch.setattr(reconcile, "get_financial_data", fake_get_financial_data)
+
+    ratio = reconcile.compute_npl_ratio("ANY_LEI", "202512")
+    assert ratio == pytest.approx(0.02)  # 20 / (980 + 20), by hand
+
+
+def test_compute_dupont_hand_calculation(monkeypatch):
+    # Hand-picked so every DuPont factor is a distinct, checkable-on-paper number:
+    # total_revenue = 200 (NII) + 50 (net fee) + 0 (trading) = 250.
+    values = {
+        "net_interest_income": 200.0,
+        "fee_and_commission_income_expense": 50.0,
+        "trading_income_expense": 0.0,
+        "profit_or_loss_for_the_year": 100.0,
+        "total_assets": 2000.0,
+        "total_equity": 200.0,
+    }
+
+    def fake_get_financial_data(bank_lei, concepts, period=None, csv_path=None):
+        return pd.DataFrame([
+            {"standardized_concept": c, "source": "esef", "status": "ok", "value": v}
+            for c, v in values.items()
+        ])
+
+    monkeypatch.setattr(reconcile, "get_financial_data", fake_get_financial_data)
+
+    result = reconcile.compute_dupont("ANY_LEI", "202412")
+
+    assert result.total_revenue == pytest.approx(250.0)
+    assert result.profit_margin == pytest.approx(100.0 / 250.0)  # 0.4
+    assert result.asset_utilization == pytest.approx(250.0 / 2000.0)  # 0.125
+    assert result.equity_multiplier == pytest.approx(2000.0 / 200.0)  # 10.0
+    assert result.roa == pytest.approx(0.05)  # 100 / 2000
+    assert result.roe == pytest.approx(0.5)  # 100 / 200, and 0.4 * 0.125 * 10.0

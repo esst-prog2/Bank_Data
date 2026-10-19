@@ -150,10 +150,16 @@ def _p3dh_available():
         )
 
 
-def test_p3dh_concept_returns_one_row_per_cached_reference_date(_p3dh_available):
+def test_p3dh_concept_returns_one_row_per_cached_reference_date(_source_available, _p3dh_available):
     """2026-10-11: P3DH wiring (EU KM1 only). get_financial_data(period=None) should
     return one p3dh row per cached reference date for this bank/template - cache-only,
-    never a live P3DH query (see reconcile._p3dh_rows's docstring)."""
+    never a live P3DH query (see reconcile._p3dh_rows's docstring).
+
+    Needs `_source_available` too: cet1_ratio also has a stress_test-mapped item, so
+    get_financial_data() loads the stress-test CSV eagerly regardless of `_p3dh_available`
+    (found empirically, homework 6 review feedback, 2026-10-19 - a full fresh-clone
+    simulation of the whole suite turned up 3 more instances of this bug beyond the
+    4 the review itself found)."""
     df = reconcile.get_financial_data(_BANK_LEI, ["cet1_ratio"], period=None)
     p3dh = df[df["source"] == "p3dh"]
 
@@ -310,13 +316,17 @@ def test_p3dh_ov1_rwa_breakdown_concepts_are_new(_p3dh_ov1_available):
     assert (df["value"] > 0).all()
 
 
-def test_p3dh_ov1_total_rwa_is_untagged_as_one_with_km1s_own_total(_p3dh_available, _p3dh_ov1_available):
+def test_p3dh_ov1_total_rwa_is_untagged_as_one_with_km1s_own_total(_source_available, _p3dh_available, _p3dh_ov1_available):
     """4.3 / spec, a THIRD instance of the untagged-as-one rule, and the most
     striking one found so far: EU OV1's own "29. Total" row maps to the SAME
     total_risk_exposure_amount concept as EU KM1's row 0040 - and the two
     independently-disclosed P3DH figures for the same bank/period do NOT agree
     (confirmed 2026-10-12: a real ~1.5% gap, not yet explained) - exactly the kind
-    of disagreement this module is designed to surface, never silently resolve."""
+    of disagreement this module is designed to surface, never silently resolve.
+
+    Needs `_source_available` too: total_risk_exposure_amount also has a
+    stress_test-mapped item (see test_p3dh_concept_returns_one_row_per_cached_reference_date's
+    note above)."""
     df = reconcile.get_financial_data(_BANK_LEI, ["total_risk_exposure_amount"], period="202512")
     p3dh_rows = df[df["source"] == "p3dh"]
 
@@ -358,10 +368,16 @@ def test_p3dh_cq3_matches_by_row_name_not_ambiguous_row_code(_p3dh_cq3_available
 
 
 def test_compute_npl_ratio_matches_hand_calculation(_p3dh_cq3_available):
-    """Expected values computed by hand from the same cached EU CQ3 export this
-    function reads, confirmed plausible for a real European bank (~1-2%) before
-    trusting the mapping - see CONCEPT_MAP's CQ3 comment and compute_npl_ratio's
-    own docstring."""
+    """Expected value computed by RUNNING compute_npl_ratio against the cached EU
+    CQ3 export (confirmed plausible for a real European bank, ~1-2% - see
+    CONCEPT_MAP's CQ3 comment), not from an independent source - DATA_SOURCES_NOTES.md
+    has no independent figure for Erste's NPL ratio to check against. So this test
+    can only catch a REGRESSION (the function returning something different than it
+    used to), never a wrong CQ3 row/column mapping: if the mapping were wrong, this
+    expected value would simply have been computed from the wrong inputs and agree
+    with them anyway (homework 6 review feedback, 2026-10-19). See
+    test_reconcile_unit.py's test_compute_npl_ratio_hand_calculation for a real
+    ground-truth check against hand-picked, independently-known inputs."""
     ratio = reconcile.compute_npl_ratio(_BANK_LEI, "202512")
     assert ratio == pytest.approx(0.014214244401241994, rel=1e-9)
 
@@ -378,11 +394,17 @@ def test_compute_npl_ratio_raises_when_not_cached():
         reconcile.compute_npl_ratio(lei, "202512")
 
 
-def test_p3dh_returns_no_rows_when_nothing_cached_for_bank():
+def test_p3dh_returns_no_rows_when_nothing_cached_for_bank(_source_available):
     """A bank run_update.py hasn't scraped P3DH for yet should return nothing for a
     p3dh-sourced concept - not a fabricated missing_from_source row, since this module
     never live-queries P3DH to confirm the value is actually absent there (see
-    reconcile._p3dh_rows's docstring on the cache-only asymmetry)."""
+    reconcile._p3dh_rows's docstring on the cache-only asymmetry).
+
+    Needs `_source_available`: cet1_ratio also has a stress_test-mapped item, so
+    get_financial_data() loads the stress-test CSV regardless of which source this
+    test actually cares about - without this guard, a fresh clone with no cached
+    data raises DataSourceError here instead of skipping (homework 6 review feedback,
+    2026-10-19: confirmed empirically by hiding the cached CSV)."""
     # HSBC Continental Europe - a real tracked LEI with no cached P3DH export as of
     # 2026-10-11; skip (rather than assert a now-stale fact) if that's since changed.
     lei = "F0HUI1NY1AZMJMD8LP67"
@@ -409,7 +431,7 @@ def test_rwa_density_uses_reported_actual_trea(_source_available, _esef_availabl
     assert density == pytest.approx(0.4445, abs=0.0005)
 
 
-def test_compute_total_revenue_sums_esef_components(_esef_available):
+def test_compute_total_revenue_sums_esef_components(_source_available, _esef_available):
     """2026-10-08, DuPont analysis. Erste's FY2024 filing tags all three Total
     Revenue components directly (net interest income, net fee and commission income,
     and - unlike most banks - the IFRS standard TradingIncomeExpense tag), so this is
@@ -417,7 +439,11 @@ def test_compute_total_revenue_sums_esef_components(_esef_available):
     exactly to the reported total: 7,528 + 2,938 + 519 = 10,985 (EUR million, 2024-12-31
     duration facts - 7,528 is the same FY2024 net interest income figure already
     established throughout this project since the spike, e.g.
-    spike/comparison.md's own citation to Erste's Annual Report p.236)."""
+    spike/comparison.md's own citation to Erste's Annual Report p.236).
+
+    Needs `_source_available` too: net_interest_income also has a stress_test-mapped
+    item (see test_p3dh_concept_returns_one_row_per_cached_reference_date's note
+    above)."""
     revenue = reconcile.compute_total_revenue(_BANK_LEI, "202412")
     assert revenue["complete"] is True
     assert revenue["value"] == pytest.approx(10985.0, abs=1.0)
@@ -426,23 +452,37 @@ def test_compute_total_revenue_sums_esef_components(_esef_available):
     assert revenue["components"]["trading_income"] == pytest.approx(519.0, abs=1.0)
 
 
-def test_compute_total_revenue_derives_net_fee_from_gross_when_untagged():
+def test_compute_total_revenue_derives_net_fee_from_gross_when_untagged(_source_available):
     """Most ESEF filers (confirmed 2026-10-08: 28/29 cached banks) tag fee and
     commission income/expense as a gross pair, not a single net fact - Banco
     Santander is one of them (no ifrs-full:FeeAndCommissionIncomeExpense tag).
     compute_total_revenue() must fall back to Income - Expense in that case, not
     report the component as missing. Santander FY2024: income 17,602.0m - expense
-    4,592.0m = 13,010.0m (confirmed by direct inspection of the cached filing)."""
+    4,592.0m = 13,010.0m (confirmed by direct inspection of the cached filing).
+
+    Needs `_source_available`: net_interest_income also has a stress_test-mapped
+    item, so this loads the stress-test CSV eagerly (see
+    test_p3dh_returns_no_rows_when_nothing_cached_for_bank's note above)."""
     revenue = reconcile.compute_total_revenue("5493006QMFDDMYWIAM13", "202412")
     assert revenue["components"]["net_fee_and_commission_income"] == pytest.approx(13010.0, abs=1.0)
 
 
-def test_compute_dupont_roe_equals_net_income_over_equity():
+def test_compute_dupont_roe_equals_net_income_over_equity(_source_available):
     """Structural identity, not an externally-sourced value: however Profit Margin x
     Asset Utilization x Equity Multiplier is computed, it must algebraically reduce to
     Net Income / Total Equity - a regression guard against the three factors drifting
     out of sync with each other (e.g. a future edit using total_assets in one factor
-    and average_total_assets in another would break this silently otherwise)."""
+    and average_total_assets in another would break this silently otherwise).
+
+    This identity holds algebraically for ANY inputs, so it can never catch a wrong
+    net_income/total_assets/total_equity/total_revenue VALUE - only drift between the
+    three factors (homework 6 review feedback, 2026-10-19). See
+    test_reconcile_unit.py's test_compute_dupont_hand_calculation for a real
+    ground-truth check of the arithmetic against known, hand-picked inputs.
+
+    Needs `_source_available`: profit_or_loss_for_the_year also has a stress_test-
+    mapped item, so this loads the stress-test CSV eagerly (see
+    test_p3dh_returns_no_rows_when_nothing_cached_for_bank's note above)."""
     result = reconcile.compute_dupont(_BANK_LEI, "202412")
     assert result.roe == pytest.approx(result.net_income / result.total_equity, rel=1e-9)
     assert result.roe == pytest.approx(
@@ -450,9 +490,12 @@ def test_compute_dupont_roe_equals_net_income_over_equity():
     )
 
 
-def test_compute_dupont_missing_concept_raises_dupont_error():
+def test_compute_dupont_missing_concept_raises_dupont_error(_source_available):
     """BNP Paribas reports gross interest income/expense separately, never a single
     net_interest_income total (same finding as the spike's NII investigation) - this
-    is correctly a retrieval gap (DuPontError), never a silently fabricated 0."""
+    is correctly a retrieval gap (DuPontError), never a silently fabricated 0.
+
+    Needs `_source_available`: same eager stress-test-CSV load as the two tests
+    above (profit_or_loss_for_the_year is stress_test-mapped too)."""
     with pytest.raises(reconcile.DuPontError):
         reconcile.compute_dupont("R0MUWSFPU8MPRO8K5P83", "202412")

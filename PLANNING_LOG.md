@@ -837,3 +837,25 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   data files, no .env/secrets, no blob over 200KB ever committed on any
   branch. Genuinely clean, nothing to fix. All 9 reviews now done - see
   CODE_REVIEW.md's summary table. Decided and carried out by agent.
+- 2026-10-19: Follow-up feedback on homework 6's review 8 (testing gaps) correctly
+  pushed past that review's own flagged-but-unfinished `compute_*` gap: the existing
+  `test_compute_npl_ratio_matches_hand_calculation` expected value was computed by
+  running the function itself (no independent source exists), and
+  `test_compute_dupont_roe_equals_net_income_over_equity` checks an algebraic
+  identity that holds for any inputs - neither can catch a wrong mapping or formula.
+  Added two real unit tests (`test_reconcile_unit.py`) that monkeypatch
+  `reconcile.get_financial_data` with small, hand-built, independently-known inputs
+  (performing/non-performing exposures -> NPL ratio exactly 0.02; net income/assets/
+  equity/revenue -> every DuPont factor checked individually, not just the ROE
+  identity). Also simulated a fresh clone (temporarily moved the cached stress-test
+  CSV aside) to check the feedback's "not quite the green run the review describes"
+  claim directly: found 7 tests (not just the 4 spotted by inspection) that crash
+  with `DataSourceError` instead of skipping on a fresh clone, all for the same
+  reason - they request a concept (`cet1_ratio`/`net_interest_income`/
+  `total_risk_exposure_amount`/`profit_or_loss_for_the_year`) that also has a
+  `stress_test`-mapped item, so `get_financial_data()` eagerly loads the stress-test
+  CSV even when the test only cares about p3dh/esef data, and their existing fixture
+  didn't guard against that. Added the `_source_available` fixture to all 7.
+  Re-verified via the same fresh-clone simulation: 0 failures. Full details in
+  CODE_REVIEW.md's review-8 follow-up section. Decided and carried out by agent,
+  per the user's forwarded review feedback.
