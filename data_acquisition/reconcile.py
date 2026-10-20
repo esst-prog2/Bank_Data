@@ -107,23 +107,6 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     ("esef", "ifrs-full:Equity"): "total_equity",
     ("esef", "ifrs-full:InterestRevenueExpense"): "net_interest_income",
     ("esef", "ifrs-full:ProfitLoss"): "profit_or_loss_for_the_year",
-    # Added 2026-10-08 for compute_total_revenue()/compute_dupont() (homework: DuPont
-    # analysis). FeeAndCommissionIncomeExpense is the NET concept some filers tag
-    # directly (e.g. Erste); most only tag the gross Income/Expense pair (confirmed:
-    # 28/29 cached FY2024 banks have the gross pair, only 16/29 tag net directly) -
-    # compute_total_revenue() prefers the net tag and falls back to Income - Expense.
-    # TradingIncomeExpense is the IFRS *standard* taxonomy concept for trading
-    # income, but only 9/29 cached banks actually use it - most tag it under their
-    # own custom extension taxonomy (e.g. bnpp:NetGainOnFinancialInstruments...,
-    # san:GainsLossesOnFinancialAssetsAndLiabilitiesHeldForTrading), which this
-    # static per-item table deliberately does not attempt to chase per-bank (see
-    # design.md decision 1 - a static table trades comprehensiveness for
-    # reviewability; mapping ~20 banks' individual extension concepts would be
-    # exactly the curation-cost blowup that decision accepted as a non-goal for v1).
-    ("esef", "ifrs-full:FeeAndCommissionIncome"): "fee_and_commission_income",
-    ("esef", "ifrs-full:FeeAndCommissionExpense"): "fee_and_commission_expense",
-    ("esef", "ifrs-full:FeeAndCommissionIncomeExpense"): "fee_and_commission_income_expense",
-    ("esef", "ifrs-full:TradingIncomeExpense"): "trading_income_expense",
     # Added 2026-10-11: EU KM1 ("K_61.00 - EU KM1 - Key metrics template") row codes,
     # confirmed against Erste Group Bank AG's own cached exports - see _p3dh_rows()'s
     # docstring for the cross-check against the stress test's independent figure for
@@ -214,15 +197,11 @@ _ESEF_PERIOD_KIND: dict[str, str] = {
     "ifrs-full:Equity": "instant",
     "ifrs-full:InterestRevenueExpense": "duration",
     "ifrs-full:ProfitLoss": "duration",
-    "ifrs-full:FeeAndCommissionIncome": "duration",
-    "ifrs-full:FeeAndCommissionExpense": "duration",
-    "ifrs-full:FeeAndCommissionIncomeExpense": "duration",
-    "ifrs-full:TradingIncomeExpense": "duration",
 }
 
 # 2026-10-08: generalized from a single hardcoded ESEF period (originally only
-# FY2024, Erste-only) to any period this project has fetched - the DuPont work
-# needed FY2021 too (38 banks cached) alongside FY2024 (29 banks). `_ESEF_PERIOD`
+# FY2024, Erste-only) to any period this project has fetched - cross-period analysis
+# work needed FY2021 too (38 banks cached) alongside FY2024 (29 banks). `_ESEF_PERIOD`
 # stays as a named default (not a hard restriction) for callers that don't care
 # which year, e.g. compute_rwa_density's default argument.
 _ESEF_PERIOD_END = "2024-12-31"
@@ -669,168 +648,3 @@ def compute_npl_ratio(bank_lei: str, period: str) -> float:
     non_performing_value = float(non_performing.iloc[0]["value"])
     return non_performing_value / (performing_value + non_performing_value)
 
-
-class DuPontError(ValueError):
-    """A DuPont figure (net income, total assets, total equity, or net interest
-    income - the one mandatory Total Revenue component) wasn't available for this
-    bank/period."""
-
-
-def _esef_value(df: pd.DataFrame, concept: str) -> float | None:
-    rows = df[(df["source"] == "esef") & (df["standardized_concept"] == concept)]
-    if rows.empty or rows.iloc[0]["status"] != "ok":
-        return None
-    return float(rows.iloc[0]["value"])
-
-
-def compute_total_revenue(bank_lei: str, period: str) -> dict:
-    """Total Revenue = net interest income + net fee and commission income + trading
-    income (when tagged) - the denominator compute_dupont()'s Asset Utilization ratio
-    needs. Not itself a single reported IFRS concept: it's a composite this project
-    builds explicitly for the DuPont homework by SUMMING individually-sourced
-    components. This is different from the project's usual refusal to derive
-    cross-source figures (e.g. net_interest_income is never derived from gross
-    interest income/expense across sources - spike/comparison.md's Cause 1): Total
-    Revenue is, by definition, an aggregate of several P&L lines from ONE bank's own
-    filing, not two sources' competing claims about the same concept.
-
-    All three components come from ESEF specifically (never stress_test), so the
-    whole buildup stays on one consistent reporting perimeter - mixing a
-    stress-test-sourced NII with ESEF-sourced fee/trading income would silently
-    combine two different consolidation scopes, the exact comparability problem the
-    spike's Cause 1 investigation found and corrected for net interest income alone.
-
-    Net fee and commission income prefers a direct net tag
-    (ifrs-full:FeeAndCommissionIncomeExpense) and falls back to Income - Expense when
-    only the gross pair is tagged (confirmed 2026-10-08: 16/29 cached FY2024 banks tag
-    net directly, 28/29 have the gross pair - deriving it here is safe because it's
-    one bank's own two disclosed figures, not two different banks' or sources').
-
-    Trading income is included ONLY when the IFRS standard tag
-    (ifrs-full:TradingIncomeExpense) is present - confirmed only 9/29 cached FY2024
-    banks use it; the rest tag it under their own custom extension taxonomy (e.g.
-    bnpp:NetGainOnFinancialInstruments..., san:GainsLossesOnFinancialAssetsAnd...),
-    which this project does not attempt to chase per-bank (see CONCEPT_MAP's
-    comment - mapping ~20 banks' individual extensions would be exactly the
-    curation-cost blowup design.md decision 1 accepted as a non-goal for v1). Decided
-    by user (2026-10-08, PLANNING_LOG.md): include it where available rather than drop
-    it entirely, with the gap flagged explicitly via the returned `complete` field -
-    never silently treated as zero for the banks missing it.
-
-    Returns {"value": float (EUR millions), "complete": bool, "components": dict}.
-    `complete` is False whenever the fee or trading component couldn't be determined
-    - callers comparing Asset Utilization/Profit Margin across banks should check it
-    rather than assume every bank's Total Revenue was built from the same inputs.
-    Raises DuPontError if net interest income itself is unavailable (the one
-    mandatory component - a bank with no NII figure isn't a meaningful subject here).
-    """
-    df = get_financial_data(
-        bank_lei,
-        ["net_interest_income", "fee_and_commission_income", "fee_and_commission_expense",
-         "fee_and_commission_income_expense", "trading_income_expense"],
-        period=period,
-    )
-    nii = _esef_value(df, "net_interest_income")
-    if nii is None:
-        raise DuPontError(f"{bank_lei}/{period}: no ESEF net_interest_income available")
-
-    fee_net = _esef_value(df, "fee_and_commission_income_expense")
-    if fee_net is None:
-        fee_inc = _esef_value(df, "fee_and_commission_income")
-        fee_exp = _esef_value(df, "fee_and_commission_expense")
-        if fee_inc is not None and fee_exp is not None:
-            fee_net = fee_inc - fee_exp
-
-    trading = _esef_value(df, "trading_income_expense")
-
-    total = nii + (fee_net or 0.0) + (trading or 0.0)
-    return {
-        "value": total,
-        "complete": fee_net is not None and trading is not None,
-        "components": {
-            "net_interest_income": nii,
-            "net_fee_and_commission_income": fee_net,
-            "trading_income": trading,
-        },
-    }
-
-
-@dataclass(frozen=True)
-class DuPontResult:
-    bank_lei: str
-    period: str
-    net_income: float
-    total_assets: float
-    total_equity: float
-    total_revenue: float
-    revenue_complete: bool
-    profit_margin: float
-    asset_utilization: float
-    equity_multiplier: float
-    roa: float
-    roe: float
-
-
-def compute_dupont(bank_lei: str, period: str) -> DuPontResult:
-    """3-factor bank DuPont decomposition:
-
-        ROE = Profit Margin x Asset Utilization x Equity Multiplier
-            = (Net Income / Total Revenue) x (Total Revenue / Total Assets)
-              x (Total Assets / Total Equity)
-
-    Adapted from a university DuPont-analysis Excel template (a 2008/2009 Hungarian
-    banking-sector comparison built on local-GAAP line items - "rendkivuli
-    eredmeny"/extraordinary items, detailed interest-income sub-categories - that
-    don't exist in IFRS/ESEF taxonomies, for 11 banks' Hungarian subsidiaries this
-    project doesn't track). This function keeps the template's core 3-factor ratio
-    structure (its own rows 66-69: ROE / leverage / ROA / profit margin) applied to
-    this project's actual IFRS/XBRL data and tracked banks, per explicit user
-    decision 2026-10-08 (PLANNING_LOG.md) - not the template's Hungarian-GAAP line
-    items or its 11-bank Hungarian leaderboard, neither of which this project's data
-    can support.
-
-    Uses POINT-IN-TIME (year-end) total_assets/total_equity, NOT the template's own
-    average-of-four-quarters methodology - this project has one annual ESEF snapshot
-    per bank/year, not intra-year quarterly balance sheets, so a true average isn't
-    computable from what's actually available. Flagged here rather than silently
-    approximated as if it were the same thing.
-
-    Net income and all Total Revenue components come from ESEF (never stress_test),
-    keeping the whole decomposition on one consistent reporting perimeter - see
-    compute_total_revenue()'s docstring for why that matters.
-
-    Raises DuPontError if net income, total assets, or total equity aren't available,
-    or if compute_total_revenue() can't find net interest income. The result's
-    `revenue_complete` field carries through compute_total_revenue()'s own
-    completeness flag - check it before comparing profit_margin/asset_utilization
-    across banks as if every one's Total Revenue were built from the same inputs.
-    """
-    df = get_financial_data(
-        bank_lei, ["profit_or_loss_for_the_year", "total_assets", "total_equity"], period=period,
-    )
-    net_income = _esef_value(df, "profit_or_loss_for_the_year")
-    total_assets = _esef_value(df, "total_assets")
-    total_equity = _esef_value(df, "total_equity")
-    if net_income is None:
-        raise DuPontError(f"{bank_lei}/{period}: no ESEF profit_or_loss_for_the_year available")
-    if total_assets is None:
-        raise DuPontError(f"{bank_lei}/{period}: no total_assets available")
-    if total_equity is None:
-        raise DuPontError(f"{bank_lei}/{period}: no total_equity available")
-
-    revenue = compute_total_revenue(bank_lei, period)
-    total_revenue = revenue["value"]
-
-    profit_margin = net_income / total_revenue
-    asset_utilization = total_revenue / total_assets
-    equity_multiplier = total_assets / total_equity
-    roa = net_income / total_assets
-    roe = profit_margin * asset_utilization * equity_multiplier
-
-    return DuPontResult(
-        bank_lei=bank_lei, period=period, net_income=net_income,
-        total_assets=total_assets, total_equity=total_equity,
-        total_revenue=total_revenue, revenue_complete=revenue["complete"],
-        profit_margin=profit_margin, asset_utilization=asset_utilization,
-        equity_multiplier=equity_multiplier, roa=roa, roe=roe,
-    )

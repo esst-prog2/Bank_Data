@@ -859,3 +859,19 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   Re-verified via the same fresh-clone simulation: 0 failures. Full details in
   CODE_REVIEW.md's review-8 follow-up section. Decided and carried out by agent,
   per the user's forwarded review feedback.
+- 2026-10-20: User decided to deprioritize the DuPont analysis feature (not
+  important for where the project is going) in favor of spending the two-week
+  gap on data coverage instead - and asked for the DuPont code to exist only as
+  a local copy on their machine, not on GitHub. Removed `compute_total_revenue()`,
+  `compute_dupont()`, `DuPontResult`/`DuPontError`, `_esef_value()`, the
+  fee/trading CONCEPT_MAP and `_ESEF_PERIOD_KIND` entries they fed, and all 5
+  of their tests (including the hand-calculation one added in the entry above,
+  same day it was added) from `reconcile.py`/`test_reconcile.py`/
+  `test_reconcile_unit.py`, via a new commit - per the user's own choice,
+  existing git history (the homework 5 commits, this log's prior DuPont
+  entries) stays untouched rather than being rewritten, matching this log's own
+  append-only convention. Backed up the pre-removal versions of all three files
+  to `Advanced-Programming-dupont-backup/` (a sibling folder outside this repo,
+  never pushed) before editing, with the commit hash they were pulled from.
+  Full suite re-run after removal: 35 passed, 2 skipped, 0 failures. Decided by
+  user, carried out by agent.

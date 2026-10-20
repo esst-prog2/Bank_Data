@@ -262,6 +262,16 @@ the `_source_available` fixture to all 7. Re-ran the same fresh-clone simulation
 after the fix: 26 passed, 16 skipped, 0 failures - a genuinely green run this time,
 confirmed by actually hiding the file rather than assumed from the skip markers.
 
+**2026-10-20 update:** the DuPont feature itself (`compute_total_revenue()`,
+`compute_dupont()`, `DuPontResult`/`DuPontError`, the fee/trading CONCEPT_MAP
+entries, and all 5 of their tests, including the hand-calculation one added
+above) was removed from this repo at the user's explicit request - deprioritized
+in favor of data-coverage work, kept only as a local, ungitted copy on the
+user's machine (not on GitHub). `test_compute_npl_ratio_matches_hand_calculation`'s
+weakness and its `test_compute_npl_ratio_hand_calculation` fix both still apply
+and remain in the suite; the DuPont half of this entry is now historical record
+of work no longer present in the tree.
+
 ## 9. What should not be in git
 
 Checked for the slide's three categories directly, across the full history on
