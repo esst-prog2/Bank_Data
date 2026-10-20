@@ -184,7 +184,19 @@ wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) don
   installment: all 114 templates for Erste alone (~5 hours), to see which of the
   110 untried templates have any real content before deciding whether to extend further.
   Resumable across however many future sessions it takes - same idempotent state file as
-  everything else.
+  everything else. Only Erste has been done so far (confirmed 2026-10-20: the other
+  4 wired templates - KM1/LI1/OV1/CQ3 - are the only ones fetched at full-46-bank scale;
+  the other 110 have only ever been fetched for Erste alone).
+- **gap-national-oam-coverage** - opened 2026-10-20, per user request (two-week
+  gap priority: data coverage over the DuPont feature - see PLANNING_LOG.md). Surveyed
+  all 30 EU/EEA national OAMs (ESMA's official list) as potential ESEF/XBRL sources
+  beyond `filings.xbrl.org`, this project's only wired ESEF source today. Found that
+  Germany's existing confirmed gap (0 filings via filings.xbrl.org) is that aggregator's
+  own documented access limitation, not necessarily an absence of German ESEF data -
+  Germany's OAM (unternehmensregister.de) hasn't yet been directly checked for real
+  machine-readable access. Full findings, the complete OAM table, and open questions in
+  DATA_SOURCES_NOTES.md's 2026-10-20 entry. Not yet started: deciding which country to
+  investigate first, or whether to prioritize this over continuing gap-p3dh-full-catalog.
 
 ## Working conventions established so far
 

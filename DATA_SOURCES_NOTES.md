@@ -1533,3 +1533,89 @@ than guessing at what's valuable.
 Sources checked (this update):
 - A full live fetch of all 114 `data/modules.txt` templates for Erste Group Bank AG,
   across all 4 currently-expected reference dates
+
+## Update 2026-10-20: survey of national ESEF/XBRL sources beyond filings.xbrl.org, one country explained
+
+User asked (after deprioritizing the DuPont feature) to look, for every EU/EEA country
+under EBA's remit, for a database of XBRL-format bank financial reporting - this
+project's only wired ESEF source today (`esef_client.py`) queries `filings.xbrl.org`
+alone, which has one already-confirmed national gap (Germany: 0 filings, vs. 1179 for
+France/873 for Italy as of 2026-10-11 - see the 2026-10-11 entry).
+
+**The ESMA-maintained full list of national OAMs (Officially Appointed Mechanisms under
+the Transparency Directive)** - fetched directly from
+<https://www.esma.europa.eu/databases-and-registers> - 30 EU/EEA countries, one row
+each (operator type and URL):
+
+| Country | Operator | URL |
+|---|---|---|
+| Austria | OeKB | http://issuerinfo.oekb.at/startpage.html |
+| Belgium | Competent Authority (FSMA) | https://www.fsma.be/en/business-link/stori |
+| Bulgaria | Competent Authority | https://eis.fsc.bg/services/520/ |
+| Croatia | Competent Authority (HANFA) | https://www.hanfa.hr/areas-of-supervision/capital-market/officially-appointed-mechanism-for-the-central-storage-of-regulated-information/ |
+| Cyprus | Stock Exchange (CSE) | https://www.cse.com.cy/en-GB/regulated-market/announcements/ |
+| Czechia | Competent Authority (CNB) | https://oam.cnb.cz/sipresextdad/SIPRESWEB.WEB21.START_INPUT_OAM?p_lang=en&p_hist=N |
+| Denmark | Competent Authority (Finanstilsynet) | https://oam.finanstilsynet.dk/#!/ |
+| Estonia | Competent Authority | http://oam.fi.ee/et/home |
+| Finland | Stock Exchange (Nasdaq Helsinki) | https://csf.omxgroup.com/cns-web/oam/Search.action?request_locale=fi |
+| France | Official Journal (info-financiere.fr) | https://www.info-financiere.fr/pages/home/ |
+| Germany | Company Register (Unternehmensregister) | https://www.unternehmensregister.de/ureg/ |
+| Greece | Stock Exchange (Athex) | https://www.athexgroup.gr/web/guest/home |
+| Hungary | Competent Authority (MNB) | https://kozzetetelek.mnb.hu/ |
+| Iceland | Competent Authority | https://csf.omxgroup.com/cns-web/oam/Search.action?request_locale=is |
+| Ireland | Stock Exchange (Euronext Dublin) | https://direct.euronext.com/#/oamfiling |
+| Italy | 1Info / eMarket Storage (private entities) | http://www.1info.it/PORTALEONEINFO/, http://www.emarketstorage.com/ |
+| Latvia | Competent Authority | https://csri.investinfo.lv/lv/ |
+| Liechtenstein | Competent Authority (FMA) | https://register.fma-li.li/search |
+| Lithuania | Stock Exchange (Nasdaq Vilnius) | https://csf.omxgroup.com/cns-web/oam/Search.action?request_locale=lt |
+| Luxembourg | Stock Exchange (Bourse de Luxembourg) | https://www.luxse.com/ |
+| Malta | Stock Exchange | https://www.borzamalta.com.mt/ |
+| Netherlands | Competent Authority (AFM) | https://www.afm.nl/en/sector/registers/meldingenregisters |
+| Norway | Stock Exchange (Oslo Bors Newsweb) | https://newsweb.oslobors.no/ |
+| Poland | Competent Authority (KNF) | https://www.knf.gov.pl/en/MARKET/OAM |
+| Portugal | Competent Authority (CMVM) | https://www.cmvm.pt/PInstitucional/ |
+| Romania | Competent Authority (ASF) | https://oam.asfromania.ro/oam/loadedPDFReportsForPublic.jsp |
+| Slovakia | Competent Authority (NBS) | https://ceri.nbs.sk/ |
+| Slovenia | Stock Exchange | https://www.oam.si/ |
+| Spain | Competent Authority (CNMV) | https://www.cnmv.es/portal/home.aspx |
+| Sweden | Competent Authority (FI) | https://finanscentralen.fi.se/search/search.aspx |
+
+Not yet checked directly: whether each of these 30 OAMs exposes ESEF/iXBRL filings in a
+machine-readable, programmatically-fetchable way, or only PDF/HTML regulated-information
+notices (the Transparency Directive requires "regulated information" generally, of which
+the ESEF-tagged annual report is one category, not necessarily a separately-flagged one).
+
+**Germany's gap, explained, not just confirmed again:** `filings.xbrl.org`'s own
+about/Filing Sources page (fetched directly) states plainly that Germany (and Ireland)
+are countries where "ESEF filings are not made available in a way that allows us to
+reliably discover and download them," and invites anyone who can help access that data
+to contact them - i.e. this project's existing Germany gap is `filings.xbrl.org`'s own
+documented access limitation, not necessarily evidence that German banks' ESEF filings
+don't exist. Germany's OAM is the Unternehmensregister company register
+(unternehmensregister.de) - a first direct check (fetched the page itself, not yet a
+real search) shows a login ("Anmelden") control and a "Dokumente (0)" counter on
+filed-document search, suggesting document retrieval may require an account or fee;
+this is not confirmed (the page's static HTML doesn't say), and needs a real search
+attempted (for a known German pilot bank, e.g. Deutsche Bank) before concluding either
+way. **Ireland is a discrepancy worth re-checking**: `filings.xbrl.org`'s own about page
+names Ireland as a access gap too, but this project's 2026-10-11 ESEF-gap investigation
+found Bank of Ireland and AIB both have real, cached FY2024 filings there - either that
+about-page listing is stale, or those two banks' filings came through some other route
+that doesn't generalize to every Irish filer; not yet resolved.
+
+**Not yet done:** picking which country to investigate first beyond Germany, checking
+whether any of the 30 OAMs offer a bulk/API access path the way P3DH's scraper needed
+Playwright for, and deciding whether "coverage" here means closing known gaps
+(Germany, Societe Generale/Credit Agricole SA's missing filings) or systematically
+checking all 30 for filers outside the current `filings.xbrl.org`-covered set. Reported
+to the user with this finding before committing to either path.
+
+Sources checked (this update):
+- ESMA Databases and Registers page (https://www.esma.europa.eu/databases-and-registers),
+  "Corporate reporting (Transparency Directive)" section - full 30-country OAM table.
+- filings.xbrl.org's own about/Filing Sources page - confirms it is run by XBRL
+  International, aggregates ESEF/UKSEF/Ukraine FRS filings sourced per-country from each
+  OAM, is explicitly not complete, and names Germany and Ireland as known access gaps.
+- unternehmensregister.de's own landing page - confirms a search function exists
+  (Schnellsuche/Erweiterte Suche) but does not confirm whether document retrieval is
+  free or requires login; inconclusive, flagged for a real follow-up check.
