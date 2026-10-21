@@ -195,8 +195,15 @@ wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) don
   own documented access limitation, not necessarily an absence of German ESEF data -
   Germany's OAM (unternehmensregister.de) hasn't yet been directly checked for real
   machine-readable access. Full findings, the complete OAM table, and open questions in
-  DATA_SOURCES_NOTES.md's 2026-10-20 entry. Not yet started: deciding which country to
-  investigate first, or whether to prioritize this over continuing gap-p3dh-full-catalog.
+  DATA_SOURCES_NOTES.md's 2026-10-20 entry. **2026-10-21 update**: checked directly via
+  Playwright - Germany's ESEF filings genuinely exist and are freely, registration-free
+  searchable there (confirmed real FY2023/2024/2025 entries for Deutsche Bank AG), but
+  the actual filing viewer is gated behind a real, named CAPTCHA (`fox-captcha`) -
+  a deliberate anti-automation measure, unlike every other source this project has
+  wired. Decided not to attempt to defeat it. Closing Germany's gap would now need a
+  manual one-off download (bounded: 5 banks) rather than a scraper, or staying a
+  documented permanent gap - not yet decided which. See DATA_SOURCES_NOTES.md's
+  2026-10-21 entry for the full investigation.
 
 ## Working conventions established so far
 

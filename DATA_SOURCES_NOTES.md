@@ -1619,3 +1619,62 @@ Sources checked (this update):
 - unternehmensregister.de's own landing page - confirms a search function exists
   (Schnellsuche/Erweiterte Suche) but does not confirm whether document retrieval is
   free or requires login; inconclusive, flagged for a real follow-up check.
+
+## Update 2026-10-21: unternehmensregister.de genuinely has Germany's ESEF filings - gated behind a real CAPTCHA, not a dead end but not a scrapable source either
+
+Followed up on the 2026-10-20 finding directly: used Playwright (same tool this project already
+uses for `edap_scraper.py`) to run a real search against unternehmensregister.de for Deutsche
+Bank AG, the same verify-before-trusting discipline every other source in this project got.
+
+**Confirmed real and present:** read the Unternehmensregister's own "Allgemeine
+Nutzungsbedingungen" PDF in full (12 pages, fetched directly, not a secondhand summary). Unlike
+the separate Handelsregister portal (SS9a HGB, an explicit 60-retrievals/hour cap and a
+criminal-offence warning for automated mass querying - a DIFFERENT German system, confirmed not
+to apply here), the Unternehmensregister's own terms describe free, registration-free search
+and retrieval for data under SS8b Abs. 2 HGB (SS3 Abs. 1-3), explicitly permit copying retrieved
+data as an electronic file (SS3 Abs. 3), and only require registration/fees for a narrow
+micro-entity ("Kleinstkapitalgesellschaft") balance-sheet deposit route (SS326 Abs. 2 HGB) that
+doesn't apply to large banks. The advanced-search page's own text repeats this: "Hier konnen Sie
+kostenlos und ohne Registrierung ... suchen."
+
+A real search for "Deutsche Bank", filtered to the "Rechnungslegung / Finanzberichte" category
+(found via the results page's drilldown filter, `drilldownFilter=22`), returned real entries:
+"Jahres- und Konzernabschluss zum Geschaftsjahr vom 01.01.2024 bis zum 31.12.2024" (and FY2023,
+FY2025 too), published directly by "Unternehmensregister" itself - exactly the DiRUG-mandated
+direct-to-Unternehmensregister ESEF filing route the homepage's own banner describes for fiscal
+years beginning after 2021-12-31. So the FY2024 figure this project already has from
+filings.xbrl.org's own confirmed-missing-for-Germany gap genuinely does exist here, discoverable
+and free to search.
+
+**But the document itself is gated behind a real CAPTCHA, not just an awkward UI:** clicking
+through to the filing (`/de/veroeffentlichung?payload=...`) lands on a "Sicherheitsabfrage"
+(security check) page with a checkbox labelled "Ich bin ein Mensch" ("I am a human") - inspecting
+the DOM shows this is `#fox-captcha-checkbox`, a dedicated, named CAPTCHA product, not a plain
+form control. This is a deliberate anti-automation measure the operator placed specifically in
+front of document content - a different, and more serious, kind of barrier than anything this
+project has encountered in any other source (P3DH, ESEF via filings.xbrl.org, GLEIF, EBA's
+exercise archives - none of them have anything like this).
+
+**Decision: did not attempt to defeat it, and recommend this project doesn't either.** Clicking
+through a stateful JS search UI (as already done above, and as this project already does for
+P3DH) is investigating whether a public page is reachable; getting past a named CAPTCHA control
+is circumventing an access control the site operator deliberately built, which is a different
+thing regardless of the underlying research being for coursework. Reported to the user before
+going further, rather than deciding unilaterally to keep trying.
+
+**What this means for Germany's gap:** the data is real, specific, and locatable (we now know
+exactly which 3 fiscal years of Deutsche Bank's filing exist and roughly how to find the
+equivalent filings for the other 4 German pilot banks), but closing it isn't a scraper task the
+way every other source in this project has been - it would need either a manual, one-off human
+download (a bounded task: 5 banks x however many fiscal years, not a recurring fetch), or
+staying a documented, explained, permanent gap the way Societe Generale/Credit Agricole SA's
+P3DH absence already is. Not yet decided which; reported back to the user.
+
+Sources checked (this update):
+- A live Playwright session against unternehmensregister.de: cookie consent, Schnellsuche for
+  "Deutsche Bank", the Rechnungslegung/Finanzberichte drilldown filter, and the resulting filing
+  list (confirmed real entries for Deutsche Bank AG, FY2023/FY2024/FY2025).
+- The Unternehmensregister's own "Allgemeine Nutzungsbedingungen fur das Unternehmensregister"
+  PDF, read in full (12 pages) via direct fetch, not a summary or search snippet.
+- The CAPTCHA gate itself, inspected via the live page's DOM (`#fox-captcha-checkbox`,
+  `#fox-captcha-checkbox-label`).
