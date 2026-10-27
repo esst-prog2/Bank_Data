@@ -3,8 +3,8 @@
 ## Purpose
 Given a bank identifier, a reporting period, and requested financial-statement or
 regulatory concepts, retrieve the matching figures from the project's wired-up sources
-(EBA EU-wide Stress Test 2025, ESEF financial statements, EBA Pillar 3 Data Hub's EU KM1
-template), map each to a standardized concept, and return them as a pandas DataFrame
+(EBA EU-wide Stress Test 2025, ESEF financial statements, EBA Pillar 3 Data Hub's EU KM1,
+EU LI1, EU OV1, and EU CQ3 templates), map each to a standardized concept, and return them as a pandas DataFrame
 with enough source and provenance metadata to check every figure against the
 publication it came from. The package deliberately does not reconcile figures across
 sources, accounting standards, or consolidation scopes into a single comparable value -

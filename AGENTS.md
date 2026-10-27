@@ -163,12 +163,15 @@ especially 2026-10-08 (BBVA/Sabadell data error), 2026-10-11 (P3DH/EU KM1 wiring
 ESEF-gap investigation), and 2026-10-12 (EU LI1 wiring, EU KM1 extended, a real
 read_only/openpyxl row-trimming bug found via the test suite) entries.
 
-## Open change: extend-p3dh-template-coverage
+## Closed change: extend-p3dh-template-coverage
 
-Created 2026-10-12, all planning artifacts done; tasks 2-5 (inspect EU OV1/EU CQ3/EU CC1,
-wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) done
-2026-10-12/13 - see its `tasks.md` for the full trail. Only 6.1 (this file, done) and 6.2
-(archive once the full-pilot fetch's final numbers are confirmed) remain.
+Done and archived (`openspec/changes/archive/2026-10-13-extend-p3dh-template-coverage`).
+EU OV1/EU CQ3 wired, EU CC1 inspected and excluded, full-pilot fetch done for both wired
+templates, this file's P3DH section and `openspec/specs/data-retrieval/spec.md`'s own
+concept-mapping requirement both updated to match. (Note 2026-10-27: that change's own
+`tasks.md` still shows checkboxes 6.1/6.2 unticked - cosmetic, the archive folder and the
+spec requirement confirm the work itself is done; archived files are a frozen record, not
+re-edited.)
 
 ## Gap tasks (opened 2026-10-13, after reviewing what further data-gathering remained)
 
@@ -179,14 +182,15 @@ wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) don
   EU LI1 line items are safe to wire, and that even the 2 already-wired totals are far
   sparser than previously documented (1/36 banks has both).
 - **gap-cc1-revisit** - done. EU CC1 confirmed not worth wiring (see above).
-- **gap-p3dh-full-catalog** - starting. True full scope (46 banks x 110 remaining
-  templates) is ~9 days of continuous scraping - too large for one sitting. First
-  installment: all 114 templates for Erste alone (~5 hours), to see which of the
-  110 untried templates have any real content before deciding whether to extend further.
-  Resumable across however many future sessions it takes - same idempotent state file as
-  everything else. Only Erste has been done so far (confirmed 2026-10-20: the other
-  4 wired templates - KM1/LI1/OV1/CQ3 - are the only ones fetched at full-46-bank scale;
-  the other 110 have only ever been fetched for Erste alone).
+- **gap-p3dh-full-catalog** - closed, out of scope for the final submission
+  (2026-10-27, user decision: MVP scope stands, don't expand past the README pitch).
+  The full 114-template catalog was never part of what README section 3 commits to -
+  it explicitly rules out "comprehensive coverage of every financial and regulatory
+  variable." The 4 templates actually wired (KM1/LI1/OV1/CQ3) already cover the
+  demo's real needs: confirmed 2026-10-27 that 37/46 pilot banks already have all 4
+  cached, including both banks used in the demo (Erste, BNP Paribas). The other 110
+  templates, fetched only for Erste (2026-10-20), stay unwired and unfetched for
+  everyone else - no further P3DH scraping planned before the final.
 - **gap-national-oam-coverage** - opened 2026-10-20, per user request (two-week
   gap priority: data coverage over the DuPont feature - see PLANNING_LOG.md). Surveyed
   all 30 EU/EEA national OAMs (ESMA's official list) as potential ESEF/XBRL sources

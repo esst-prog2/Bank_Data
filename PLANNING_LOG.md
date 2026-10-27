@@ -882,3 +882,18 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   Societe Generale/Credit Agricole SA's absence from P3DH. No code changes;
   AGENTS.md and DATA_SOURCES_NOTES.md updated to record the decision and stop
   this being an open thread. Decided by user, recorded by agent.
+- 2026-10-27: Scoped the final month (today through the 2026-11-27 slide upload,
+  presented 2026-12-01). No further homework is scheduled after homework 7/8
+  (due 2026-11-07); the only remaining grading signal is "finish your pitched
+  project," scored live against README section 1 ("The demo") via screenshots,
+  no live run. Decided: README section 3's MVP scope stands as the final
+  scope - polish and harden what's pitched, don't expand past it. Concretely
+  closes `gap-p3dh-full-catalog` (the full 114-template catalog was never
+  committed to - README section 3 explicitly rules out "comprehensive coverage
+  of every financial and regulatory variable," and the 4 templates actually
+  wired already cover 37/46 pilot banks). Decided by user, recorded by agent.
+- 2026-10-27: Found and fixed stale documentation: AGENTS.md still described
+  the `extend-p3dh-template-coverage` change as open (it's archived, just has
+  2 unticked checkboxes in its own frozen tasks.md) and `openspec/specs/
+  data-retrieval/spec.md`'s Purpose line only named EU KM1 among the 4 P3DH
+  templates actually wired. Both corrected. Decided and carried out by agent.
