@@ -18,7 +18,17 @@ A Python package that, given a bank + reporting period + requested variables, re
 matching figures from financial-statement (ESEF) and regulatory (Pillar 3 / stress test /
 transparency exercise) sources, maps them to standardized concepts, and flags what's
 genuinely non-comparable rather than silently combining it. Returns a pandas DataFrame.
-Scope for v1 (see README section 3) is a handful of supported banks, not full EU coverage.
+Scope for v1 (see README section 3) is a handful of supported, publicly traded banks, not
+full EU coverage. "Publicly traded" is ESEF's own constraint, not a choice made here: the
+EU Transparency Directive requires ESEF filings only from issuers with securities (shares
+or bonds) admitted to trading on an EU regulated market - confirmed 2026-10-28 via the
+cases already in `entities.csv` (e.g. Credit Industriel et Commercial, tracked specifically
+because it's "the group's main **listed** banking subsidiary," per the 2026-10-07 entry in
+DATA_SOURCES_NOTES.md, not the unlisted Credit Mutuel confederation itself). P3DH and the
+EBA exercises are NOT restricted this way - they cover every significant supervised
+institution regardless of listing status, which is why a few tracked pilot banks (e.g.
+Cooperatieve Rabobank, DZ Bank, OP Osuuskunta) have real P3DH/stress-test data without
+necessarily being equity-listed themselves.
 
 ## Data sources decided so far
 

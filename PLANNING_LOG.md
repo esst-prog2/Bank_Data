@@ -930,3 +930,15 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   bill of health for data coverage ahead of the final submission. Decided and
   carried out by agent, per user's request to "nail all things related to data
   coverage first."
+- 2026-10-28: Updated README.md section 3 and AGENTS.md's overview to state the project
+  deals with publicly traded European banks, per user request. Scoped the claim precisely
+  rather than as a blanket statement: it's ESEF's own constraint (the EU Transparency
+  Directive requires ESEF filings only from issuers with securities - shares or bonds -
+  admitted to trading on an EU regulated market), not a restriction this project imposes
+  on P3DH/stress-test data, which covers every significant supervised institution
+  regardless of listing status - several tracked pilot banks (Rabobank, DZ Bank, OP
+  Osuuskunta, Credit Mutuel's CIC subsidiary) are real examples already in entities.csv
+  of banks with P3DH/stress-test data that aren't straightforwardly equity-listed; CIC
+  specifically was already noted (2026-10-07 DATA_SOURCES_NOTES.md entry) as "the group's
+  main listed banking subsidiary," confirming the claim holds for every bank this
+  project's ESEF side actually serves. Decided by user, worded and verified by agent.
