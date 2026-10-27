@@ -910,3 +910,23 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   (no console/page errors, both lines render distinctly) before committing.
   Decided and carried out by agent, as part of hardening the project toward
   the final Dec 1 demo (README section 1) rather than expanding scope.
+- 2026-10-27: Ran a full-pilot, ground-truth data-coverage audit before further
+  hardening work: called the real get_financial_data() for all 46 pilot banks
+  across the 7 concepts the demo/docs/review.html use (2,928 bank-period-concept
+  rows total), not just a file-presence check. Result: zero exceptions, zero
+  unexpected statuses - every row is either "ok" (2,800) or "missing_from_source"
+  (128), and every missing row traces to an already-documented, already-explained
+  gap (ESEF's untagged InterestRevenueExpense/Equity facts for specific banks -
+  2026-10-08 entry; EU LI1's known sparsity; one not-yet-published quarter).
+  Both demo banks check out specifically: Erste has 0 missing rows across 75;
+  BNP Paribas's 7 missing rows are exactly the pre-existing documented ESEF NII
+  gap (reports interest gross, never netted) plus one already-expected LI1 gap -
+  no new, unexplained behavior for either bank used in the Dec 1 demo. Also
+  recounted (via raw filenames, not memory) AGENTS.md's "37/46 pilot banks have
+  all 4 wired P3DH templates" claim - still exactly 37/46, same 9 partial banks
+  named there. Cross-checked entities.csv for integrity (65 total/46 pilot, no
+  duplicate LEIs or names, no blank countries) - clean. Full test suite re-run:
+  35 passed, 2 skipped, unchanged. No bugs found; this is a clean, verified
+  bill of health for data coverage ahead of the final submission. Decided and
+  carried out by agent, per user's request to "nail all things related to data
+  coverage first."
