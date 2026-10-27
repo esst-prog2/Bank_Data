@@ -949,3 +949,17 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   plus AGENTS.md's overview, reworded accordingly; the underlying fact (ESEF itself only
   covers EU-regulated-market issuers, P3DH/stress-test aren't restricted this way) is
   unchanged from the earlier entry. Decided by user.
+- 2026-10-28: User asked directly "will our work actually be a python package?" - checked
+  rather than assumed: no, not until now. There was no pyproject.toml/setup.py anywhere in
+  the repo, so `pip install .` had no way to work; `data_acquisition/` was only an
+  importable package in the narrow sense (has `__init__.py`), usable only from the repo
+  root or with PYTHONPATH set by hand. This directly contradicted README section 1's own
+  literal claim ("I install the Python package and run a function..."). User chose to add
+  real packaging rather than reword the README. Added pyproject.toml (setuptools backend,
+  name "bank-data", deps mirrored from requirements.txt, dev extra for pytest). Verified
+  `pip install -e .` succeeds and the package genuinely imports and runs
+  (get_financial_data()) from outside the repo directory entirely (/tmp), not just from
+  the repo root - confirms the README's claim is now literally true. Added
+  *.egg-info//build//dist/ to .gitignore for the resulting build artifacts. Full test
+  suite still green (35 passed, 2 skipped) after the change. Decided by user, implemented
+  and verified by agent.
