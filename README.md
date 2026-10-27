@@ -23,7 +23,7 @@ in between  retrieve data from machine-readable bank and regulatory reports;
 3. The size
 First useful version
 
-Retrieve a defined set of financial-statement and regulatory data for a supported, publicly traded European bank.
+Retrieve a defined set of financial-statement and regulatory data for a supported European bank with data available through ESEF, this term.
 Return the data in a consistent pandas DataFrame structure.
 Support requests for a bank, reporting period, and selected variables.
 Map returned variables to their underlying source reporting items.
@@ -33,7 +33,7 @@ Allow the returned data to be used in further calculations.
 
 Not this term
 Comprehensive coverage of every European bank.
-Coverage of banks without securities admitted to trading on an EU regulated market — ESEF, this project's financial-statement source, is itself scoped there by the EU Transparency Directive, not a choice made in this package.
+Coverage of banks whose data isn't available through ESEF — a this-term scope boundary set by ESEF's own EU Transparency Directive coverage (issuers with securities on an EU regulated market), not a permanent limitation of this package.
 Comprehensive coverage of every financial and regulatory variable.
 A standalone dashboard or web application.
 A public API or hosted service.

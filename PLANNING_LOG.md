@@ -942,3 +942,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   specifically was already noted (2026-10-07 DATA_SOURCES_NOTES.md entry) as "the group's
   main listed banking subsidiary," confirming the claim holds for every bank this
   project's ESEF side actually serves. Decided by user, worded and verified by agent.
+- 2026-10-28: Corrected the prior wording (same day's earlier entry): the defining
+  criterion is bank data being available through ESEF, framed explicitly as this term's
+  scope boundary (not a permanent one) - not "publicly traded" as a standalone claim.
+  README section 3's "First useful version" bullet and matching "Not this term" bullet,
+  plus AGENTS.md's overview, reworded accordingly; the underlying fact (ESEF itself only
+  covers EU-regulated-market issuers, P3DH/stress-test aren't restricted this way) is
+  unchanged from the earlier entry. Decided by user.
