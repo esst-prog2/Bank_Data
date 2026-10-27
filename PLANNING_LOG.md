@@ -897,3 +897,16 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   2 unticked checkboxes in its own frozen tasks.md) and `openspec/specs/
   data-retrieval/spec.md`'s Purpose line only named EU KM1 among the 4 P3DH
   templates actually wired. Both corrected. Decided and carried out by agent.
+- 2026-10-27: Refreshed docs/review.html from live get_financial_data() output
+  (was last regenerated 2026-10-12, before EU OV1 was wired) - 75 rows now vs
+  71 before, the 4 new ones being EU OV1's own total_risk_exposure_amount,
+  independent of EU KM1's. Found the chart would have silently merged both
+  under one "P3DH actual" label/line (exactly the never-combine rule the
+  package itself enforces everywhere else) - split them into "P3DH actual
+  (KM1)"/"P3DH actual (OV1)" scenario labels so the chart shows two distinct
+  lines, and added a 4th edge-case card showing the real ~1.5% gap
+  (147,487.07 vs 149,673.86) as this project's live example of "multiple
+  sources report the same concept." Verified via a headless Playwright load
+  (no console/page errors, both lines render distinctly) before committing.
+  Decided and carried out by agent, as part of hardening the project toward
+  the final Dec 1 demo (README section 1) rather than expanding scope.
