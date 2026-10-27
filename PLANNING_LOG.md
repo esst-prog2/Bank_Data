@@ -875,3 +875,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   never pushed) before editing, with the commit hash they were pulled from.
   Full suite re-run after removal: 35 passed, 2 skipped, 0 failures. Decided by
   user, carried out by agent.
+- 2026-10-27: User decided against hand-downloading the German pilot banks'
+  ESEF filings found behind unternehmensregister.de's CAPTCHA (2026-10-21
+  entry in DATA_SOURCES_NOTES.md). Germany's ESEF gap is now closed as a
+  permanent, documented gap rather than pursued further - same treatment as
+  Societe Generale/Credit Agricole SA's absence from P3DH. No code changes;
+  AGENTS.md and DATA_SOURCES_NOTES.md updated to record the decision and stop
+  this being an open thread. Decided by user, recorded by agent.

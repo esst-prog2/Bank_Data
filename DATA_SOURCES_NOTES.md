@@ -1678,3 +1678,21 @@ Sources checked (this update):
   PDF, read in full (12 pages) via direct fetch, not a summary or search snippet.
 - The CAPTCHA gate itself, inspected via the live page's DOM (`#fox-captcha-checkbox`,
   `#fox-captcha-checkbox-label`).
+
+## Update 2026-10-27: Germany's ESEF gap closed as a permanent, documented gap - no manual download
+
+User decision: not going to hand-download the Deutsche Bank (or other German pilot bank)
+filings found behind unternehmensregister.de's CAPTCHA in the 2026-10-21 entry above. Closing
+this the same way Societe Generale/Credit Agricole SA's absence from P3DH is already handled -
+a real, named, deliberate access control on the source's side, reported and explained, not a
+bug or an open lead to keep chasing.
+
+**Status going forward:** `esef_client.py` has no path to German filings and none is planned.
+If a future session reopens this, the exact filings and how to find them (Deutsche Bank AG,
+FY2023/2024/2025, via the Rechnungslegung/Finanzberichte drilldown filter) are already
+documented in the 2026-10-21 entry above - no need to re-investigate from scratch, only the
+CAPTCHA step itself remains unresolved and is understood to be out of scope.
+
+**Coverage-expansion work continues on two other tracks** (per the original 2026-10-20 ask):
+remaining ~29 EU/EEA national OAMs beyond Germany, not yet individually checked; and the P3DH
+full-template catalog, currently complete only for Erste Group.

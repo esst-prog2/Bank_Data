@@ -200,10 +200,12 @@ wire/exclude, small-sample validate, full-pilot fetch for EU OV1 and EU CQ3) don
   searchable there (confirmed real FY2023/2024/2025 entries for Deutsche Bank AG), but
   the actual filing viewer is gated behind a real, named CAPTCHA (`fox-captcha`) -
   a deliberate anti-automation measure, unlike every other source this project has
-  wired. Decided not to attempt to defeat it. Closing Germany's gap would now need a
-  manual one-off download (bounded: 5 banks) rather than a scraper, or staying a
-  documented permanent gap - not yet decided which. See DATA_SOURCES_NOTES.md's
-  2026-10-21 entry for the full investigation.
+  wired. Decided not to attempt to defeat it. **2026-10-27 decision (user)**: closed
+  as a permanent, documented gap rather than a manual one-off download - user declined
+  hand-downloading filings. Germany stays uncovered by `esef_client.py` for the same
+  reason Societe Generale/Credit Agricole SA are absent from P3DH: a real, deliberate
+  access control on the source's side, not a bug or an unexplored lead. No further
+  work planned here. See DATA_SOURCES_NOTES.md's 2026-10-21 and 2026-10-27 entries.
 
 ## Working conventions established so far
 
