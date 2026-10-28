@@ -963,3 +963,18 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   *.egg-info//build//dist/ to .gitignore for the resulting build artifacts. Full test
   suite still green (35 passed, 2 skipped) after the change. Decided by user, implemented
   and verified by agent.
+- 2026-10-28: Built the two-bank comparison screen (`docs/compare.html`) to literally back
+  README section 1's "I run a function for two European banks" claim, which previously
+  only had a published single-bank snapshot (review.html, Erste only). Pulled real output
+  from a live run of get_financial_data() for Erste Group Bank AG and BNP Paribas across
+  the same 7 standardized concepts (the ones already verified clean for both banks in the
+  2026-10-27 full-pilot coverage audit), and rendered it as a static side-by-side table:
+  each cell shows the bank's own reported-actual value, its source (ESEF own filing
+  preferred, EBA Stress Test 2025 reported-actual as fallback), and period - no JS
+  rendering, so it's screenshot-stable. filings.xbrl.org rate-limited (429) the first two
+  pull attempts; fixed by retrying with backoff in the pull script rather than the
+  package itself (a scratchpad concern, not a product bug - find_filing() isn't cached by
+  design, see esef_client.py). All 14 cells came back `ok` with real, plausible figures
+  (e.g. BNP total assets ~EUR2.79tn, Erste CET1 ratio 15.26% - both match public-record
+  ballpark). Linked from README section 1 alongside the existing review.html link.
+  Decided and implemented by agent per user's "go on with the two-bank comparison screen."
