@@ -978,3 +978,31 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   (e.g. BNP total assets ~EUR2.79tn, Erste CET1 ratio 15.26% - both match public-record
   ballpark). Linked from README section 1 alongside the existing review.html link.
   Decided and implemented by agent per user's "go on with the two-bank comparison screen."
+- 2026-10-28: Investigated whether ESEF and P3DH year coverage should narrow the dashboard's
+  46-bank pilot sample, prompted by the user asking about dual-source coverage for
+  2023/2024/2025. Checked live, not assumed: P3DH's own ReferenceDate slicer (the real
+  EBA Pillar 3 Data Hub tool, not this project's cache) currently offers exactly
+  30/06/2025, 30/09/2025, 31/10/2025, 31/12/2025, 31/03/2026, 30/06/2026, 30/09/2026 -
+  nothing earlier. This is a structural fact about P3DH itself (it looks like a tool
+  launched without historical backfill), not a scraping gap - confirms and extends the
+  2026-10-06 research note with one new quarter since. Also checked ESEF's own filing
+  history for 3 real banks (Erste, BNP Paribas, OTP): every period_end across all 14
+  filings is a December 31 - zero quarterly/semi-annual ESEF filings exist anywhere,
+  because the EU's ESEF XBRL-tagging mandate only ever applies to annual financial
+  reports (half-yearly reports are required to exist under the Transparency Directive but
+  not required to be ESEF-tagged; quarterly reporting was abolished EU-wide in 2013).
+  Ran a live (not cached) check of all 46 pilot banks against filings.xbrl.org for
+  FY2023/FY2024/FY2025: 34/46, 38/46, 31/46 respectively, 28/46 have all three years.
+  Cross-tabulated live ESEF-2025 against cached P3DH-2025 (P3DH is cache-only by design,
+  so the cache IS the complete truth for it): 29/46 have both ESEF 2025 and P3DH 2025 -
+  2025 being the only year the two sources can overlap at all, given P3DH's mid-2025
+  start and ESEF's annual-report-only lag. Presented the choice (narrow to the clean
+  29-bank dual-2025-coverage set vs. keep all 46 with the mismatch visible). **User
+  decided: keep all 46, treat the year mismatch as an honest, documented, temporary
+  limitation** that narrows naturally as more P3DH quarters and ESEF fiscal years
+  accumulate going forward - not something to design the sample around. Implication for
+  the dashboard build: every value shown (hover card, comparison table) must keep
+  surfacing its own period alongside its source, exactly as reconcile()'s DataFrame
+  schema already does, so a bank whose ESEF and P3DH years don't match stays honestly
+  visible rather than silently implied to line up. Decided by user, investigated and
+  logged by agent.
