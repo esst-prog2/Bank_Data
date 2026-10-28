@@ -1024,3 +1024,28 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   unchanged). This matters for the dashboard specifically: a hover card can't crash for
   4 real banks just because they're correctly, permanently outside ESEF's scope. Found
   and fixed by agent while carrying out the user's "total assets on hover" decision.
+- 2026-10-28: Found a real correctness bug while sanity-checking the first real FY2025
+  total_assets pull for all 46 banks: 5 pilot banks (Danske Bank, DNB, SEB, Svenska
+  Handelsbanken, Swedbank) report in their own national currency (DKK/NOK/SEK) in their
+  own ESEF filing, not EUR - confirmed directly against the cached facts.json's own
+  `unit` dimension (e.g. Danske's Assets fact carries `unit: iso4217:DKK`,
+  value 3,753,911,000,000). get_financial_data() never reads or surfaces this `unit`
+  field at all; every existing display (review.html, compare.html) prefixes every figure
+  with "EUR" unconditionally, meaning these 5 banks' total assets have been silently
+  mislabeled by roughly 7-11x (the real DKK/NOK/SEK->EUR ratio) in every artifact
+  published so far. Caught only now because this was the first time real total_assets
+  values were sorted/eyeballed for plausibility rather than just checked for
+  status==ok/missing - the 2026-10-27 full-pilot coverage audit ran the same concept
+  across the same banks and reported "zero bugs" because it only checked status, never
+  the value's real-world scale. **Decision: fix this at the dashboard layer only, not in
+  get_financial_data() itself** - the package keeps returning the real reported figure,
+  untouched, in its original currency; the dashboard converts to EUR for display only,
+  clearly labeled as converted. (get_financial_data()'s DataFrame still doesn't expose a
+  `unit` column - a known, now-documented latent gap, not fixed today; the dashboard's
+  conversion step will need to read the currency from the cached facts.json directly
+  until/unless that's added.) **Also decided: narrow the dashboard's bank sample from 46
+  to the 28 with confirmed ESEF 2025-12-31 AND P3DH 2025-12-31 (the strict match from the
+  2026-10-28 P3DH-reference-date entry above)** - supersedes the earlier same-day "keep
+  all 46, show the gap honestly" decision; the dashboard's definition of "in the pilot
+  sample" is now this specific 28-bank set, still spanning all 14 pilot countries. Both
+  decided by user.
