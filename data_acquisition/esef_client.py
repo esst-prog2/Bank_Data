@@ -180,6 +180,24 @@ def get_concept_value(facts: dict, concept: str, period_key: str) -> float | Non
     return None
 
 
+def get_concept_unit(facts: dict, concept: str, period_key: str) -> str | None:
+    """Returns the `unit` dimension (e.g. "iso4217:EUR", "iso4217:DKK") for the same
+    fact `get_concept_value` would return for `concept`/`period_key` - None if no such
+    fact exists. Added 2026-10-28 after confirming ESEF filers report in their own
+    national currency, not always EUR (Danske Bank/DKK, DNB/NOK, SEB/SEK, Svenska
+    Handelsbanken/SEK all confirmed among the pilot banks) - callers that combine an
+    ESEF-sourced figure with one from another source (e.g. compute_rwa_density) must
+    check this rather than assume EUR."""
+    for fact in facts.get("facts", {}).values():
+        dims = fact.get("dimensions", {})
+        if dims.get("concept") != concept or dims.get("period") != period_key:
+            continue
+        if set(dims) - _BASE_DIMS:
+            continue
+        return dims.get("unit")
+    return None
+
+
 def fiscal_year_keys(period_end: str) -> tuple[str, str]:
     """(duration_key, instant_key) for the calendar fiscal year ending `period_end`
     ("YYYY-12-31" only - see module docstring's fiscal-year-end assumption)."""

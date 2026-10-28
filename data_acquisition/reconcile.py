@@ -443,6 +443,25 @@ def _read_p3dh_fact(
     return reference_date, None, None, None
 
 
+def _scale_p3dh_amount(raw_value: float) -> float:
+    """Converts a non-ratio P3DH FactValue to EUR millions, matching this module's
+    convention - but P3DH's raw exports are NOT uniformly scaled across filers,
+    confirmed 2026-10-28 while checking RWA density for the dashboard's concept picker:
+    Erste's own K_61.00 TREA FactValue is 147487065101.15 (plain EUR, needs /1e6 to
+    become a plausible 147487.07 EUR-m), but La Banque Postale's is 100031 for the same
+    row/column - already EUR-m-scale (matches the EBA stress test's own independent
+    ~101,260-104,427 figure for the same bank/period; dividing it by 1e6 again gave a
+    nonsense 0.100031). The raw export carries no unit/scale column at all (confirmed -
+    only Entity/Template/Row/Column/FactValue), so there's no metadata to read instead of
+    guessing. No real EU bank in this project's scope has total capital, RWA, liabilities,
+    etc. below roughly EUR 1m, so a post-division result under 1.0 is itself the signal
+    that the raw value was already EUR-m-scale, not EUR-scale - this is a plausibility
+    guard, not a certainty, but a division that lands under 1.0 for one of these concepts
+    is never a real answer either way."""
+    scaled = raw_value / 1_000_000
+    return raw_value if abs(scaled) < 1.0 else scaled
+
+
 def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) -> list[dict]:
     """item_code is "<template prefix>::<Row or Open Key>=<match value>::<column code>",
     e.g. "K_61.00::Row=0010::0010" for EU KM1's CET1 capital row, or
@@ -514,7 +533,7 @@ def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
                 ),
             })
             continue
-        value = raw_value if concept in _P3DH_RATIO_CONCEPTS else raw_value / 1_000_000
+        value = raw_value if concept in _P3DH_RATIO_CONCEPTS else _scale_p3dh_amount(raw_value)
         rows.append({
             "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "p3dh",
@@ -575,7 +594,23 @@ def get_financial_data(
 
 class RwaDensityError(ValueError):
     """RWA density could not be computed for this bank/period - no reported_actual TREA
-    row, or no total_assets row, available."""
+    row, no total_assets row, or (see _EUR_FX_RATES) no EUR conversion available for the
+    currency total_assets was reported in."""
+
+
+# ECB reference rates, EUR base, fetched 2026-10-28 (see PLANNING_LOG.md's same-day
+# entry). total_risk_exposure_amount (from P3DH/the EBA stress test) is always EUR, but
+# total_assets (from ESEF) is reported in each filer's OWN currency - confirmed real for
+# 4 pilot banks (Danske Bank/DKK, DNB/NOK, SEB/SEK, Svenska Handelsbanken/SEK). Dividing
+# a EUR numerator by a raw DKK/NOK/SEK denominator silently produced a nonsense ratio
+# (confirmed: Danske Bank's density read 2.93% instead of a real ~22%) - caught 2026-10-28
+# while checking real coverage for the dashboard's concept picker, not by a test, since
+# no existing test exercised a non-EUR bank. Not live-fetched, to keep this function's
+# existing dependency-free, cache-only character (same reasoning as P3DH being
+# cache-only - see _p3dh_rows's docstring); a rate a few months stale changes the result
+# by at most a percent or two for these currencies, acceptable for this purpose but worth
+# refreshing periodically.
+_EUR_FX_RATES = {"DKK": 7.4741, "NOK": 10.3475, "SEK": 11.0560}
 
 
 def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
@@ -596,9 +631,15 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
     TREA for Erste FY2024 gives ~42.5%, a plausible-looking but methodologically
     mismatched number per the spike).
 
+    total_assets is converted to EUR first if the filer reported it in another currency
+    (see _EUR_FX_RATES) - get_financial_data()'s own DataFrame doesn't expose a filing's
+    currency (a known, documented gap), so this reads it directly off the cached ESEF
+    facts rather than assume EUR.
+
     Raises RwaDensityError if either figure isn't available for this bank/period (no
-    ESEF filing cached, or no reported_actual TREA row) - never silently computes a
-    density from whichever TREA row happened to be present.
+    ESEF filing cached, or no reported_actual TREA row), or if total_assets was reported
+    in a currency this function has no EUR rate for - never silently computes a density
+    from whichever TREA row happened to be present, or from a wrong-currency ratio.
     """
     df = get_financial_data(
         bank_lei, ["total_risk_exposure_amount", "total_assets"], period=period,
@@ -614,7 +655,22 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
         )
     if assets.empty or assets.iloc[0]["status"] != "ok":
         raise RwaDensityError(f"{bank_lei}/{period}: no total_assets available")
-    return float(trea.iloc[0]["value"]) / float(assets.iloc[0]["value"])
+
+    assets_value = float(assets.iloc[0]["value"])
+    period_end = _period_to_esef_period_end(period)
+    facts = esef_client.fetch_facts(bank_lei, period_end)
+    _, instant_key = esef_client.fiscal_year_keys(period_end)
+    unit = esef_client.get_concept_unit(facts, "ifrs-full:Assets", instant_key)
+    currency = (unit or "iso4217:EUR").rsplit(":", 1)[-1]
+    if currency != "EUR":
+        if currency not in _EUR_FX_RATES:
+            raise RwaDensityError(
+                f"{bank_lei}/{period}: total_assets reported in {currency}, "
+                f"no EUR conversion rate available for it"
+            )
+        assets_value = assets_value / _EUR_FX_RATES[currency]
+
+    return float(trea.iloc[0]["value"]) / assets_value
 
 
 class NplRatioError(ValueError):

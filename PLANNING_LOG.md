@@ -1121,3 +1121,36 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   Copied to the working folder as `dashboard_map_V3.html` (and `dashboard_map_draft.html`
   updated to match). Decided and built by agent per the user's "sure let's try this setup,
   I like it!"
+- 2026-10-28: User asked to add RWA density (compute_rwa_density(), a real tested
+  function from HW5 - total_risk_exposure_amount / total_assets) to the concept picker.
+  Checked real coverage first rather than assuming it would just work, and found two
+  genuine, separate bugs - not coverage gaps, wrong numbers returned as `status: ok`.
+  (1) Currency mismatch: 4 banks (Danske Bank/DKK, DNB/NOK, SEB/SEK, Svenska
+  Handelsbanken/SEK) showed 2-3% instead of a real ~22-28%, because
+  total_risk_exposure_amount (always EUR, from P3DH/stress_test) was being divided by
+  total_assets in its raw national currency (never converted) - the same root cause as
+  the 2026-10-28 hover-card currency bug, but this time corrupting an actual computed
+  package function's output, not just a display label, so the earlier "fix at the
+  dashboard layer only" decision didn't cover it. (2) La Banque Postale showed 0.00%
+  (really 0.100031 instead of ~100,031) - traced to the raw cached P3DH export itself:
+  confirmed by reading the raw .xlsx directly that Erste's own export reports this exact
+  row/column as plain EUR (147487065101.15, needs /1e6) while La Banque Postale's reports
+  the SAME row/column already in EUR-millions (100031, matches the EBA stress test's own
+  ~101-104k figure for the same bank/period) - P3DH exports are not uniformly scaled
+  across filers, and the raw export carries no unit/scale column to detect this from
+  metadata. **User chose to fix both in the package** (not just add RWA density excluding
+  the 5 broken banks). Fixed (1) by adding `esef_client.get_concept_unit()` (mirrors
+  get_concept_value(), reads the `unit` XBRL dimension) and a documented, dated ECB-rate
+  table (`_EUR_FX_RATES`, same rates as the hover-card fix) that compute_rwa_density()
+  now uses to convert non-EUR total_assets before dividing - not live-fetched, to keep
+  the function dependency-free like the rest of the module. Fixed (2) by adding
+  `_scale_p3dh_amount()`: a plausibility guard in `_p3dh_rows()` itself (not a one-off
+  La Banque Postale patch) - no real EU bank's capital/RWA/liabilities figures are
+  genuinely below EUR 1m, so a post-/1e6 result under 1.0 is itself the signal the raw
+  value was already EUR-m-scale; applies to every P3DH-sourced non-ratio concept, not
+  just TREA, since the same raw-export inconsistency could affect any of them. Verified:
+  full test suite still green (35 passed, 2 skipped), Danske/DNB/SEB/Handelsbanken now
+  21-28%, La Banque Postale now 13.79% (plausible for its mortgage/postal-savings
+  profile), Erste unchanged at 40.02% (confirms the fix doesn't regress the
+  already-correct large-raw-value case), and all 28 banks now land in a consistent
+  13.79%-50.40% range with zero failures. Decided by user, found and fixed by agent.
