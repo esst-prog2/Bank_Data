@@ -1096,3 +1096,28 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   flag) - switched to real flag images sourced the same way as the bank logos
   (Wikimedia Commons, `Flag_of_<Country>.svg`, 13 countries, all verified by eye).
   Decided and built by agent per direct user feedback on the delivered draft.
+- 2026-10-28: Checked real FY2025/2025-12-31 coverage for all 22 SUPPORTED_CONCEPTS across
+  the 28-bank set before proposing concept-picker categories (15 of the 22 had never been
+  checked this way before - the earlier full-pilot audit only covered 7). First attempt
+  rate-limited hard (24/28 banks failed with 429s - find_filing() isn't cached, and 22
+  concepts per bank means several repeated calls to the same endpoint per bank); fixed by
+  adding retry/backoff to the check script itself (not the package - this is already-known,
+  accepted behaviour there), rerun succeeded cleanly on all 28. Result: 19 of 22 concepts
+  have excellent coverage (26-28/28 banks); the 3 EU-LI1-sourced P3DH concepts
+  (total_equity_prudential_scope, total_liabilities, total_liabilities_prudential_scope)
+  are essentially unusable (1/28, 2/28, 2/28) - P3DH's LI1 template was only ever really
+  checked against Erste, never broadly scraped. Proposed and user confirmed 6 categories
+  covering the 19 well-covered concepts: Capital & Solvency, Balance Sheet, Profitability,
+  RWA Breakdown, Liquidity, Asset Quality - the 3 sparse ones deliberately excluded from
+  the picker rather than included and left to fail quietly.
+- 2026-10-28: Built the concept/scope picker as a modal, opened from the basket's
+  "Compare" button (previously a placeholder alert). Shows the selected banks, the 6
+  categories in a 2-column grid with a "select all"/"clear" toggle per category plus
+  individual checkboxes, a live selected-metric count, and a "See results" button
+  (enabled once >=1 metric is picked - itself still a placeholder, since the actual
+  results table/view is explicitly the next piece, not built today). Verified via
+  Playwright: category select-all/clear toggle, individual checkbox selection, count
+  updates correctly (6 category + 1 individual = 7), and closing via backdrop click.
+  Copied to the working folder as `dashboard_map_V3.html` (and `dashboard_map_draft.html`
+  updated to match). Decided and built by agent per the user's "sure let's try this setup,
+  I like it!"
