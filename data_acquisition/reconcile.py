@@ -107,6 +107,13 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     ("esef", "ifrs-full:Equity"): "total_equity",
     ("esef", "ifrs-full:InterestRevenueExpense"): "net_interest_income",
     ("esef", "ifrs-full:ProfitLoss"): "profit_or_loss_for_the_year",
+    # Added 2026-10-28: a single, already-netted IFRS tag (fee income minus fee
+    # expense) - confirmed on Erste's own 2025-12-31 filing: FeeAndCommissionIncomeExpense
+    # (3,191 EUR m) equals FeeAndCommissionIncome (3,810) minus FeeAndCommissionExpense
+    # (620) to within rounding, and the net figure itself is directly tagged as an
+    # undimensioned total, not something this module has to compute by subtracting two
+    # facts itself. ESEF-only - no stress_test or P3DH source reports this concept.
+    ("esef", "ifrs-full:FeeAndCommissionIncomeExpense"): "net_fee_income",
     # Added 2026-10-11: EU KM1 ("K_61.00 - EU KM1 - Key metrics template") row codes,
     # confirmed against Erste Group Bank AG's own cached exports - see _p3dh_rows()'s
     # docstring for the cross-check against the stress test's independent figure for
@@ -197,6 +204,7 @@ _ESEF_PERIOD_KIND: dict[str, str] = {
     "ifrs-full:Equity": "instant",
     "ifrs-full:InterestRevenueExpense": "duration",
     "ifrs-full:ProfitLoss": "duration",
+    "ifrs-full:FeeAndCommissionIncomeExpense": "duration",
 }
 
 # 2026-10-08: generalized from a single hardcoded ESEF period (originally only
@@ -239,7 +247,7 @@ SUPPORTED_CONCEPTS = frozenset(_ITEMS_BY_CONCEPT)
 
 _DATAFRAME_COLUMNS = [
     "bank_lei", "period", "standardized_concept", "source_reporting_item",
-    "source", "provenance", "value", "status", "origin_reference",
+    "source", "provenance", "value", "currency", "status", "origin_reference",
 ]
 
 
@@ -283,7 +291,7 @@ def _stress_test_rows(df: pd.DataFrame, bank_lei: str, bank_name: str, concept: 
         return [{
             "bank_lei": bank_lei, "period": period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "eba_stress_test",
-            "provenance": None, "value": None, "status": "missing_from_source",
+            "provenance": None, "value": None, "currency": None, "status": "missing_from_source",
             "origin_reference": f"EBA EU-wide Stress Test 2025, item {item_code}",
         }]
 
@@ -293,7 +301,15 @@ def _stress_test_rows(df: pd.DataFrame, bank_lei: str, bank_name: str, concept: 
         rows.append({
             "bank_lei": bank_lei, "period": r["Period"], "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "eba_stress_test",
-            "provenance": _SCENARIO_PROVENANCE[scenario], "value": r["Amount"], "status": "ok",
+            "provenance": _SCENARIO_PROVENANCE[scenario], "value": r["Amount"],
+            # the stress test is a centralized EU supervisory exercise - every
+            # participating bank reports in EUR regardless of home currency, unlike
+            # ESEF (each filer's own currency). Confirmed, not assumed: Danske Bank
+            # (a DKK reporter) and BNP Paribas (EUR) both plausible on the same EUR
+            # scale here (e.g. Danske's TREA scenario rows ~108k-115k, matching its
+            # own P3DH EUR figure ~110k) - if the stress test used home currency,
+            # Danske's numbers would be ~7.5x too large relative to BNP's.
+            "currency": "EUR", "status": "ok",
             "origin_reference": (
                 f"EBA EU-wide Stress Test 2025, {bank_name} ({bank_lei}), "
                 f"item {item_code}, scenario {scenario}"
@@ -320,7 +336,7 @@ def _esef_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
             rows.append({
                 "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
                 "source_reporting_item": item_code, "source": "esef",
-                "provenance": None, "value": None, "status": "missing_from_source",
+                "provenance": None, "value": None, "currency": None, "status": "missing_from_source",
                 "origin_reference": f"ESEF (filings.xbrl.org), {bank_lei}, no filing for {period_end}",
             })
             continue
@@ -336,15 +352,22 @@ def _esef_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
             rows.append({
                 "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
                 "source_reporting_item": item_code, "source": "esef",
-                "provenance": None, "value": None, "status": "missing_from_source",
+                "provenance": None, "value": None, "currency": None, "status": "missing_from_source",
                 "origin_reference": f"ESEF filing {filing.report_url}, concept {item_code} not tagged as a total",
             })
             continue
 
+        # each filer reports in its OWN currency, not always EUR - confirmed real for 4
+        # pilot banks (Danske Bank/DKK, DNB/NOK, SEB/SEK, Svenska Handelsbanken/SEK),
+        # caught 2026-10-28 via an implausible compute_rwa_density() result before this
+        # column existed to check instead of assume. None of this module's other
+        # sources (eba_stress_test, p3dh) vary this way - both are always EUR.
+        currency = (esef_client.get_concept_unit(facts, item_code, period_key) or "iso4217:EUR").rsplit(":", 1)[-1]
         rows.append({
             "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "esef",
-            "provenance": "reported_actual", "value": value / 1_000_000, "status": "ok",
+            "provenance": "reported_actual", "value": value / 1_000_000, "currency": currency,
+            "status": "ok",
             "origin_reference": f"ESEF filing (FY{period_end[:4]}), {filing.report_url}, concept {item_code}",
         })
     return rows
@@ -525,7 +548,7 @@ def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
             rows.append({
                 "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
                 "source_reporting_item": item_code, "source": "p3dh",
-                "provenance": None, "value": None, "status": "missing_from_source",
+                "provenance": None, "value": None, "currency": None, "status": "missing_from_source",
                 "origin_reference": (
                     f"EBA Pillar 3 Data Hub, {bank_name}, template {template_prefix}, "
                     f"{match_field}={match_value!r}/column {column_code!r} not reported in "
@@ -537,7 +560,11 @@ def _p3dh_rows(bank_lei: str, concept: str, item_code: str, period: str | None) 
         rows.append({
             "bank_lei": bank_lei, "period": our_period, "standardized_concept": concept,
             "source_reporting_item": item_code, "source": "p3dh",
-            "provenance": "reported_actual", "value": value, "status": "ok",
+            # P3DH, like the stress test, is always EUR - every pilot bank's export
+            # confirmed on this scale throughout this project's work (e.g. the
+            # cross-check in this function's own docstring), unlike ESEF where each
+            # filer uses its own currency.
+            "provenance": "reported_actual", "value": value, "currency": "EUR", "status": "ok",
             "origin_reference": (
                 f"EBA Pillar 3 Data Hub, {bank_name}, template {template_prefix}, "
                 f"{description} ({column_desc}), reference date {reference_date.date().isoformat()}"
@@ -632,9 +659,8 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
     mismatched number per the spike).
 
     total_assets is converted to EUR first if the filer reported it in another currency
-    (see _EUR_FX_RATES) - get_financial_data()'s own DataFrame doesn't expose a filing's
-    currency (a known, documented gap), so this reads it directly off the cached ESEF
-    facts rather than assume EUR.
+    (see _EUR_FX_RATES), read from the DataFrame's own `currency` column rather than
+    assumed.
 
     Raises RwaDensityError if either figure isn't available for this bank/period (no
     ESEF filing cached, or no reported_actual TREA row), or if total_assets was reported
@@ -657,11 +683,7 @@ def compute_rwa_density(bank_lei: str, period: str = _ESEF_PERIOD) -> float:
         raise RwaDensityError(f"{bank_lei}/{period}: no total_assets available")
 
     assets_value = float(assets.iloc[0]["value"])
-    period_end = _period_to_esef_period_end(period)
-    facts = esef_client.fetch_facts(bank_lei, period_end)
-    _, instant_key = esef_client.fiscal_year_keys(period_end)
-    unit = esef_client.get_concept_unit(facts, "ifrs-full:Assets", instant_key)
-    currency = (unit or "iso4217:EUR").rsplit(":", 1)[-1]
+    currency = assets.iloc[0]["currency"] or "EUR"
     if currency != "EUR":
         if currency not in _EUR_FX_RATES:
             raise RwaDensityError(

@@ -1160,3 +1160,23 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   than a single sourced figure. Verified via Playwright (8 metrics selected: the 7-item
   Capital & Solvency "select all" + total_assets). Copied to the working folder as
   `dashboard_map_V4.html`. Decided and built by agent following the two bug fixes above.
+- 2026-10-28: User asked to add net fee income - checked real data first: it's a clean,
+  single, already-netted IFRS tag (`ifrs-full:FeeAndCommissionIncomeExpense`, confirmed
+  on Erste's own filing), so wired it straightforwardly into CONCEPT_MAP (esef-only,
+  duration). Checking its real 28-bank coverage before adding it to the picker surfaced
+  the SAME currency-mislabeling bug a 3rd time (SEB's net fee income read EUR26,491m
+  instead of a real ~EUR2,396m - its filing is in SEK, confirmed directly against the
+  fact's own `unit` dimension), in a place neither of the two earlier narrow fixes
+  (hover-card display layer, compute_rwa_density() internals) could reach, since
+  get_financial_data()'s DataFrame had never exposed currency at all. **User chose the
+  systemic fix this time**: added a `currency` column to the DataFrame itself (EUR for
+  eba_stress_test and p3dh - both confirmed always-EUR sources; read from the fact's own
+  `unit` dimension for esef, where each filer uses its own currency). compute_rwa_density()
+  simplified to read this column directly instead of its own duplicate esef_client calls.
+  Verified: full test suite green (35 passed, 2 skipped), SEB's net fee income now
+  correctly tagged `currency: SEK` (raw value unchanged, per this project's design -
+  figures are never silently altered, only accurately labeled now), compute_rwa_density()
+  still gives the same correct ~27.4% for SEB via the new column. This closes the
+  underlying gap, not just this one occurrence - any future ESEF-sourced concept for
+  these banks is now automatically correct rather than needing its own patch.
+  Decided by user, found and fixed by agent.
