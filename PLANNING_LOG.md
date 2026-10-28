@@ -1049,3 +1049,35 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   all 46, show the gap honestly" decision; the dashboard's definition of "in the pilot
   sample" is now this specific 28-bank set, still spanning all 14 pilot countries. Both
   decided by user.
+- 2026-10-28: Correction to the entry immediately above - "still spanning all 14 pilot
+  countries" was wrong, caught while actually building the 28-bank map (country
+  membership wasn't checked before writing that claim, only the bank count was). Germany
+  drops out of the dashboard entirely under the 28-bank criterion: all 5 German pilot
+  banks (Deutsche Bank, Commerzbank, Landesbank Baden-Wurttemberg, Bayerische
+  Landesbank, DZ Bank) lack FY2025 ESEF specifically, so none qualify. The 28-bank
+  dashboard sample spans 13 countries, not 14. Flagged to the user before building
+  rather than left as a silent surprise. Caught and corrected by agent.
+- 2026-10-28: Built the basket-selection map (28 banks, 13 countries) per the agreed
+  design: click a logo to toggle it into/out of a persistent bottom basket bar (chip per
+  bank, remove-by-x, "Clear all"), capped at 6 with a visible "max 6 reached" notice
+  rather than a silent block, "Compare ->" enabled once >=1 selected (currently a
+  placeholder alert - concept picker/results view are explicitly deferred per the user's
+  "keep the data request and categories for later"). Logo clicks and cluster-background
+  clicks (which still zoom a crowded country) are independently handled via
+  stopPropagation, verified both still work. Added the first real hover card: total
+  assets, FY2025, EUR billion - converted to EUR at the dashboard-display layer only
+  (per the earlier option-3 decision) for the 4 affected banks still in the 28-set
+  (Danske Bank/DKK, DNB/NOK, SEB/SEK, Svenska Handelsbanken/SEK; Swedbank, the 5th
+  non-EUR reporter, isn't in the strict 28-set), using real ECB reference rates fetched
+  live (2026-10-28: DKK 7.4741, NOK 10.3475, SEK 11.0560), each hover tooltip explicitly
+  noting the conversion rather than presenting a bare EUR figure. Caught and fixed one
+  bug during testing: the tooltip's number formatting used `.toLocaleString()` with no
+  explicit locale, which rendered as "210,3bn" (comma decimal) instead of "210.3bn" -
+  switched to `.toFixed(1)` for a locale-independent result, consistent with every other
+  EUR figure already published (review.html, compare.html). Verified end to end via
+  Playwright: hover tooltip renders correctly including the currency-conversion note,
+  select/deselect toggle, the 6-bank cap blocks a 7th with the warning shown, the x-remove
+  chip button works, and zoom-by-background-click still works independently of logo
+  selection. Copied to the user's working folder as `dashboard_map_draft.html` (not yet
+  committed to the repo - concept picker and results view still pending). Decided and
+  built by agent per the user's "finish the basket selection today."
