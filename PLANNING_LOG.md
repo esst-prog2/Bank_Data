@@ -1081,3 +1081,18 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   selection. Copied to the user's working folder as `dashboard_map_draft.html` (not yet
   committed to the repo - concept picker and results view still pending). Decided and
   built by agent per the user's "finish the basket selection today."
+- 2026-10-28: Three fixes to the basket-selection map per direct user feedback. (1)
+  Versioning: user wants each iteration saved as V1, V2, etc. going forward, not
+  overwritten in place - established in the working folder (`dashboard_map_V1.html`,
+  `dashboard_map_V2.html`, ...), with `dashboard_map_draft.html` kept as a convenience
+  alias always pointing at the latest. (2) ING was hard to click because its cluster
+  (Netherlands: Rabobank, ING) sat right against Belgium's (KBC) - moved NL's cluster's
+  visual anchor into Germany's now-empty screen space (Germany has zero banks in the
+  28-bank set) for the overview-zoom layout only; a zoomed-in view of NL still snaps back
+  to its real geographic centroid, verified via screenshot, so this is a decluttering
+  trick, not a misplacement. (3) Added country flags to the hover tooltip next to the
+  bank name, as asked - first tried Unicode flag emoji, but these don't reliably render
+  on Windows/Chromium (confirmed directly: showed as a literal "NL" two-letter box, not a
+  flag) - switched to real flag images sourced the same way as the bank logos
+  (Wikimedia Commons, `Flag_of_<Country>.svg`, 13 countries, all verified by eye).
+  Decided and built by agent per direct user feedback on the delivered draft.
