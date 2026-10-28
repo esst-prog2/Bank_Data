@@ -1154,3 +1154,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   profile), Erste unchanged at 40.02% (confirms the fix doesn't regress the
   already-correct large-raw-value case), and all 28 banks now land in a consistent
   13.79%-50.40% range with zero failures. Decided by user, found and fixed by agent.
+- 2026-10-28: Added RWA density to the concept picker (Capital & Solvency category),
+  labeled "RWA density (calculated)" to keep it visually distinct from the 19 raw
+  reported concepts, since it's a locally-computed ratio (compute_rwa_density()) rather
+  than a single sourced figure. Verified via Playwright (8 metrics selected: the 7-item
+  Capital & Solvency "select all" + total_assets). Copied to the working folder as
+  `dashboard_map_V4.html`. Decided and built by agent following the two bug fixes above.
