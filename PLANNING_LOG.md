@@ -1006,3 +1006,21 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   schema already does, so a bank whose ESEF and P3DH years don't match stays honestly
   visible rather than silently implied to line up. Decided by user, investigated and
   logged by agent.
+- 2026-10-28: Found and fixed a real bug while pulling real FY2025 total_assets (ESEF,
+  the dashboard's locked-in first hover metric) for all 46 pilot banks: 4 banks (Landesbank
+  Baden-Wurttemberg, Bayerische Landesbank, DZ Bank, Credit Mutuel confederation) crashed
+  with DataSourceError instead of resolving to missing_from_source. Root cause:
+  esef_client.find_filing() only distinguished "entity indexed but no filing for this
+  period" (EsefNotFoundError, handled gracefully) from "request failed" (EsefDataError,
+  treated as a genuine failure) - it never had a case for "entity not indexed on
+  filings.xbrl.org at all" (a 404 on the /entities/{lei}/filings list itself), which is
+  what these 4 genuinely unlisted institutions produce. This path was never exercised
+  before now because every prior full-pilot run used period=None, which only reads
+  _cached_esef_periods() (empty for these 4, so no live lookup was ever attempted) -
+  passing an explicit period for the first time, for all 46 banks, is what surfaced it.
+  Fixed by treating a 404 on that endpoint as EsefNotFoundError too, same missing-from-
+  source outcome as the already-handled case. Verified directly on all 4 affected banks
+  (now `missing_from_source`, not a crash) and the full test suite (35 passed, 2 skipped,
+  unchanged). This matters for the dashboard specifically: a hover card can't crash for
+  4 real banks just because they're correctly, permanently outside ESEF's scope. Found
+  and fixed by agent while carrying out the user's "total assets on hover" decision.

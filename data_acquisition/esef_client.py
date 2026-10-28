@@ -68,6 +68,15 @@ def find_filing(lei: str, period_end: str) -> EsefFiling:
             headers={"Accept": "application/vnd.api+json"},
             timeout=30,
         )
+        if resp.status_code == 404:
+            # the ENTITY itself isn't indexed at all - filings.xbrl.org has never seen any
+            # filing for this LEI (confirmed 2026-10-28 for 4 real pilot banks: Landesbank
+            # Baden-Wurttemberg, Bayerische Landesbank, DZ Bank, Credit Mutuel confederation
+            # - all genuinely unlisted institutions, not an API hiccup). Semantically the
+            # same as "no filing for this period" (below), just at the whole-entity level,
+            # so it gets the same missing-from-source treatment rather than looking like a
+            # retrieval failure.
+            raise EsefNotFoundError(f"{lei} is not indexed on filings.xbrl.org at all")
         resp.raise_for_status()
         payload = resp.json()
     except (requests.RequestException, ValueError) as exc:
