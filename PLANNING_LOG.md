@@ -1180,3 +1180,17 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   underlying gap, not just this one occurrence - any future ESEF-sourced concept for
   these banks is now automatically correct rather than needing its own patch.
   Decided by user, found and fixed by agent.
+- 2026-10-28: Added net_fee_income to the concept picker (Profitability category),
+  labeled "Net fee income (16/28 banks)" since its real coverage (16/28, confirmed with
+  the currency fix applied - all values now plausible and on a consistent scale) is
+  meaningfully weaker than every other concept in the picker (all >=26/28). The 12
+  missing banks (mostly Spanish - Santander, CaixaBank, BBVA, Sabadell, Bankinter,
+  Unicaja - plus BNP, BPCE, La Banque Postale, AIB, Bank of Ireland, DNB) don't tag fee
+  income as a single undimensioned total the way Erste does - a genuine filer-to-filer
+  tagging difference, not a bug. Updated the modal's subtext, which previously claimed
+  "every metric has at least 26/28" - no longer true with this one included, so it now
+  says most do and coverage is called out next to the ones that don't. Deferred (not
+  built today, per the earlier "net fee income now, hold cost-to-income and total
+  revenue" decision): both of those still need real multi-bank investigation before a
+  trustworthy formula can be written, same as RWA density and the NPL ratio were.
+  Copied to the working folder as `dashboard_map_V5.html`. Decided and built by agent.
