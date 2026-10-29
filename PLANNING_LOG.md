@@ -1279,3 +1279,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   original 5-step dashboard journey end to end (map -> hover -> basket ->
   concept picker -> comparison table). Decided and built by agent, following the
   user's "build the comparison sheets" request and the 3 design answers above.
+- 2026-10-29: User feedback on V7's comparison table: figures weren't centered
+  under their bank's logo (cells were right-aligned while the column headers,
+  logo+name, were centered, so the two misaligned visually). Changed the table's
+  cell text-align from right to center (metric-name column stays left-aligned).
+  Copied to the working folder as `dashboard_map_V8.html`. Decided by user,
+  built by agent.
