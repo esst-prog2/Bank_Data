@@ -114,6 +114,36 @@ CONCEPT_MAP: dict[tuple[str, str], str] = {
     # undimensioned total, not something this module has to compute by subtracting two
     # facts itself. ESEF-only - no stress_test or P3DH source reports this concept.
     ("esef", "ifrs-full:FeeAndCommissionIncomeExpense"): "net_fee_income",
+    # Added 2026-10-29: total_revenue and operating_expense, to unblock
+    # compute_cost_to_income_ratio() (held back 2026-10-28 pending exactly this
+    # investigation). IFRS doesn't mandate one income-statement shape for banks -
+    # confirmed by direct inspection of all 28 pilot banks' cached FY2025 facts that
+    # filers split cleanly into two real reporting styles, not a bug in either:
+    #   - 13/28 (ING, Nordea, DNB, KBC, AIB, Bank of Ireland, OP, ABN AMRO, Rabobank,
+    #     HSBC Continental Europe, SEB, Banco Comercial Portugues, Danske Bank) tag a
+    #     single already-totaled ifrs-full:OperatingExpense line, and most of those
+    #     also tag a single total income line - ifrs-full:Revenue or
+    #     ifrs-full:RevenueAndOperatingIncome (both used; same role, different tag
+    #     chosen by different filers' taxonomy extensions).
+    #   - 6/28 (the 5 Spanish banks - Santander, CaixaBank, BBVA, Sabadell, Bankinter -
+    #     plus Erste) instead break expenses into 3 separate granular tags
+    #     (AdministrativeExpense/EmployeeBenefitsExpense/DepreciationAndAmortisationExpense,
+    #     summed by compute_cost_to_income_ratio() itself, not mapped here) and total
+    #     income into ifrs-full:GrossProfit - the Spanish "margen bruto" line.
+    # Mapping Revenue/RevenueAndOperatingIncome/GrossProfit all to the SAME
+    # total_revenue concept is the established pattern this module already uses for
+    # total_risk_exposure_amount (2 independent P3DH templates) - multiple raw tags,
+    # same underlying total, surfaced as separate rows per bank rather than merged.
+    # Sanity-checked before trusting it: cost_to_income_ratio computed from these on
+    # 10 real banks lands 38-76%, and on the Spanish/Erste granular path 50-71% -
+    # both normal ranges for a European bank, not a tagging artifact. Erste has no
+    # single Revenue/RevenueAndOperatingIncome/GrossProfit tag at all - genuinely
+    # absent from its filing, not missed; it falls back to a 4-line sum inside
+    # compute_cost_to_income_ratio() instead (see that function's docstring).
+    ("esef", "ifrs-full:OperatingExpense"): "operating_expense",
+    ("esef", "ifrs-full:Revenue"): "total_revenue",
+    ("esef", "ifrs-full:RevenueAndOperatingIncome"): "total_revenue",
+    ("esef", "ifrs-full:GrossProfit"): "total_revenue",
     # Added 2026-10-11: EU KM1 ("K_61.00 - EU KM1 - Key metrics template") row codes,
     # confirmed against Erste Group Bank AG's own cached exports - see _p3dh_rows()'s
     # docstring for the cross-check against the stress test's independent figure for
@@ -205,7 +235,23 @@ _ESEF_PERIOD_KIND: dict[str, str] = {
     "ifrs-full:InterestRevenueExpense": "duration",
     "ifrs-full:ProfitLoss": "duration",
     "ifrs-full:FeeAndCommissionIncomeExpense": "duration",
+    "ifrs-full:OperatingExpense": "duration",
+    "ifrs-full:Revenue": "duration",
+    "ifrs-full:RevenueAndOperatingIncome": "duration",
+    "ifrs-full:GrossProfit": "duration",
 }
+
+# Raw ESEF tags compute_cost_to_income_ratio() reads directly (esef_client, bypassing
+# CONCEPT_MAP/get_financial_data) rather than exposing as standalone standardized
+# concepts - they only ever appear combined into that one ratio, never requested on
+# their own. All 5 are income-statement lines, so always "duration".
+_COST_TO_INCOME_RAW_TAGS = (
+    "ifrs-full:AdministrativeExpense",
+    "ifrs-full:EmployeeBenefitsExpense",
+    "ifrs-full:DepreciationAndAmortisationExpense",
+    "ifrs-full:TradingIncomeExpense",
+    "ifrs-full:OtherOperatingIncomeExpense",
+)
 
 # 2026-10-08: generalized from a single hardcoded ESEF period (originally only
 # FY2024, Erste-only) to any period this project has fetched - cross-period analysis
@@ -725,4 +771,94 @@ def compute_npl_ratio(bank_lei: str, period: str) -> float:
     performing_value = float(performing.iloc[0]["value"])
     non_performing_value = float(non_performing.iloc[0]["value"])
     return non_performing_value / (performing_value + non_performing_value)
+
+
+def _esef_raw_duration_value(bank_lei: str, period_end: str, tag: str) -> float | None:
+    """One raw ESEF duration (income-statement) fact, in EUR millions, bypassing
+    CONCEPT_MAP - for the handful of tags compute_cost_to_income_ratio() needs only
+    as ingredients of that one ratio (see _COST_TO_INCOME_RAW_TAGS). Returns None for
+    "no filing" or "tag not present in this filing" alike - both read the same way
+    here as a plain absence, since the caller only ever treats this as one candidate
+    among several and falls back regardless of which kind of absence it was."""
+    try:
+        facts = esef_client.fetch_facts(bank_lei, period_end)
+    except (esef_client.EsefNotFoundError, esef_client.EsefDataError):
+        return None
+    duration_key, _instant_key = esef_client.fiscal_year_keys(period_end)
+    value = esef_client.get_concept_value(facts, tag, duration_key)
+    return None if value is None else value / 1_000_000
+
+
+class CostToIncomeRatioError(ValueError):
+    """Cost-to-income ratio could not be computed for this bank/period - neither of
+    this module's two resolution paths (see compute_cost_to_income_ratio's
+    docstring) found both an expense figure and a revenue figure on the same
+    filing."""
+
+
+def compute_cost_to_income_ratio(bank_lei: str, period: str) -> float:
+    """Cost-to-income ratio = operating expenses / total operating income, for one
+    bank/period. Held back 2026-10-28 pending real investigation (risk of
+    double-counting AdministrativeExpense vs EmployeeBenefitsExpense) - done
+    2026-10-29, see CONCEPT_MAP's own "Added 2026-10-29" entry for the full
+    per-bank tag survey this is built on.
+
+    Tries three resolution paths, in order, never mixing pieces across them:
+
+    1. operating_expense / total_revenue, both already-totaled single ESEF tags
+       (ifrs-full:OperatingExpense; ifrs-full:Revenue or
+       ifrs-full:RevenueAndOperatingIncome) - works for 10 of the 13 banks that
+       report this way (the other 3 lack a matching revenue tag).
+    2. (AdministrativeExpense + EmployeeBenefitsExpense +
+       DepreciationAndAmortisationExpense) / total_revenue, where total_revenue
+       resolved via ifrs-full:GrossProfit - the Spanish-bank reporting style
+       (Santander, CaixaBank, BBVA, Sabadell, Bankinter).
+    3. The same 3-line expense sum / (net_interest_income + net_fee_income +
+       TradingIncomeExpense + OtherOperatingIncomeExpense) - for filers (so far
+       just Erste) with neither a single opex tag nor a single revenue tag, but
+       every individual line tagged separately. Erste 2025-12-31 gives ~50.1% via
+       this path, in the same normal range as paths 1 and 2 (38-76%), confirmed
+       before trusting it.
+
+    Both sides of whichever path is used come from the SAME filer's SAME filing,
+    so the ratio is currency-invariant by construction - no EUR conversion needed
+    here, unlike compute_rwa_density.
+
+    Raises CostToIncomeRatioError if no path resolves both sides - never silently
+    falls back to a partial sum (e.g. 2 of 3 expense lines).
+    """
+    period_end = _period_to_esef_period_end(period)
+
+    df = get_financial_data(bank_lei, ["operating_expense", "total_revenue"], period=period)
+    opex_tagged = df[(df["standardized_concept"] == "operating_expense") & (df["status"] == "ok")]
+    revenue_tagged = df[(df["standardized_concept"] == "total_revenue") & (df["status"] == "ok")]
+
+    if not opex_tagged.empty and not revenue_tagged.empty:
+        return float(opex_tagged.iloc[0]["value"]) / float(revenue_tagged.iloc[0]["value"])
+
+    admin = _esef_raw_duration_value(bank_lei, period_end, "ifrs-full:AdministrativeExpense")
+    employee = _esef_raw_duration_value(bank_lei, period_end, "ifrs-full:EmployeeBenefitsExpense")
+    depreciation = _esef_raw_duration_value(bank_lei, period_end, "ifrs-full:DepreciationAndAmortisationExpense")
+    if admin is None or employee is None or depreciation is None:
+        raise CostToIncomeRatioError(
+            f"{bank_lei}/{period}: no operating_expense tag, and the granular "
+            f"admin/employee/depreciation expense lines aren't all present either"
+        )
+    granular_opex = admin + employee + depreciation
+
+    if not revenue_tagged.empty:
+        return granular_opex / float(revenue_tagged.iloc[0]["value"])
+
+    ni_fee = get_financial_data(bank_lei, ["net_interest_income", "net_fee_income"], period=period)
+    nii = ni_fee[(ni_fee["standardized_concept"] == "net_interest_income") & (ni_fee["status"] == "ok")]
+    fee = ni_fee[(ni_fee["standardized_concept"] == "net_fee_income") & (ni_fee["status"] == "ok")]
+    trading = _esef_raw_duration_value(bank_lei, period_end, "ifrs-full:TradingIncomeExpense")
+    other = _esef_raw_duration_value(bank_lei, period_end, "ifrs-full:OtherOperatingIncomeExpense")
+    if nii.empty or fee.empty or trading is None or other is None:
+        raise CostToIncomeRatioError(
+            f"{bank_lei}/{period}: no total_revenue tag, and the net interest/fee/"
+            f"trading/other-operating income lines needed to sum one aren't all present"
+        )
+    total_revenue = float(nii.iloc[0]["value"]) + float(fee.iloc[0]["value"]) + trading + other
+    return granular_opex / total_revenue
 

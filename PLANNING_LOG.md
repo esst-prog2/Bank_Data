@@ -1194,3 +1194,39 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   revenue" decision): both of those still need real multi-bank investigation before a
   trustworthy formula can be written, same as RWA density and the NPL ratio were.
   Copied to the working folder as `dashboard_map_V5.html`. Decided and built by agent.
+- 2026-10-29: Built the two deferred metrics (cost-to-income ratio, total revenue),
+  unblocked by a direct survey of all 28 pilot banks' cached FY2025 ESEF facts rather
+  than guessing a formula first. Found IFRS doesn't mandate one income-statement shape
+  for banks - filers split into two real, non-overlapping reporting styles, confirmed
+  by inspection, not assumed: 13/28 (ING, Nordea, DNB, KBC, AIB, Bank of Ireland, OP,
+  ABN AMRO, Rabobank, HSBC Continental Europe, SEB, Banco Comercial Portugues, Danske)
+  tag a single already-totaled `ifrs-full:OperatingExpense` line, most of those also a
+  single total-income line (`ifrs-full:Revenue` or `ifrs-full:RevenueAndOperatingIncome`
+  - same role, different tag chosen by different filers' taxonomy extensions); 6/28 (the
+  5 Spanish banks plus Erste) instead break expenses into 3 granular tags
+  (AdministrativeExpense/EmployeeBenefitsExpense/DepreciationAndAmortisationExpense,
+  summed) and total income into `ifrs-full:GrossProfit` (the Spanish "margen bruto"
+  line). Erste alone has neither a single opex tag nor GrossProfit, but has every
+  individual income-statement line tagged separately, so it gets a 3rd fallback path:
+  granular expense sum / (net_interest_income + net_fee_income + TradingIncomeExpense +
+  OtherOperatingIncomeExpense).
+  Wired `total_revenue` as a raw CONCEPT_MAP concept (3 ESEF tags -> one standardized
+  concept, the SAME established pattern already used for total_risk_exposure_amount's
+  2 independent P3DH templates - multiple sources, same total, surfaced as separate
+  rows, never silently merged). Added `compute_cost_to_income_ratio()` (same family as
+  compute_rwa_density/compute_npl_ratio) implementing the 3-tier resolution above, never
+  mixing pieces across tiers. Both sides of the ratio always come from the same filer's
+  same filing, so it's currency-invariant by construction - no FX conversion needed,
+  unlike total_assets/RWA density.
+  Verified against real data before trusting it, not just unit tests: cost-to-income
+  ratios from the single-tag path land 38.0-75.8%, from the granular/GrossProfit path
+  38.0-71.4%, and Erste's fallback gives 47.8% - all in the normal range for a European
+  bank, no outliers. Full pytest suite green (35 passed, 2 skipped).
+  Real coverage, confirmed live against all 28 banks (not estimated): total_revenue
+  18/28, cost_to_income_ratio 16/28. Added both to the concept picker's Profitability
+  category with honest coverage labels, matching net_fee_income's precedent. Verified
+  via Playwright (both checkboxes present, selectable, counter updates correctly).
+  Copied to the working folder as `dashboard_map_V6.html`. This closes out the user's
+  original 3-item ask ("cost to income ratios, net fee income and total revenue") -
+  all three now shipped. Decided and built by agent, per the user's "add next metrics"
+  request continuing the sequencing the user set 2026-10-28.
