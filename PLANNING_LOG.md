@@ -1230,3 +1230,52 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   original 3-item ask ("cost to income ratios, net fee income and total revenue") -
   all three now shipped. Decided and built by agent, per the user's "add next metrics"
   request continuing the sequencing the user set 2026-10-28.
+- 2026-10-29: Built the results view (step 5, the last unbuilt piece of the dashboard
+  journey) - replaces the placeholder `alert()` the concept picker's "See results"
+  button fired. User chose 3 design points up front (AskUserQuestion): metrics as
+  rows / banks as columns (not the reverse - scales better since baskets are capped
+  at 6 banks but a user can select 20+ metrics); missing cells show "-" with a
+  hover tooltip explaining why, not a bare dash; and both "highlight the best value
+  per row" and CSV export, not just a plain grid.
+  Dashboard has no live Python backend, so every (bank, metric) display value has to
+  be precomputed ahead of time, not resolved on click - added
+  `scratchpad/build_comparison_data.py`, which calls get_financial_data() /
+  compute_rwa_density() / compute_cost_to_income_ratio() exactly as shipped (no
+  logic duplicated or reimplemented) for all 28 pilot banks x all 23 picker
+  concepts, FY2025. Monkeypatches `esef_client.find_filing()` to a no-network stub
+  for this run only - every pilot bank's FY2025 ESEF facts are already cached
+  locally, and `_esef_rows()` calls `find_filing()` unconditionally just to build a
+  human-readable origin_reference URL this script never uses; without the patch
+  that alone re-triggers filings.xbrl.org's 429 rate limit (hit repeatedly this
+  session) on nearly every request. With it, the full 28-bank x 23-concept
+  precompute runs in seconds, fully offline.
+  Where a concept has more than one real source (e.g. total_risk_exposure_amount
+  from the stress test and 2 P3DH templates), picks one display value by a fixed
+  precedence - reported_actual > restated_actual > scenario_projection, then
+  esef > p3dh > stress_test, with EU KM1 preferred over EU OV1 for
+  total_risk_exposure_amount specifically - rather than showing multiple numbers
+  in one cell; the underlying DataFrame still carries every row, this is a display
+  choice for the comparison table only.
+  "Highlight best" is restricted to true ratios with an unambiguous direction
+  (cet1_ratio/leverage_ratio/liquidity_coverage_ratio/nsfr_ratio: higher is
+  better; cost_to_income_ratio: lower is better) - deliberately NOT applied to
+  absolute EUR amounts (a bigger bank's bigger capital/income figure isn't
+  "better") or to rwa_density (a risk-weighting intensity, not a performance
+  measure) - agent's own scope call, not asked separately since it's covered by
+  the user's general "highlight best" approval.
+  CSV export writes a UTF-8-with-BOM file (found and fixed before shipping: Excel
+  on Windows renders a plain UTF-8 CSV's euro signs as mojibake without the BOM;
+  Google Sheets reads either form fine).
+  Verified via Playwright end to end, not just that it renders: 4-bank/12-metric
+  selection (including Danske Bank, to exercise the EUR-conversion footnote and
+  real missing cells) produces the right row/column counts, best-highlighting
+  lands on real values (confirmed against the actual numbers in the screenshot,
+  not just "a cell got highlighted"), missing-cell tooltips carry the real
+  origin_reference text, CSV downloads and decodes correctly with the BOM
+  present, and "edit selection" correctly reopens the concept picker with the
+  same basket/selection state intact. Full pytest suite still green (35 passed,
+  2 skipped - this work only touched the dashboard generator, not the package).
+  Copied to the working folder as `dashboard_map_V7.html`. This completes the
+  original 5-step dashboard journey end to end (map -> hover -> basket ->
+  concept picker -> comparison table). Decided and built by agent, following the
+  user's "build the comparison sheets" request and the 3 design answers above.
