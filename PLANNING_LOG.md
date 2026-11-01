@@ -1356,3 +1356,32 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   works exactly as pitched, and is still demoable directly. Prompted by the
   user noticing the README's "not this term" line now directly contradicted
   the actual demo being presented. Decided by user, worded by agent.
+- 2026-11-01: Added NPL ratio and ROE to the dashboard, per user request
+  ("add other relevant metrics" -> agent proposed these two -> user
+  confirmed). NPL ratio: `compute_npl_ratio()` already existed in
+  reconcile.py (built 2026-10-12, extend-p3dh-template-coverage) but had
+  never actually been wired into the dashboard - wired it into
+  `build_comparison_data.py` the same way as rwa_density/
+  cost_to_income_ratio (calls the real tested function, catches its
+  dedicated `NplRatioError`), added it to the Asset Quality category, and
+  gave it a "best" highlight direction (down - fewer non-performing
+  exposures is unambiguously better), same treatment as cost_to_income_ratio.
+  Real coverage confirmed live: 26/28 banks, values 0.19%-2.01% - all
+  plausible for solid European banks, no outliers.
+  ROE: added as a third `DERIVED_RATIO` denominator (total_equity) alongside
+  the existing % of assets / % of RWA ones, computed client-side exactly
+  like those - profit_or_loss_for_the_year was the only metric that made
+  sense against equity (not, e.g., RWA-breakdown items). Deliberately left
+  OUT of "best" highlighting, same reasoning as ROA: a higher margin against
+  a smaller equity base can reflect leverage/risk-taking rather than a
+  "better" bank, so it stays an unforced agent judgment call for
+  consistency with the existing %-of-assets ratios.
+  Verified via Playwright (Erste/ABN AMRO/Danske, 8 metrics): ROA 1.2%/0.5%/
+  0.6%, ROE 12.4%/8.3%/12.7%, NPL ratio 1.4%/1.2%/0.9% - all plausible;
+  highlighting landed on exactly the 2 true "best" cells (cost-to-income and
+  NPL ratio, both "down"-direction), not on ROA/ROE; Danske's missing
+  cost-to-income cell still shows its real reason on hover. Full pytest
+  suite still green (35 passed, 2 skipped - package untouched, npl_ratio
+  wiring only touched the dashboard's precompute script). Copied to the
+  working folder as `dashboard_map_V11.html`. Decided by user, scoped and
+  built by agent.
