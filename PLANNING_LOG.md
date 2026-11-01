@@ -1319,3 +1319,29 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   skipped - package itself untouched, this was a dashboard-generator-only
   change). Copied to the working folder as `dashboard_map_V9.html`. Decided
   by user, scope narrowed jointly (AskUserQuestion), built by agent.
+- 2026-11-01: Added "% of total RWA" as a second standardization base
+  alongside the % of assets one above, per user request ("standardise
+  figures with RWA also, when it makes sense"). Agent judgment call on
+  scope, not asked separately since the user explicitly delegated it: Tier 1
+  capital and total capital (the standard Basel Tier 1 ratio / total capital
+  ratio) and all 5 RWA-breakdown amounts (shows each risk type's share of
+  total RWA) - deliberately EXCLUDING CET1 capital, since the already-wired
+  `cet1_ratio` IS cet1_capital/RWA (confirmed by direct comparison against
+  real data before deciding: both give exactly 0.147312968 for the same
+  bank/period, so a `cet1_capital_pct_rwa` entry would just duplicate an
+  existing metric under a new name) - and excluding income-statement/
+  assets/equity amounts, which aren't normally expressed against RWA.
+  Refactored the single-denominator `PCT_ASSETS_BASE` map from the earlier
+  entry into a general `DERIVED_RATIO` map (concept -> [base, denominator])
+  so both standardizations share one `getCell()` resolution path instead of
+  duplicating the lookup/missing-data logic per denominator.
+  Verified via Playwright: Erste + a Dutch bank, 16 metrics including every
+  RWA-breakdown pair - Tier 1 ratio (21.7%/22.0%) and total capital ratio
+  (24.8%/23.6%) land exactly where CET1 ratio (19.3%/20.3%) would predict
+  (Tier 1 >= CET1, total capital >= Tier 1, as Basel's capital tiers
+  require), and the 5 RWA-breakdown percentages sum to ~98% of total RWA
+  for both banks (credit risk dominant at 78-84%, as expected for
+  commercial banks) - no missing cells, no bugs. Full pytest suite still
+  green (35 passed, 2 skipped - package untouched). Copied to the working
+  folder as `dashboard_map_V10.html`. Decided by user, scoped and built by
+  agent.
