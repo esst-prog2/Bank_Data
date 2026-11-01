@@ -1285,3 +1285,37 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   cell text-align from right to center (metric-name column stays left-aligned).
   Copied to the working folder as `dashboard_map_V8.html`. Decided by user,
   built by agent.
+- 2026-11-01: Added "% of total assets" as a selectable form for 8 amount
+  metrics (net interest income, net fee income, total revenue, profit/loss
+  for the year, CET1/Tier 1/total capital, total equity), per user request.
+  Agreed scope and presentation with the user up front (AskUserQuestion):
+  income-statement + capital/equity metrics only (not RWA-breakdown or
+  exposure amounts, which are normally normalized against RWA/total
+  exposures, not total assets); each gets its own second checkbox in the
+  concept picker (e.g. "Net fee income (% of assets)") next to the existing
+  €-amount entry, rather than a global toggle.
+  Computed entirely client-side from values already in `comparison_data.json`
+  (the metric's own EUR amount divided by that bank's total_assets, both
+  already FX-converted) - no new source data, no reconcile.py changes,
+  nothing duplicated from the package. Added a `getCell()` JS helper so both
+  the results table and CSV export resolve these derived concepts the same
+  way; missing inputs (either the base metric or total_assets) surface the
+  same dash + hover-reason pattern as every other missing cell. Deliberately
+  left out of `METRIC_DIRECTION` (no "best value" highlighting) - whether a
+  higher income/assets or capital/assets ratio is "better" is genuinely
+  debatable (could reflect risk-taking, not quality), unlike the existing
+  highlighted ratios, so it stays an agent judgment call consistent with the
+  project's conservative highlighting rule.
+  Also added a timestamp to the CSV export's filename (`bank_comparison_
+  YYYY-MM-DD_HHMMSS.csv`), per the same user request, so repeated exports
+  during the demo don't silently overwrite each other.
+  Verified via Playwright: 8-metric/3-bank selection (Erste, Danske,
+  Rabobank) renders all 4 base/pct-of-assets pairs with plausible values
+  (e.g. Erste CET1/assets 7.7%, ROA 1.2%), CSV downloads with a real
+  timestamped filename and confirmed-correct UTF-8-with-BOM bytes (a
+  Windows-console cp1250 print artifact looked like mojibake but the raw
+  file bytes were checked directly and are correct, same false alarm as the
+  2026-10-29 BOM check). Full pytest suite still green (35 passed, 2
+  skipped - package itself untouched, this was a dashboard-generator-only
+  change). Copied to the working folder as `dashboard_map_V9.html`. Decided
+  by user, scope narrowed jointly (AskUserQuestion), built by agent.
