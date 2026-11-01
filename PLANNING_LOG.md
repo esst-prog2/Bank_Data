@@ -1345,3 +1345,14 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   green (35 passed, 2 skipped - package untouched). Copied to the working
   folder as `dashboard_map_V10.html`. Decided by user, scoped and built by
   agent.
+- 2026-11-01: Updated README section 1 ("The demo") to describe the
+  dashboard as the actual demo, and removed "a standalone dashboard or web
+  application" / "extensive financial analysis and visualization" from
+  section 3's "Not this term" list, replacing them with a dated note
+  explaining the change rather than silently deleting the original scope
+  boundary. Reframed, not replaced: the original function-call package
+  interface (section 2's in/out shape, the `docs/review.html`/`compare.html`
+  snapshots) is now presented as the engine the dashboard is built on, still
+  works exactly as pitched, and is still demoable directly. Prompted by the
+  user noticing the README's "not this term" line now directly contradicted
+  the actual demo being presented. Decided by user, worded by agent.

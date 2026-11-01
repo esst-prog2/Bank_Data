@@ -2,9 +2,9 @@
 
 1. The demo
 
-I install the Python package and run a function for two European banks and a selected reporting period. It returns a table containing financial-statement and regulatory metrics for that bank and period, including the underlying source item for each figure. I can inspect the mapping to see which XBRL/ESEF or regulatory reporting item produced each value, what standardized concept it represents, and whether it is a reported actual or a scenario-projected figure (e.g. from an EU-wide stress test). Every figure carries enough metadata to check it against the publication it came from; the package does not attempt to reconcile figures across different accounting standards or reporting frameworks into a single comparable value — if the same concept is reported by more than one source, it returns each one tagged by its provenance rather than picking or combining them. I can then use the returned data directly in Python to calculate a metric such as RWA density.
+At this point the project reads better as an interactive dashboard than as a bare package call, so that's how it's demoed: open the dashboard, build a basket of up to 6 banks by clicking logos on a map of Europe, pick which financial and regulatory concepts to compare — including several standardized as a percentage of total assets or of total RWA where that's a meaningful ratio (e.g. net fee income or profit for the year against assets; Tier 1 capital, total capital, or an RWA-breakdown item against RWA) — and get a results table across the selected banks, with missing data shown as a dash with its real reason on hover, the best value per ratio row highlighted, and a timestamped CSV export. Every figure in that table is produced by calling the real package functions (`get_financial_data()`, `compute_rwa_density()`, `compute_cost_to_income_ratio()`) exactly as shipped, precomputed offline so the dashboard needs no live backend — nothing shown there is reimplemented or simplified for presentation.
 
-A reviewable snapshot of this output for the MVP's pilot bank (Erste Group Bank AG, EBA Stress Test 2025 + its own ESEF filing) is published at <https://esst-prog2.github.io/Bank_Data/review.html> (source: `docs/review.html`). A second snapshot shows the same function run for two European banks side by side (Erste Group Bank AG + BNP Paribas) at <https://esst-prog2.github.io/Bank_Data/compare.html> (source: `docs/compare.html`).
+The underlying package interface this dashboard is built on still works exactly as originally pitched: I can install the Python package and run a function for a bank and reporting period directly, and get back a table with the same figures, source items, and provenance the dashboard uses. A reviewable snapshot of that direct function-call output for the MVP's pilot bank (Erste Group Bank AG, EBA Stress Test 2025 + its own ESEF filing) is published at <https://esst-prog2.github.io/Bank_Data/review.html> (source: `docs/review.html`); a second snapshot shows the same function run for two banks side by side (Erste Group Bank AG + BNP Paribas) at <https://esst-prog2.github.io/Bank_Data/compare.html> (source: `docs/compare.html`).
 
 2. The shape
 in          a bank identifier, reporting period, and requested financial or
@@ -35,11 +35,11 @@ Not this term
 Comprehensive coverage of every European bank.
 Coverage of banks whose data isn't available through ESEF — a this-term scope boundary set by ESEF's own EU Transparency Directive coverage (issuers with securities on an EU regulated market), not a permanent limitation of this package.
 Comprehensive coverage of every financial and regulatory variable.
-A standalone dashboard or web application.
 A public API or hosted service.
-Extensive financial analysis and visualization.
 Advanced statistical modelling based on the retrieved data.
 Normalizing or reconciling figures across different accounting standards or reporting frameworks into a single comparable value.
+
+*Note, 2026-11-01: this boundary turned out not to hold for "a standalone dashboard or web application" or "extensive financial analysis and visualization." Seeing how much more the project's point came across as an interactive dashboard than as a bare function call, one was built directly on top of the package described in section 2 — calling its functions exactly as shipped, not reimplementing anything — and became the actual demo in section 1. Everything else in this list still stands.*
 
 4. How we would know it works
 
