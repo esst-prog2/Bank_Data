@@ -121,3 +121,16 @@ that's mostly dashes. Is a sparse row like that a good illustration of the
 project's actual point (real data is genuinely incomplete and inconsistent
 across banks), or does it just read as "this demo doesn't work" to someone
 seeing it for the first time, with no context for why?
+
+**Addendum (2026-11-02).** Two more real commits landed later the same day
+this write-up was submitted, so it's noted here rather than silently
+missing: the README's section 1 was updated to describe the dashboard
+itself as the actual demo (previously it still framed the dashboard as an
+addition on top of the original function-call pitch), and two more
+metrics — NPL ratio and ROE — were wired into the dashboard. NPL ratio
+reuses `compute_npl_ratio()` (already built and tested, just never wired
+into the dashboard before); coverage is 26/28 banks, all plausible values.
+ROE is a third client-side ratio computed against total equity, deliberately
+left out of "best"-value highlighting for the same reason ROA already was —
+a higher margin against a smaller equity base isn't unambiguously "better."
+Doesn't change either answer above.

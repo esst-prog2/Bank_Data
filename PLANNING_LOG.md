@@ -1385,3 +1385,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   wiring only touched the dashboard's precompute script). Copied to the
   working folder as `dashboard_map_V11.html`. Decided by user, scoped and
   built by agent.
+- 2026-11-02: Added an addendum to Homework 8 in HOMEWORK_LOG.md noting the
+  README demo-reframe and NPL ratio/ROE dashboard additions (both committed
+  later the same day HW8 was submitted, so the write-up itself predates
+  them) - same convention as Homework 7's own addendum. No code changes.
+  Decided and carried out by agent, per user request to check whether HW7/8
+  needed updating ahead of the 2026-11-07 due date.
