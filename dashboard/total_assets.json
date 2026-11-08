@@ -1,0 +1,323 @@
+[
+  {
+    "lei": "O2RNE8IBXP4R0TD8PU41",
+    "name": "SOCIETE GENERALE",
+    "status": "ok",
+    "value": 1546641.0,
+    "source": "esef"
+  },
+  {
+    "lei": "F0HUI1NY1AZMJMD8LP67",
+    "name": "HSBC CONTINENTAL EUROPE",
+    "status": "ok",
+    "value": 251391.0,
+    "source": "esef"
+  },
+  {
+    "lei": "7LTWFZYICNSX8D621K86",
+    "name": "DEUTSCHE BANK AKTIENGESELLSCHAFT",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "815600E4E6DCD2D25E30",
+    "name": "BANCO BPM SOCIETA' PER AZIONI",
+    "status": "ok",
+    "value": 205896.307,
+    "source": "esef"
+  },
+  {
+    "lei": "3M5E1GQGKL17HI6CPN30",
+    "name": "JYSKE BANK A/S",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "635400AKJBGNS5WNQL34",
+    "name": "AIB GROUP PUBLIC LIMITED COMPANY",
+    "status": "ok",
+    "value": 148151.0,
+    "source": "esef"
+  },
+  {
+    "lei": "2W8N8UU78PMDQKZENC08",
+    "name": "INTESA SANPAOLO SPA",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "9ZHRYM6F437SQJ6OUG95",
+    "name": "Raiffeisen Bank International AG",
+    "status": "ok",
+    "value": 210265.0,
+    "source": "esef"
+  },
+  {
+    "lei": "96950066U5XAAIRCPA78",
+    "name": "LA BANQUE POSTALE",
+    "status": "ok",
+    "value": 725484.0,
+    "source": "esef"
+  },
+  {
+    "lei": "MAES062Z21O4RZ2U7M96",
+    "name": "DANSKE BANK A/S",
+    "status": "ok",
+    "value": 3753911.0,
+    "source": "esef"
+  },
+  {
+    "lei": "529900ODI3047E2LIV03",
+    "name": "Nordea Bank Abp",
+    "status": "ok",
+    "value": 654350.0,
+    "source": "esef"
+  },
+  {
+    "lei": "969500TJ5KRTCJQWXH05",
+    "name": "CREDIT AGRICOLE SA",
+    "status": "ok",
+    "value": 2374307.0,
+    "source": "esef"
+  },
+  {
+    "lei": "DG3RU1DBUFHT4ZF9WN62",
+    "name": "Cooperatieve Rabobank U.A.",
+    "status": "ok",
+    "value": 638886.0,
+    "source": "esef"
+  },
+  {
+    "lei": "5299009N55YRQC69CN08",
+    "name": "ALPHA SERVICES AND HOLDINGS",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "NHBDILHZTYCNBV5UYZ31",
+    "name": "Svenska Handelsbanken AB",
+    "status": "ok",
+    "value": 3387566.0,
+    "source": "esef"
+  },
+  {
+    "lei": "M312WZV08Y7LYUC71685",
+    "name": "Swedbank AB",
+    "status": "ok",
+    "value": 3062782.0,
+    "source": "esef"
+  },
+  {
+    "lei": "213800X3Q9LSAKRUWY91",
+    "name": "KBC GROEP",
+    "status": "ok",
+    "value": 397372.0,
+    "source": "esef"
+  },
+  {
+    "lei": "B81CK4ESI35472RHJ606",
+    "name": "Landesbank Baden-Wurttemberg",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "5UMCZOEYKCVFAW8ZLO05",
+    "name": "NATIONAL BANK OF GREECE",
+    "status": "ok",
+    "value": 78886.0,
+    "source": "esef"
+  },
+  {
+    "lei": "635400C8EK6DRI12LJ39",
+    "name": "BANK OF IRELAND GROUP PLC",
+    "status": "ok",
+    "value": 164799.0,
+    "source": "esef"
+  },
+  {
+    "lei": "VWMYAEQSTOPNV0SUGU82",
+    "name": "BANKINTER SOCIEDAD ANONIMA",
+    "status": "ok",
+    "value": 131018.892,
+    "source": "esef"
+  },
+  {
+    "lei": "N747OI7JINV7RUUH6190",
+    "name": "BPER BANCA S.P.A.",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "9695005MSX1OYEMGDF46",
+    "name": "BPCE",
+    "status": "ok",
+    "value": 1645733.0,
+    "source": "esef"
+  },
+  {
+    "lei": "M6AD1Y1KW32H8THQ6F76",
+    "name": "PIRAEUS FINANCIAL HOLDINGS",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "A5GWLFH3KM7YV2SFQL84",
+    "name": "BELFIUS BANQUE",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "R0MUWSFPU8MPRO8K5P83",
+    "name": "BNP PARIBAS",
+    "status": "ok",
+    "value": 2792981.0,
+    "source": "esef"
+  },
+  {
+    "lei": "J4CP7MHCXR8DAQMKIL78",
+    "name": "BANCA MONTE DEI PASCHI DI SIENA S.P.A.",
+    "status": "ok",
+    "value": 241640.511,
+    "source": "esef"
+  },
+  {
+    "lei": "851WYGNLUQLFZBSYGB56",
+    "name": "COMMERZBANK Aktiengesellschaft",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "LIU16F6VZJSD6UKHD557",
+    "name": "NYKREDIT REALKREDIT A/S",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "549300TRUWO2CD2G5692",
+    "name": "UNICREDIT, SOCIETA' PER AZIONI",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "549300NYKK9MWM7GGW15",
+    "name": "ING GROEP N.V.",
+    "status": "ok",
+    "value": 1054405.0,
+    "source": "esef"
+  },
+  {
+    "lei": "PQOH26KWDF7CG10L6792",
+    "name": "ERSTE GROUP BANK AG",
+    "status": "ok",
+    "value": 368574.0,
+    "source": "esef"
+  },
+  {
+    "lei": "F3JS33DEI6XQ4ZBPTN86",
+    "name": "Skandinaviska Enskilda Banken AB",
+    "status": "ok",
+    "value": 3670681.0,
+    "source": "esef"
+  },
+  {
+    "lei": "549300GKFG0RYRRQ1414",
+    "name": "DNB BANK ASA",
+    "status": "ok",
+    "value": 3695290.0,
+    "source": "esef"
+  },
+  {
+    "lei": "JU1U6S0DG9YLT7N8ZV32",
+    "name": "BANCO COMERCIAL PORTUGUES S.A.",
+    "status": "ok",
+    "value": 109332.927,
+    "source": "esef"
+  },
+  {
+    "lei": "7CUNS533WID6K7DGFI87",
+    "name": "CAIXABANK SA",
+    "status": "ok",
+    "value": 664040.0,
+    "source": "esef"
+  },
+  {
+    "lei": "VDYMYTQGZZ6DU0912C88",
+    "name": "BAYERISCHE LANDESBANK",
+    "status": "missing_from_source",
+    "value": null
+  },
+  {
+    "lei": "K8MS7FD7N5Z2WQ51AZ71",
+    "name": "BANCO BILBAO VIZCAYA ARGENTARIA SOCIEDAD ANONIMA",
+    "status": "ok",
+    "value": 859576.0,
+    "source": "esef"
+  },
+  {
+    "lei": "7437003B5WFBOIEFY714",
+    "name": "OP Osuuskunta",
+    "status": "ok",
+    "value": 164841.0,
+    "source": "esef"
+  },
+  {
+    "lei": "SI5RG2M0WQQLZCXKRM20",
+    "name": "BANCO DE SABADELL S.A.",
+    "status": "ok",
+    "value": 245392.394,
+    "source": "esef"
+  },
+  {
+    "lei": "9695000CG7B84NLR5984",
+    "name": "CONFEDERATION NATIONALE CREDIT MUTUEL",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "BFXS5XCH7N0Y05NIXW11",
+    "name": "ABN AMRO Bank N.V.",
+    "status": "ok",
+    "value": 413210.0,
+    "source": "esef"
+  },
+  {
+    "lei": "529900HNOAA1KXQJUQ27",
+    "name": "DZ BANK AG Deutsche Zentral-Genossenschaftsbank, Frankfurt am Main",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  },
+  {
+    "lei": "5493006QMFDDMYWIAM13",
+    "name": "BANCO SANTANDER S.A.",
+    "status": "ok",
+    "value": 1867515.0,
+    "source": "esef"
+  },
+  {
+    "lei": "5493007SJLLCTM6J6M37",
+    "name": "UNICAJA BANCO SA",
+    "status": "ok",
+    "value": 98427.639,
+    "source": "esef"
+  },
+  {
+    "lei": "N4JDFKKH2FTD8RKFXO39",
+    "name": "Credit Industriel et Commercial - CIC",
+    "status": "missing_from_source",
+    "value": null,
+    "source": "esef"
+  }
+]

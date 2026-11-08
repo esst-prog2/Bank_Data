@@ -1391,3 +1391,35 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   them) - same convention as Homework 7's own addendum. No code changes.
   Decided and carried out by agent, per user request to check whether HW7/8
   needed updating ahead of the 2026-11-07 due date.
+- 2026-11-08: Code review on Homework 7/8 flagged two real problems, both now
+  fixed. (1) The dashboard the demo actually runs from, and the script that
+  precomputes its numbers, had only ever existed on the user's own Desktop /
+  a prior session's scratchpad - never in the repository, so the repository
+  alone couldn't reproduce what the demo shows. Moved both scripts plus every
+  input they depend on (pilot_28_leis.json, total_assets.json, europe_map.svg,
+  bank_logos/, country_flags/) into a new `dashboard/` directory, and the
+  generated page into `docs/dashboard.html` (same snapshot convention as
+  review.html/compare.html). While doing this, found and fixed a real
+  portability bug: the HTML referenced logos/flags via absolute file:///
+  paths into that Desktop folder, so even once committed it would have
+  rendered with every image broken on any other machine - now every image is
+  inlined as a base64 data URI, so the file has zero external dependencies.
+  (2) Answered Homework 7's open question properly this time: checking across
+  all 28 pilot banks (not just Erste) found the KM1-vs-OV1 total_risk_exposure_
+  amount disagreement recurs for one more bank (~0.3% gap, vs. Erste's ~1.5%),
+  confirming it's a real, recurring case rather than a one-off. Added
+  disagreement detection to `build_comparison_data.py`'s pick_best_row()
+  (scoped to the reported_actual provenance tier only - EBA stress-test
+  baseline/adverse scenario pairs differ by design, not by disagreement, and
+  must never be flagged this way), and the results table now shows every
+  disagreeing figure with a hover explanation instead of silently resolving
+  to one number, exactly as the review suggested. Verified via Playwright:
+  Erste's RWA cell renders "...149.7bn / ...147.5bn" with the correct
+  KM1-vs-OV1/1.5% tooltip, disagreement cells are excluded from "best value"
+  highlighting, and a 3-bank/5-metric run (including a non-EUR bank and both
+  disagreement cases) still highlights the correct best cells, shows the
+  correct missing-cell reasons, and exports a correct CSV. Full pytest suite
+  untouched by this change (no package code modified). Written up in
+  `openspec/changes/archive/2026-11-08-commit-dashboard-and-surface-rwa-disagreement/`.
+  Decided by the course's code review feedback, not self-discovered; scoped
+  and built by agent.
