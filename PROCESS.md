@@ -16,6 +16,10 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   The install itself (24 MB: a Windows engine binary, font index, browser-automation
   JS) is third-party tooling, not project content, so added it to `.gitignore` instead
   of committing it — same treatment as `node_modules/`.
+- **Step 2 (2026-11-14)** — Never run. The homework's `/office-hours`/gstack step for
+  drafting promo-page content was skipped — no draft exists anywhere in the repo or
+  chat history. Decided: don't backfill it; let `/impeccable shape` build the design
+  brief straight from README.md instead, as it already offered to do.
 - **Step 3a — `/impeccable init` (2026-11-14)** — Skill wasn't in this session's
   skill list (session started outside the repo), so Claude followed
   `.claude/skills/impeccable/SKILL.md` and `reference/init.md` directly. Ran the
