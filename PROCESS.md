@@ -30,3 +30,14 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   mode config deferred until `generate` needs it. Decided: primary users are
   analysts & researchers; positioning leads with the dashboard (provenance is
   supporting); status framed as a course-term MVP.
+- **Step 3b — `/impeccable shape` (2026-11-14)** — Content source: README.md (user
+  decision; no separate step-2 draft in the repo). Claude ran a 3-question discovery
+  round, then Impeccable's `concept-seed` direction roll and served its decision page
+  locally. First hand (assigned: Annual Report Highlights; pick: Auditor's Working
+  Paper; 6 catalog challengers, all declined) — user re-rolled. Second hand
+  (assigned: Market Data Pages; pick: Atlas Plate I; one competitive challenger,
+  Monochrome Product Marketing) — user chose **Atlas Plate I**. Code-led build (no
+  image-generation tool here). Wrote `PROMO_BRIEF.md` (no code). Decided: primary
+  action is opening the dashboard; look is "related to the dashboard but bolder";
+  page lives at `docs/index.html`. Open: whether plate-key entries should deep-link
+  into the dashboard with a bank preselected (needs a dashboard change; default no).

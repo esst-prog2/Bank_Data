@@ -1430,3 +1430,9 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   a course-term MVP (28-bank ESEF pilot, no hosted API). Agent recorded these
   plus repo-verified facts (28 pilot LEIs, package metadata, Pages URLs) and the
   standing constraints (repo public, no personal info on pages).
+- 2026-11-14: Promo page design brief (`PROMO_BRIEF.md`, via `/impeccable shape`).
+  User decided: content comes from README.md; primary action = open the live
+  dashboard; visual identity related to the dashboard but bolder; page lives at
+  `docs/index.html` (site root); direction "Atlas Plate I" (statistical-atlas map
+  plate, graded greens, one red reserved for source disagreement), chosen after one
+  re-roll. Agent proposed the candidate directions and the brief's structure.
