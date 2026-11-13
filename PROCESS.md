@@ -16,3 +16,13 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   The install itself (24 MB: a Windows engine binary, font index, browser-automation
   JS) is third-party tooling, not project content, so added it to `.gitignore` instead
   of committing it — same treatment as `node_modules/`.
+- **Step 3a — `/impeccable init` (2026-11-14)** — Skill wasn't in this session's
+  skill list (session started outside the repo), so Claude followed
+  `.claude/skills/impeccable/SKILL.md` and `reference/init.md` directly. Ran the
+  engine's `context` check (reported no PRODUCT.md, no design context), scanned
+  README/pyproject/dashboard inputs, then asked 3 interview questions. Wrote
+  `PRODUCT.md` (product truth only, no visual decisions). No image-generation
+  tool available, so build path is code-first by default (nothing stored); live
+  mode config deferred until `generate` needs it. Decided: primary users are
+  analysts & researchers; positioning leads with the dashboard (provenance is
+  supporting); status framed as a course-term MVP.

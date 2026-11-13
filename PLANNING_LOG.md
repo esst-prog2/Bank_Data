@@ -1423,3 +1423,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   `openspec/changes/archive/2026-11-08-commit-dashboard-and-surface-rwa-disagreement/`.
   Decided by the course's code review feedback, not self-discovered; scoped
   and built by agent.
+- 2026-11-14: Wrote PRODUCT.md via `/impeccable init` (promo page homework, step 3).
+  User decided: the program's primary users are analysts/researchers (course
+  reviewers secondary); positioning leads with the no-backend dashboard, with
+  provenance/disagreement-surfacing as the supporting claim; status is stated as
+  a course-term MVP (28-bank ESEF pilot, no hosted API). Agent recorded these
+  plus repo-verified facts (28 pilot LEIs, package metadata, Pages URLs) and the
+  standing constraints (repo public, no personal info on pages).
