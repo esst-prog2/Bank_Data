@@ -9,3 +9,6 @@ data/raw/
 data/state/
 node_modules/
 .DS_Store
+.claude/skills/impeccable/
+.claude/agents/impeccable-*.md
+.claude/settings.local.json
