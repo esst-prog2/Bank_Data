@@ -1467,3 +1467,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   system (agent, via Impeccable's documenter definition). Promo page published as the
   GitHub Pages root and all commits pushed to origin/main (user decision: push before
   done).
+- 2026-11-14: Updated AGENTS.md's Repo layout to list docs/index.html, PROCESS.md,
+  PRODUCT.md, PROMO_BRIEF.md, DESIGN.md, and .impeccable/ (none of these existed when
+  that section was last written). Housekeeping only, no behavior change. Decided by
+  user, carried out by agent.
