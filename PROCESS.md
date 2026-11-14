@@ -57,3 +57,11 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   `docs/index.html` is now the source file. Decided (user): no deep-linking from the key;
   build first, then `generate`. Not yet done: finish review and DESIGN.md (deferred
   until `generate`/`critique` settle the design); nothing pushed.
+- **Step 3d — disagreement colour: red → amber (2026-11-14)** — User decision: use
+  the dashboard's amber, not red. Reason (user's): the disagreement isn't an error but the
+  provenance design working, and the colour must mean the same thing on the promo page
+  and in the dashboard it hands visitors to. Claude switched the callout, the ringed
+  markers, the legend swatch, the status line and Note 2's figures to the dashboard's
+  values (`#8a5a00` text, `#fff8ec` wash, `#d9a441` rule; deeper `#b07410` for the
+  map ring so it holds on green land), rewrote Note 2's sentence, and updated
+  `PROMO_BRIEF.md` and the surface brief to match.

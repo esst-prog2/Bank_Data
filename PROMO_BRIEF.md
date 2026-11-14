@@ -22,7 +22,7 @@ Product facts live in `PRODUCT.md`; the content source is `README.md`.
 Chosen on the decision page (`seed:a2b8e26acbe32464`, re-roll 1; you picked Impeccable's pick over the assigned direction, Market Data Pages).
 - **World:** the page is Plate I of a statistical atlas of European banking. It has a numbered thematic map plate, a legend box, and plate notes citing the sources.
 - **Thread from the dashboard:** the dashboard's map and its green, pushed bolder. Land is shaded in graded greens from `#cdeadd` to `#0f5a3c`, on white with near-black ink.
-- **Colour roles:** a single red, `#a3242b`, is reserved for source disagreement.
+- **Colour roles:** a single amber is reserved for source disagreement, the same as the dashboard (`#8a5a00` text, `#fff8ec` wash, `#d9a441` rule; deeper `#b07410` for the map ring). *Changed 2026-11-14 from red `#a3242b`, user decision: disagreement isn't an error, and the colour must mean the same thing on both pages.*
 - **Focal moment:** the map plate fills most of the first viewport, with the 28 banks as numbered markers. The plate key (numbered bank list) and the legend sit in the plate's own margins. The primary action is set as the plate's caption line ("Open the interactive plate → dashboard") and is plainly a button.
 - **Sequence below the fold:** plate notes in atlas-footnote form.
   1. What a figure is: source template, period, provenance.
@@ -54,6 +54,6 @@ Chosen on the decision page (`seed:a2b8e26acbe32464`, re-roll 1; you picked Impe
 
 ## 7. Constraints and open decisions
 - **Hosting:** GitHub Pages from `/docs` on `main`; the repo stays public. The page must be self-contained, with assets inlined or committed under `docs/`. The map SVG and logos can be reused from `dashboard/`.
-- **Accessibility:** colour is never the only carrier of meaning (the disagreement red also gets a label), text meets WCAG AA contrast, and the map has a text alternative (the key is a real list).
+- **Accessibility:** colour is never the only carrier of meaning (the disagreement amber also gets a label), text meets WCAG AA contrast, and the map has a text alternative (the key is a real list).
 - **Open decision, yours:** should a plate-key entry open the dashboard with that bank already in the basket? The dashboard has no URL-parameter support today, so this would mean a small dashboard change. **Default: no.** Key entries just link to the dashboard, which stays untouched.
 - **Fonts:** the face is chosen at build time, avoiding the training-data defaults. If it needs to stay self-contained, it's served from `docs/`.

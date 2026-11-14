@@ -20,7 +20,10 @@
   --t1: #cdeadd; --t2: #9fd2b7; --t3: #5ea883; --t4: #2a7a55;
   --green: #0f5a3c;
   --green-ink: #0b4a31;
-  --red: #a3242b;
+  --amber: #8a5a00;      /* dashboard's disagreement text */
+  --amber-rule: #d9a441; /* dashboard's disagreement rule */
+  --amber-wash: #fff8ec; /* dashboard's disagreement cell */
+  --amber-ring: #b07410; /* deeper, so the ring holds on green land */
   --rule: #141413;
   --hair: #d4d8d2;
   --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -70,10 +73,10 @@ a:hover { text-decoration-thickness: 2px; }
 .mk { cursor: pointer; }
 .mk .dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.1; transition: fill .2s, stroke .2s; }
 .mk text { font: 700 7.2px "Archivo", sans-serif; font-stretch: 100%; text-anchor: middle; fill: var(--ink); pointer-events: none; }
-.mk .ring { fill: none; stroke: var(--red); stroke-width: 1.4; }
+.mk .ring { fill: var(--amber-wash); stroke: var(--amber-ring); stroke-width: 1.8; }
 .mk.on .dot { fill: var(--green); stroke: var(--green); }
 .mk.on text { fill: var(--paper); }
-.leader { fill: none; stroke: var(--red); stroke-width: .8; }
+.leader { fill: none; stroke: var(--amber-ring); stroke-width: .9; }
 
 /* overlays live inside the plate field on wide screens */
 .cartouche, .key, .legend, .callout { background: var(--paper); }
@@ -107,7 +110,7 @@ sup a { text-decoration: none; font-weight: 700; color: var(--green-ink); paddin
 .kg a.on, .kg a:hover { background: var(--t1); }
 .status { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 12.5px; min-height: 4.1em; color: var(--ink-2); }
 .status b { color: var(--ink); font-weight: 650; }
-.status .d { color: var(--red); font-weight: 600; }
+.status .d { color: var(--amber); font-weight: 600; }
 
 .legend { padding: 12px 14px; font-size: 12.5px; line-height: 1.35; }
 .legend h2 { margin: 0 0 8px; font-size: 11px; }
@@ -116,10 +119,10 @@ sup a { text-decoration: none; font-weight: 700; color: var(--green-ink); paddin
 .sw { width: 22px; height: 12px; flex: none; border: .5px solid rgb(0 0 0 / .18); }
 .legend svg { width: 22px; height: 22px; flex: none; }
 
-.callout { padding: 10px 12px; border: 1px solid var(--red); font-size: 13px; line-height: 1.3; }
+.callout { padding: 10px 12px; border: 1px solid var(--amber-rule); background: var(--amber-wash); font-size: 13px; line-height: 1.3; }
 .callout .t { font-weight: 650; display: block; margin-bottom: 4px; }
 .callout .pair { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; align-items: baseline; }
-.callout .v { font-size: 17px; font-weight: 700; color: var(--red); }
+.callout .v { font-size: 17px; font-weight: 700; color: var(--amber); }
 .callout .s { color: var(--ink-2); font-size: 12px; }
 .callout .gap { display: block; margin-top: 5px; color: var(--ink-2); font-size: 12px; }
 
@@ -165,10 +168,10 @@ table.carry th.num { text-align: right; }
 
 .strips { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin: 26px 0 10px; max-width: 900px; }
 .strip-pair h4 { margin: 0 0 10px; font-size: 15px; font-weight: 650; }
-.strip-pair .twin { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--red); }
+.strip-pair .twin { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--amber-rule); background: var(--amber-wash); }
 .strip-pair .twin div { padding: 14px 16px 12px; }
-.strip-pair .twin div + div { border-left: 1px solid var(--red); }
-.strip-pair .big { display: block; font-size: clamp(30px, 1rem + 2vw, 44px); line-height: 1; font-weight: 720; font-stretch: 90%; color: var(--red); }
+.strip-pair .twin div + div { border-left: 1px dashed var(--amber-rule); }
+.strip-pair .big { display: block; font-size: clamp(30px, 1rem + 2vw, 44px); line-height: 1; font-weight: 720; font-stretch: 90%; color: var(--amber); }
 .strip-pair .src { display: block; margin-top: 8px; font-family: var(--mono); font-size: 13px; color: var(--ink); }
 .strip-pair .gapnote { margin: 8px 0 0; font-size: 14px; color: var(--ink-2); }
 
@@ -204,7 +207,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 18px var(--gap) 32px; font-
   body { font-size: 16px; }
   .mk text, .mk .ring { display: none; }
   .mk .dot { r: 3.6; fill: var(--ink); stroke: var(--paper); stroke-width: .8; }
-  .mk.dis .dot { fill: var(--red); }
+  .mk.dis .dot { fill: var(--amber-ring); }
   .strip { flex-direction: column; gap: 6px; }
   .strip .plate-no { display: block; margin: 2px 0 0; }
   .note { grid-template-columns: minmax(0, 1fr); }
@@ -268,7 +271,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 18px var(--gap) 32px; font-
           <li><span class="sw" style="background:var(--t3)"></span>3 to 4 pilot banks</li>
           <li><span class="sw" style="background:var(--t4)"></span>6 pilot banks</li>
           <li><span class="sw" style="background:var(--land)"></span>No pilot bank (Germany: see note 5)</li>
-          <li><svg viewBox="-11 -11 22 22" aria-hidden="true"><circle r="9.6" fill="none" stroke="#a3242b" stroke-width="1.4"/><circle r="6.4" fill="#fff" stroke="#141413" stroke-width="1.1"/></svg>Two filings disagree</li>
+          <li><svg viewBox="-11 -11 22 22" aria-hidden="true"><circle r="9.6" fill="#fff8ec" stroke="#b07410" stroke-width="1.8"/><circle r="6.4" fill="#fff" stroke="#141413" stroke-width="1.1"/></svg>Two filings disagree</li>
         </ul>
       </aside>
 
@@ -325,7 +328,7 @@ footer { max-width: 1180px; margin: 0 auto; padding: 18px var(--gap) 32px; font-
           <p class="gapnote">0.3% apart.</p>
         </div>
       </div>
-      <p>The dashboard marks these cells in amber, explains the gap on hover, and leaves them out of best-value highlighting, because there is no single number to rank.</p>
+      <p>Amber marks a disagreement here and in the dashboard alike. It isn't an error: it's the package showing both sources instead of hiding the gap. In the dashboard, hover an amber cell to see each figure with its template; these cells are left out of best-value highlighting, because there is no single number to rank.</p>
     </div>
   </article>
 

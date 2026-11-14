@@ -1443,3 +1443,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   1280px, stacked below; dashboard screenshots as "how to try it" imagery; disagreement
   shown in red on the promo page per the approved brief (the dashboard itself uses
   amber - flagged to the user as an open consistency question).
+- 2026-11-14: Promo page disagreement colour changed from red to the dashboard's amber
+  (user decision: one meaning across both surfaces; disagreement is a feature, not an
+  error). Agent chose a deeper amber (#b07410) for the map ring only, for contrast on
+  green land.
