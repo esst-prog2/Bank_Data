@@ -94,3 +94,11 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   catch: `PROMO_BRIEF.md` had the KM1/OV1 figures reversed (page itself correct).
   **Single weakest part: the route from the first screen into the dashboard.**
   Snapshot kept locally in `.impeccable/critique/` (git-ignored by Impeccable).
+- **Step 3g — critique fixes (2026-11-14)** — User chose: fix the P0 and the key-link P1,
+  but keep the button label "Open the interactive plate" (the metaphor stays), and
+  correct the brief. Claude: (1) layered the hook panel, legend, inset and key above the
+  map at ≥1280px, so mouse clicks reach the button and links again (verified with
+  Playwright click checks at 1920/1440/1280/1100/390); (2) turned the 28 key entries into
+  plain labels that still highlight their marker on hover (the button is now the one way
+  into the dashboard), and rewrote the key's idle line to say how to compare banks;
+  (3) corrected `PROMO_BRIEF.md`'s Erste figures to OV1 149.7bn / KM1 147.5bn.

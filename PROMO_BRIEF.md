@@ -14,7 +14,7 @@ Product facts live in `PRODUCT.md`; the content source is `README.md`.
 - **Real proof the page carries** (all taken from the repo, none invented):
   - The 28-bank pilot, with logos and countries.
   - Real figures from `dashboard/comparison_data.json`.
-  - The Erste Group RWA disagreement: EU KM1 149.7bn vs EU OV1 147.5bn, about 1.5% apart. Both figures are shown, never merged.
+  - The Erste Group RWA disagreement: EU OV1 149.7bn vs EU KM1 147.5bn, about 1.5% apart. Both figures are shown, never merged.
   - The four real package functions the dashboard calls.
   - The scope limits: ESEF-only, course-term MVP, no hosted API.
 

@@ -1455,3 +1455,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   synthesis of both assessments): the route into the dashboard (P0 mouse-blocked CTA at
   >=1280px, P1 28 look-alike key links, P1 metaphor-named CTA). Which fixes to apply
   before the push is the user's call.
+- 2026-11-14: Critique fixes. User decided: fix P0 (mouse-blocked CTA) and P1 (28 key
+  entries become non-link labels), keep the CTA label "Open the interactive plate",
+  correct the reversed KM1/OV1 figures in PROMO_BRIEF.md. P2s (handoff note, phone
+  polish) not taken this round.
