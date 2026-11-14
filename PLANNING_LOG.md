@@ -1447,3 +1447,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   (user decision: one meaning across both surfaces; disagreement is a feature, not an
   error). Agent chose a deeper amber (#b07410) for the map ring only, for contrast on
   green land.
+- 2026-11-14: Promo page map/key layout chosen via `/impeccable generate` (Layout, 3
+  variants): user accepted variant 3, an "Inset: Austria" that replaces the floating
+  callout and shows both disagreeing banks (Erste 1.5%, RBI 0.3%). Agent decided the
+  inset's placement rule (Norwegian Sea, right of the hook panel, clear of all markers).

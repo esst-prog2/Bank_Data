@@ -22,7 +22,7 @@ OWN-WORLD: White plate paper, near-black ink #141413, land in graded greens #cde
 
 STORY: Visitor sees Europe with 28 numbered banks, reads that every figure is traced to its filing, sees one bank whose two sources disagree kept as two numbers, and opens the dashboard.
 
-FIRST VIEWPORT: Full-width neatline plate. Map fills it; title cartouche in the Atlantic, top-left, with hook, one-line explanation and the primary button "Open the interactive plate". Key (28 numbered banks by country) in the right margin column inside the neatline. Legend bottom-left. Erste and RBI markers ringed amber with a leader to a callout showing 149.7bn | 147.5bn.
+FIRST VIEWPORT: Full-width neatline plate. Map fills it; title cartouche in the Atlantic, top-left, with hook, one-line explanation and the primary button "Open the interactive plate". Key (28 numbered banks by country) in the right margin column inside the neatline. Legend bottom-left. Erste and RBI markers ringed amber; a dashed amber leader runs to an atlas-style "Inset: Austria" in the Norwegian Sea (right of the hook panel) showing both banks' EU OV1 | EU KM1 pairs. Chosen via /impeccable generate (layout, variant 3), 2026-11-14.
 
 FORM: Atlas Plate I, top of my ordered list (Impeccable's pick, chosen by the user over the assigned Market Data Pages), seed:a2b8e26acbe32464. Signature interaction: marker and key entry highlight each other on hover/focus, with a status line giving the bank's country and total assets. Motion: one plate reveal on load, from an already-visible default.
 

@@ -65,3 +65,18 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   values (`#8a5a00` text, `#fff8ec` wash, `#d9a441` rule; deeper `#b07410` for the
   map ring so it holds on green land), rewrote Note 2's sentence, and updated
   `PROMO_BRIEF.md` and the surface brief to match.
+- **Step 3e — `/impeccable generate` on the map/key (2026-11-14)** — Claude set up
+  Impeccable's live mode (`.impeccable/live/config.json`: page `docs/index.html`, no
+  CSP), served `docs/` locally and opened it in the system browser (the engine assumed a
+  built-in browser pane this VS Code session doesn't have). User chose direction
+  **Layout** and scope **map + key + legend** (headline panel fixed). Three variants, each
+  on a different axis: (1) key as a gazetteer strip under the plate; (2) legend merged into
+  the key as tinted country chips, disagreement callout docked under Austria; (3) the
+  disagreement promoted to an atlas-style "Inset: Austria" with both banks' KM1/OV1 pairs.
+  User accepted **variant 3** at default settings. Claude then made it permanent (CSS moved
+  into the page stylesheet, preview wrappers removed, framing script now places the inset
+  and its dashed leader), closed the session, and fixed what the check found: the inset
+  covered Ireland's and Denmark's markers (shortened it, clamped its right edge) and
+  phone styles flattened the inset's markers (scoped the rule). Verified at
+  1920/1600/1440/1280/1100/390 px: no markers under the inset, no horizontal scroll, no
+  script errors.
