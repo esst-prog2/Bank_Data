@@ -1493,3 +1493,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   This touches the dashboard, which the promo-page homework kept off-limits - decided by
   user as a separate request, outside that homework's scope. Decided by user (the fix
   itself), carried out by agent (root cause + implementation).
+- 2026-11-14: Installed FFmpeg system-wide via `winget install --id Gyan.FFmpeg`, a
+  prerequisite for the new promo-video homework's HyperFrames tool. See PROCESS.md's
+  "New homework" section for the HyperFrames install itself. Decided by user, carried
+  out by agent.

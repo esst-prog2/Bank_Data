@@ -12,3 +12,14 @@ node_modules/
 .claude/skills/impeccable/
 .claude/agents/impeccable-*.md
 .claude/settings.local.json
+.agents/
+.claude/skills/hyperframes/
+.claude/skills/hyperframes-cli/
+.claude/skills/hyperframes-registry/
+.claude/skills/media-use/
+.claude/skills/remotion-to-hyperframes/
+.claude/skills/reverse-any-video/
+.claude/skills/slideshow/
+.claude/skills/style-sampling/
+.claude/skills/figma/
+skills-lock.json

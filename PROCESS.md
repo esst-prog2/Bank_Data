@@ -162,3 +162,25 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   these sizes in passing. Re-ran the detector: only the 5.2px false positive remains.
   Frontmatter still parses (15 type roles, 17 colours); sidecar is valid JSON. Page
   unchanged.
+
+## New homework: ~30-second promo video for the page
+
+- **Step 1 — install HyperFrames (2026-11-14)** — Prerequisites first: Node already
+  v24.19.0 (satisfies 22+); FFmpeg wasn't installed, so installed it via
+  `winget install --id Gyan.FFmpeg` (user's machine, system-wide). Its own `/plugin`
+  route (`claude plugin marketplace add heygen-com/hyperframes`) isn't available in
+  this VSCode-extension environment (same gap as Impeccable), so used the generic
+  `npx skills add heygen-com/hyperframes` CLI path instead, run in the project root.
+  Installed 9 skills (hyperframes, hyperframes-cli, hyperframes-registry, media-use,
+  reverse-any-video, style-sampling, figma, remotion-to-hyperframes, slideshow) into
+  `.agents/skills/`, symlinked into `.claude/skills/`, plus `skills-lock.json`. Only
+  ~4.4 MB total, no bundled binaries this time, but still third-party tooling, not
+  project content (same reasoning as Impeccable's install) — added all of it to
+  `.gitignore` rather than committing. Note: HyperFrames isn't a "record this URL"
+  tool — per its README, it's a framework for rendering an agent-authored HTML/CSS/
+  GSAP composition to MP4; the actual video has to be composed from the promo page's
+  real content (copy, screenshots, figures), not captured live. Still pending: like
+  Impeccable, its skills won't be callable until this session restarts and reloads
+  the skill list; FFmpeg also needs a shell restart to resolve on PATH (works today
+  only via its absolute path). Decided: install now, finish composing the video in a
+  fresh session once skills are live.
