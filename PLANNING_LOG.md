@@ -1479,3 +1479,17 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   19px, body-phone 16px, table 15px, caption 12px) and 1 colour (code-ground #f3f6f3), per
   user request; 5.2px detector flag left as a known false positive (map units). Role
   names chosen by agent.
+- 2026-11-14: Fixed the dashboard's comparison-table bank-logo sizing (user reported
+  logos/headers looking uncentered and inconsistent). Root cause: checked all 46 bank
+  logo PNGs' aspect ratios (`dashboard/bank_logos/`) - they range from 1.0 (square marks,
+  e.g. BNP Paribas) to 9.8 (wide wordmarks, e.g. Danske Bank), but the CSS forced every
+  logo into an identical 22x22 square box via `object-fit:contain`, so square marks filled
+  the box while wordmarks were squeezed thin. Changed `.bank-col-head img` to a fixed
+  22px height with auto width (capped at 70px) in `dashboard/build_dashboard.py`, applied
+  the same one-line change by hand to the already-generated `docs/dashboard.html` rather
+  than re-running `build_dashboard.py`, because re-running it surfaced a separate,
+  pre-existing bug: country/bank ordering in the generated map/table isn't deterministic
+  across runs (unrelated reordering churn, not touched here - flagged to user, not fixed).
+  This touches the dashboard, which the promo-page homework kept off-limits - decided by
+  user as a separate request, outside that homework's scope. Decided by user (the fix
+  itself), carried out by agent (root cause + implementation).
