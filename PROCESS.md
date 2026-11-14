@@ -102,3 +102,19 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   plain labels that still highlight their marker on hover (the button is now the one way
   into the dashboard), and rewrote the key's idle line to say how to compare banks;
   (3) corrected `PROMO_BRIEF.md`'s Erste figures to OV1 149.7bn / KM1 147.5bn.
+- **Step 3h — Impeccable finish review (2026-11-14)** — The review deferred since the
+  first build. Run by a fresh sub-agent following Impeccable's shipped finish-reviewer
+  definition: the `impeccable-finish-reviewer` agent type isn't loaded in this session,
+  which started outside the repo, so a general-purpose agent read the definition as its
+  instructions. Round 1: **recapture**. My phone screenshot had blank frames because
+  lazy-loaded images never loaded; this was a capture-script bug, not a page bug. Round
+  2: **fix**, with 3 material fixes: (1) the P1 change had removed keyboard access to the
+  key, so entries are now focusable labels again (still not links) and focus highlights
+  the marker and updates the status line; (2) at 1280x800 the plate overflowed the
+  screen, so the height floor was lowered and the key/panels tightened on short screens;
+  (3) the contract's "map lettering" was missing, so sea names were added in the wide
+  tracked caps (Atlantic Ocean, Baltic, Mediterranean Sea; North Sea dropped because the
+  inset's leader crosses that water at laptop widths). Round 3 (verdict pass): all three
+  **resolved**, disposition **ship**. Also tightened the key's focus-ring offset. Noted,
+  not done: "BALTIC" starts on Sweden's coast at 1280; deferred P2s (phone map, handoff
+  line).

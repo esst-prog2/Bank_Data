@@ -1459,3 +1459,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   entries become non-link labels), keep the CTA label "Open the interactive plate",
   correct the reversed KM1/OV1 figures in PROMO_BRIEF.md. P2s (handoff note, phone
   polish) not taken this round.
+- 2026-11-14: Finish review of the promo page: recapture -> fix (3 material fixes:
+  keyboard focus on key labels, plate fits 1280x800, sea lettering) -> ship. Agent
+  decided the fix details (dropped the North Sea label because the inset leader
+  crosses it).
