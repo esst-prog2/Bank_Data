@@ -1471,3 +1471,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   PRODUCT.md, PROMO_BRIEF.md, DESIGN.md, and .impeccable/ (none of these existed when
   that section was last written). Housekeeping only, no behavior change. Decided by
   user, carried out by agent.
+- 2026-11-14: `/impeccable polish` on the promo page. User decided the scope (CTA context
+  line, touch-friendly phone map, BALTIC label fix; dashboard off-limits). Agent decided:
+  per-country tappable count badges with a tap-to-list status line on phones; BALTIC
+  position chosen by in-browser land-contact search.

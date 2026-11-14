@@ -132,3 +132,21 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
 - **Step 4–5 — publish and push (2026-11-14)** — `docs/index.html` is the GitHub Pages
   site root (Pages: `main`, `/docs`; repo public). Pushed all local commits to
   `origin/main`.
+- **Step 6 — `/impeccable polish` (2026-11-14)** — Final quality pass on `docs/index.html`
+  covering the deferred items (the earlier critique snapshot no longer matched the page,
+  so this was an independent pass). (1) A one-sentence line under the main button says
+  what the dashboard shows ("pick up to six banks on its map, choose what to compare,
+  and read a table where every figure names its source"); short screens get a tighter
+  version so it fits at 1366x768 and 1280x720. (2) Phone map: instead of anonymous dots,
+  each country gets one tappable count badge (amber ring for Austria), about 31px tap
+  area. A tap lists that country's banks by number and name in a status line under the
+  map and lights them in the key; Austria adds the disagreement note. Tablets and up keep
+  the numbered markers. (3) "BALTIC" moved to the southern Baltic, with a smaller and
+  tighter label, after testing a grid of positions in the browser: zero land contact at
+  1280/1366/1440/1920. Also: legend swatch border now uses the hairline token; DESIGN.md
+  and its sidecar updated to describe the phone badges and the context line. Left as
+  noted exceptions: the detector's new DESIGN.md checks flag type sizes that the DESIGN.md
+  ramp doesn't list (12/15/16/19px and a 40px short-screen headline cap; the 5.2px is SVG
+  map units, a false positive) and the one-off code-block background. Dashboard
+  untouched. Verified: button clickable, no horizontal scroll, no script errors and keyboard
+  focus into the key at 1920/1440/1280/1100/390; phone taps tested with touch emulation.

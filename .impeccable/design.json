@@ -459,7 +459,7 @@
       "**Do** link marker and key both ways and announce the selection in a polite live status line.",
       "**Do** make key entries focusable labels, not links.",
       "**Do** keep the action label \"Open the interactive plate\" in solid plate green.",
-      "**Do** stack panels below 1280px, and at 760px and below reduce markers to plain dots and hide sea lettering.",
+      "**Do** stack panels below 1280px, and at 760px and below swap markers for per-country count badges with a tap-to-list status line, and hide sea lettering.",
       "**Do** keep motion to the single ink-in reveal, from a visible state, behind `prefers-reduced-motion: no-preference`.",
       "**Do** keep every interactive element on the 2px plate-green focus outline."
     ],

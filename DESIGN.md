@@ -174,7 +174,7 @@ A white plate in near-black ink, graded greens for land and structure, and one a
 - **Dispute Amber** (`dispute-amber`): text of disagreeing figures (the inset's paired values, the big figures in note 2, the status line's "two filings disagree").
 - **Dispute Rule** (`dispute-rule`): the border and the dashed divider of a disagreement pair.
 - **Dispute Wash** (`dispute-wash`): the ground of a disagreement pair and the fill of a marker's disagreement ring.
-- **Dispute Ring** (`dispute-ring`): the ring around a disagreeing bank's marker, the dashed leader line to the inset, and the phone-size dot for a disagreeing bank. Deeper than the rule so it holds on green land.
+- **Dispute Ring** (`dispute-ring`): the ring around a disagreeing bank's marker, the dashed leader line to the inset, and the ring on a disagreeing country's phone badge. Deeper than the rule so it holds on green land.
 
 ### Neutral
 - **Plate Ink** (`plate-ink`): all primary text, every rule (neatline, panel borders, note tops), marker strokes and numbers.
@@ -221,7 +221,7 @@ The page is a full-width plate inside a page gutter (`gutter`), preceded by a th
 
 **Below 1280px** the panels stack in a column: cartouche, map (cropped to the pilot region, max 820px), inset (no shadow, no leader), legend, then the key set in two columns.
 
-**At 760px and below** body drops to 16px, markers become plain ink dots (amber dots for disagreeing banks) with their numbers and rings hidden, sea lettering is hidden, the margin strip stacks, note numerals move above their text, steps go single-column, and the carry table drops its provenance column.
+**At 760px and below** body drops to 16px, the 28 numbered markers give way to one tappable count badge per country (amber-ringed where filings disagree) and a status line under the map that lists the tapped country's banks and lights them in the key, sea lettering is hidden, the margin strip stacks, note numerals move above their text, steps go single-column, and the carry table drops its provenance column.
 
 **Rhythm:** 8px plate inset; 14px tight gaps; 22px panel and paragraph spacing; 28px column gaps and panel padding; 36px above each note's content; 44px between steps; `section` padding above the notes. Notes are a two-column grid (72px numeral column, 28px gap) separated by full-width ink rules.
 
@@ -249,12 +249,13 @@ Character: the plate's one green action, solid and direct.
 - **Shape:** near-square (2px).
 - **Primary:** plate-green fill, paper text, weight 650 at 17px, padding 14px 20px 14px 22px, a trailing 18px stroked arrow; action lift shadow. Label: "Open the interactive plate". Used twice: in the cartouche and in the closing bar.
 - **Hover / Focus:** fill deepens to deep plate green with a slightly larger lift; pressed moves down 1px; transitions 0.2s. Focus is the global 2px plate-green outline at 3px offset.
+- **Context line:** in the cartouche, one sentence in secondary ink at 14px (13px on short screens), max 38ch, directly under the action, saying what the dashboard shows. The action never stands without it.
 - **Secondary:** plain links in deep plate green with 1px underline at 3px offset, thickening to 2px on hover; grouped as a wrapped row at 14px under the action.
 
 ### Map markers
 - Paper dot with an ink stroke and a bold 7.2px number. Disagreeing banks add an amber ring on a wash fill.
 - **Active** (hover or linked key focus): dot fills plate green, number turns paper.
-- At phone width: numbers and rings hidden; a 3.6-unit ink dot (amber for disagreeing banks).
+- At phone width: replaced by one count badge per country (8.6-unit dot, bold count, 17-unit tap area, amber ring where filings disagree). A tap fills the badge plate green and lists that country's banks under the map.
 
 ### Key to the plate
 - A margin panel listing the 28 banks grouped by country: expanded-caps country code in a 30px column, entries with a right-aligned bold number.
@@ -290,7 +291,7 @@ Character: the plate's one green action, solid and direct.
 - **Do** link marker and key both ways and announce the selection in a polite live status line.
 - **Do** make key entries focusable labels, not links.
 - **Do** keep the action label "Open the interactive plate" in solid plate green.
-- **Do** stack panels below 1280px, and at 760px and below reduce markers to plain dots and hide sea lettering.
+- **Do** stack panels below 1280px, and at 760px and below swap markers for per-country count badges with a tap-to-list status line, and hide sea lettering.
 - **Do** keep motion to the single ink-in reveal, from a visible state, behind `prefers-reduced-motion: no-preference`.
 - **Do** keep every interactive element on the 2px plate-green focus outline.
 
