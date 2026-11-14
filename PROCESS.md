@@ -41,3 +41,19 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   action is opening the dashboard; look is "related to the dashboard but bolder";
   page lives at `docs/index.html`. Open: whether plate-key entries should deep-link
   into the dashboard with a bank preselected (needs a dashboard change; default no).
+- **Step 3c — first build of `docs/index.html` (2026-11-14)** — Built from
+  `PROMO_BRIEF.md` (direction "Atlas Plate I"), code-led. Claude wrote the direction
+  contract to `.impeccable/surfaces/docs-index-html.md`, then built one self-contained
+  static page: the slimmed dashboard map (336 KB inline SVG, from
+  `dashboard/europe_map.svg`) with the 28 pilot banks as numbered markers, a key whose
+  entries are plain links to the dashboard, a legend, the Erste KM1/OV1 callout, and five
+  plate notes (provenance, disagreement, how to try it, the package, scope). Real
+  figures only, from `dashboard/comparison_data.json` / `total_assets.json`. Self-hosted
+  Archivo font (OFL, `docs/fonts/`); three real dashboard screenshots taken with
+  Playwright (`docs/img/`, origin embedded in each PNG). Checked at 1600/1440/1280/1100/390
+  px wide; side-panel layout from 1280 px up, stacked below. Impeccable's detector
+  findings: sub-11px labels fixed; key-row "cramped padding" and the neatline-stripe
+  advisory left as intentional. A one-off scratch script assembled the first version;
+  `docs/index.html` is now the source file. Decided (user): no deep-linking from the key;
+  build first, then `generate`. Not yet done: finish review and DESIGN.md (deferred
+  until `generate`/`critique` settle the design); nothing pushed.

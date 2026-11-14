@@ -1436,3 +1436,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   `docs/index.html` (site root); direction "Atlas Plate I" (statistical-atlas map
   plate, graded greens, one red reserved for source disagreement), chosen after one
   re-roll. Agent proposed the candidate directions and the brief's structure.
+- 2026-11-14: Built first version of the promo page at `docs/index.html`. User decided:
+  plate-key entries link plainly to the dashboard (no deep-link/preselect, dashboard
+  untouched); build first, then `/impeccable generate` on the map/key and headline area.
+  Agent decided: Archivo (self-hosted, OFL) as the only typeface; side-panel layout from
+  1280px, stacked below; dashboard screenshots as "how to try it" imagery; disagreement
+  shown in red on the promo page per the approved brief (the dashboard itself uses
+  amber - flagged to the user as an open consistency question).
