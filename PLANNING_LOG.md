@@ -1475,3 +1475,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   line, touch-friendly phone map, BALTIC label fix; dashboard off-limits). Agent decided:
   per-country tappable count badges with a tap-to-list status line on phones; BALTIC
   position chosen by in-browser land-contact search.
+- 2026-11-14: DESIGN.md + sidecar gained 5 type roles (display-short 40px cap, step-title
+  19px, body-phone 16px, table 15px, caption 12px) and 1 colour (code-ground #f3f6f3), per
+  user request; 5.2px detector flag left as a known false positive (map units). Role
+  names chosen by agent.

@@ -18,12 +18,20 @@ colors:
   unbanked-land: "#e9ece8"
   hairline: "#d4d8d2"
   sea-lettering: "#6d8378"
+  code-ground: "#f3f6f3"
 typography:
   display:
     fontFamily: "Archivo, system-ui, sans-serif"
     fontSize: "clamp(30px, 1.2rem + 1.6vw, 46px)"
     fontWeight: 760
     lineHeight: 1.04
+    letterSpacing: "-0.012em"
+    fontVariation: "\"wdth\" 112"
+  display-short:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "clamp(30px, 1rem + 1.5vw, 40px)"
+    fontWeight: 760
+    lineHeight: 1.02
     letterSpacing: "-0.012em"
     fontVariation: "\"wdth\" 112"
   headline:
@@ -52,9 +60,29 @@ typography:
     fontWeight: 650
     lineHeight: 1.3
     fontVariation: "\"wdth\" 110"
+  step-title:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "19px"
+    fontWeight: 700
+    lineHeight: 1.55
+    fontVariation: "\"wdth\" 100"
   body:
     fontFamily: "Archivo, system-ui, sans-serif"
     fontSize: "17px"
+    fontWeight: 400
+    lineHeight: 1.55
+    fontFeature: "\"lnum\", \"tnum\""
+    fontVariation: "\"wdth\" 100"
+  body-phone:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.55
+    fontFeature: "\"lnum\", \"tnum\""
+    fontVariation: "\"wdth\" 100"
+  table:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.55
     fontFeature: "\"lnum\", \"tnum\""
@@ -65,6 +93,13 @@ typography:
     fontWeight: 400
     lineHeight: 1.22
     fontFeature: "\"lnum\", \"tnum\""
+  caption:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.3
+    fontFeature: "\"lnum\", \"tnum\""
+    fontVariation: "\"wdth\" 100"
   label:
     fontFamily: "Archivo, system-ui, sans-serif"
     fontSize: "11px"
@@ -183,6 +218,7 @@ A white plate in near-black ink, graded greens for land and structure, and one a
 - **Unbanked Land** (`unbanked-land`): countries with no pilot bank (including Germany, explained in note 5).
 - **Hairline** (`hairline`): light dividers inside tables, the key and figure captions.
 - **Sea Lettering** (`sea-lettering`): the decorative, aria-hidden sea names on the map only. It is not a text colour for content.
+- **Code Ground** (`code-ground`): the faint green-grey ground of the install/code block in note 4, under a 1px ink top rule. Its only use.
 
 ### Named Rules
 **The One Meaning Rule.** Amber marks a disagreement between two filings and nothing else: not warnings, not emphasis, not hover. It is never red, because a disagreement is not an error.
@@ -198,13 +234,18 @@ A white plate in near-black ink, graded greens for land and structure, and one a
 **Character:** One grotesque used the way a cartographer uses one alphabet at several widths: expanded and tracked for lettering that labels the plate, normal for prose, condensed for figures and numerals. All figures are lining and tabular so columns of numbers align.
 
 ### Hierarchy
-- **Display** (`display`): the hook in the title cartouche; balanced wrapping. Reduced to a 40px cap on short wide screens.
+- **Display** (`display`): the hook in the title cartouche; balanced wrapping.
+- **Display, short screens** (`display-short`): the same hook capped at 40px with tighter leading when the plate is 1280px or wider and the viewport is 860px tall or less.
 - **Headline** (`headline`): each note's heading, max 26ch, balanced.
 - **Figure** (`figure`): the two disagreeing numbers in a disagreement pair, condensed and in amber.
 - **Note numeral** (`note-numeral`): the large thin, most-condensed numeral beside each note, in plate green.
-- **Title** (`title`): the closing bar's line; the 19px bold step titles sit at this tier too.
-- **Body** (`body`): reading text, 66ch max in notes, 40ch in the cartouche, pretty wrapping. 16px at phone width.
+- **Title** (`title`): the closing bar's line.
+- **Step title** (`step-title`): the bold 19px title of each "How to try it" step, its number in plate green.
+- **Body** (`body`): reading text, 66ch max in notes, 40ch in the cartouche, pretty wrapping.
+- **Body, phone** (`body-phone`): body text at 760px and below.
+- **Table** (`table`): the provenance table in note 1 and the bank names heading each disagreement pair in note 2.
 - **Key** (`key`): the key to the plate; the status line runs at 12.5px, legend at 12.5px, captions at 12.5 to 13px.
+- **Caption** (`caption`): the inset table's caption, and the key's status line on short wide screens.
 - **Label** (`label`): expanded tracked uppercase for panel titles ("Key to the plate", "Legend", "Inset: Austria"), the notes heading, scope sub-heads and the wordmark (11 to 13px). Country codes in the key and table column heads use the same expanded voice at 0.1em tracking.
 - **Sea lettering** (`sea-lettering`): widest tracking, set in SVG map units inside the plate.
 

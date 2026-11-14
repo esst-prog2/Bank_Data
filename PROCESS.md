@@ -150,3 +150,15 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   map units, a false positive) and the one-off code-block background. Dashboard
   untouched. Verified: button clickable, no horizontal scroll, no script errors and keyboard
   focus into the key at 1920/1440/1280/1100/390; phone taps tested with touch emulation.
+- **Step 7 — DESIGN.md token gaps (2026-11-14)** — User asked to record the values the
+  detector found on the page but not in the design record (real, just undocumented), and
+  to ignore the 5.2px flag (SVG map units, a false positive). Claude added to
+  `DESIGN.md`'s frontmatter and prose, and to the `.impeccable/design.json` sidecar:
+  type roles `display-short` (the headline's 40px cap on short wide screens), `step-title`
+  (19px), `body-phone` (16px), `table` (15px: note 1's table and note 2's bank heads),
+  `caption` (12px: inset caption, short-screen status line); colour `code-ground`
+  `#f3f6f3` (note 4's code block), with its OKLCH value and ramp computed by the same
+  helper the documenter used. Tidied the prose and sidecar sentences that had mentioned
+  these sizes in passing. Re-ran the detector: only the 5.2px false positive remains.
+  Frontmatter still parses (15 type roles, 17 colours); sidecar is valid JSON. Page
+  unchanged.

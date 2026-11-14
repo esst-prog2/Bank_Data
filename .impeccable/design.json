@@ -243,6 +243,21 @@
           "#bdcec5",
           "#e4f3eb"
         ]
+      },
+      "code-ground": {
+        "role": "neutral",
+        "displayName": "Code Ground",
+        "canonical": "oklch(97.0% 0.005 145.5)",
+        "tonalRamp": [
+          "#0a0b0b",
+          "#242524",
+          "#414241",
+          "#606260",
+          "#808380",
+          "#a3a6a3",
+          "#c8cac8",
+          "#edefed"
+        ]
       }
     },
     "typographyMeta": {
@@ -264,11 +279,11 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "The closing bar line and step titles."
+        "purpose": "The closing bar line."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Reading text; 66ch max in notes, 40ch in the cartouche; 16px at phone width."
+        "purpose": "Reading text; 66ch max in notes, 40ch in the cartouche (see body-phone below 760px)."
       },
       "key": {
         "displayName": "Key",
@@ -285,6 +300,26 @@
       "mono": {
         "displayName": "Mono",
         "purpose": "Template tags, code and the inset table column heads."
+      },
+      "display-short": {
+        "displayName": "Display, short screens",
+        "purpose": "The hook capped at 40px when the plate is 1280px+ wide and the viewport is 860px tall or less."
+      },
+      "step-title": {
+        "displayName": "Step title",
+        "purpose": "The bold 19px title of each 'How to try it' step."
+      },
+      "body-phone": {
+        "displayName": "Body, phone",
+        "purpose": "Body text at 760px and below."
+      },
+      "table": {
+        "displayName": "Table",
+        "purpose": "The provenance table in note 1 and the bank-name heads of the note-2 disagreement pairs."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "The inset table's caption and the key's status line on short wide screens."
       }
     },
     "shadows": [
