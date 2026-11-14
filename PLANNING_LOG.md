@@ -1463,3 +1463,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   keyboard focus on key labels, plate fits 1280x800, sea lettering) -> ship. Agent
   decided the fix details (dropped the North Sea label because the inset leader
   crosses it).
+- 2026-11-14: DESIGN.md + .impeccable/design.json written for the promo page's design
+  system (agent, via Impeccable's documenter definition). Promo page published as the
+  GitHub Pages root and all commits pushed to origin/main (user decision: push before
+  done).

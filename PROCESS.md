@@ -118,3 +118,17 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   **resolved**, disposition **ship**. Also tightened the key's focus-ring offset. Noted,
   not done: "BALTIC" starts on Sweden's coast at 1280; deferred P2s (phone map, handoff
   line).
+- **Step 3i — DESIGN.md (2026-11-14)** — Deferred until the design settled. Written by a
+  fresh sub-agent following Impeccable's shipped documenter definition (same agent-type
+  workaround as the finish review): `DESIGN.md` (colour, type, spacing tokens plus
+  named rules, components, layout, motion, do's and don'ts) and the
+  `.impeccable/design.json` sidecar. It records the system as built: plate green; four
+  land tints; amber only for disagreement ("The One Meaning Rule"); Archivo only, with
+  width as the second voice; tabular figures; hairlines rather than shadows. The
+  dashboard's older look is explicitly outside this system. Drift noted, not fixed: a
+  few colours are hard-coded rather than tokens, and the contract's darkest land tint
+  differs from the build (documented as built). Decided (user, earlier): don't hold
+  DESIGN.md back any longer.
+- **Step 4–5 — publish and push (2026-11-14)** — `docs/index.html` is the GitHub Pages
+  site root (Pages: `main`, `/docs`; repo public). Pushed all local commits to
+  `origin/main`.

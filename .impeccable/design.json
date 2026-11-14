@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T10:12:53+00:00",
+  "title": "Design System: Bank_Data",
+  "extensions": {
+    "colorMeta": {
+      "plate-green": {
+        "role": "primary",
+        "displayName": "Plate Green",
+        "canonical": "oklch(41.6% 0.086 160.8)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "plate-green-deep": {
+        "role": "primary",
+        "displayName": "Deep Plate Green",
+        "canonical": "oklch(36.4% 0.075 161.1)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "tint-1": {
+        "role": "secondary",
+        "displayName": "Land Tint 1",
+        "canonical": "oklch(91.2% 0.035 166.8)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "tint-2": {
+        "role": "secondary",
+        "displayName": "Land Tint 2",
+        "canonical": "oklch(82.1% 0.065 161.4)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "tint-3": {
+        "role": "secondary",
+        "displayName": "Land Tint 3",
+        "canonical": "oklch(67.3% 0.093 160.7)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "tint-4": {
+        "role": "secondary",
+        "displayName": "Land Tint 4",
+        "canonical": "oklch(52.0% 0.098 159.8)",
+        "tonalRamp": [
+          "#062d1c",
+          "#0b4a31",
+          "#0f5a3c",
+          "#2a7a55",
+          "#5ea883",
+          "#9fd2b7",
+          "#cdeadd",
+          "#e2f3eb"
+        ]
+      },
+      "dispute-amber": {
+        "role": "tertiary",
+        "displayName": "Dispute Amber",
+        "canonical": "oklch(50.8% 0.108 73.3)",
+        "tonalRamp": [
+          "#170600",
+          "#381f00",
+          "#5b3a01",
+          "#815817",
+          "#a9772f",
+          "#c89c61",
+          "#e9c290",
+          "#ffe9c0"
+        ]
+      },
+      "dispute-rule": {
+        "role": "tertiary",
+        "displayName": "Dispute Rule",
+        "canonical": "oklch(75.1% 0.130 79.8)",
+        "tonalRamp": [
+          "#180600",
+          "#381f00",
+          "#5c3a00",
+          "#825800",
+          "#aa7800",
+          "#ca9d4d",
+          "#eac382",
+          "#ffeab4"
+        ]
+      },
+      "dispute-wash": {
+        "role": "tertiary",
+        "displayName": "Dispute Wash",
+        "canonical": "oklch(98.1% 0.018 81.3)",
+        "tonalRamp": [
+          "#0d0b07",
+          "#28251f",
+          "#46413a",
+          "#666058",
+          "#888177",
+          "#aaa49b",
+          "#cdc8c0",
+          "#f2eee7"
+        ]
+      },
+      "dispute-ring": {
+        "role": "tertiary",
+        "displayName": "Dispute Ring",
+        "canonical": "oklch(60.7% 0.126 72.1)",
+        "tonalRamp": [
+          "#190500",
+          "#3b1d00",
+          "#603800",
+          "#875500",
+          "#b07413",
+          "#cf9a54",
+          "#eec086",
+          "#ffe7b8"
+        ]
+      },
+      "plate-ink": {
+        "role": "neutral",
+        "displayName": "Plate Ink",
+        "canonical": "oklch(19.1% 0.002 106.6)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252524",
+          "#424241",
+          "#616160",
+          "#828281",
+          "#a5a5a4",
+          "#c9c9c8",
+          "#eeeeed"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Ink",
+        "canonical": "oklch(38.8% 0.010 106.9)",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423e",
+          "#62625c",
+          "#83837c",
+          "#a5a59f",
+          "#c9c9c4",
+          "#efefea"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "unbanked-land": {
+        "role": "neutral",
+        "displayName": "Unbanked Land",
+        "canonical": "oklch(94.0% 0.006 137.8)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242524",
+          "#414340",
+          "#60625f",
+          "#808380",
+          "#a3a6a3",
+          "#c8cac7",
+          "#edefed"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(87.7% 0.009 134.9)",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#242623",
+          "#40433f",
+          "#5f625e",
+          "#80847e",
+          "#a3a6a1",
+          "#c7cac6",
+          "#edefec"
+        ]
+      },
+      "sea-lettering": {
+        "role": "neutral",
+        "displayName": "Sea Lettering",
+        "canonical": "oklch(58.9% 0.030 163.7)",
+        "tonalRamp": [
+          "#060d09",
+          "#1d2823",
+          "#37463f",
+          "#54665d",
+          "#72887d",
+          "#97aaa1",
+          "#bdcec5",
+          "#e4f3eb"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The hook in the title cartouche."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Each note's heading, max 26ch."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "The two disagreeing numbers in a disagreement pair, in amber."
+      },
+      "note-numeral": {
+        "displayName": "Note numeral",
+        "purpose": "The large thin numeral beside each note, in plate green."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The closing bar line and step titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reading text; 66ch max in notes, 40ch in the cartouche; 16px at phone width."
+      },
+      "key": {
+        "displayName": "Key",
+        "purpose": "The key to the plate; status line, legend and captions sit at 12.5 to 13px."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Expanded tracked uppercase lettering for panel titles, the notes heading and the wordmark."
+      },
+      "sea-lettering": {
+        "displayName": "Sea lettering",
+        "purpose": "Decorative sea names inside the map SVG (map units)."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Template tags, code and the inset table column heads."
+      }
+    },
+    "shadows": [
+      {
+        "name": "action-lift",
+        "value": "0 1px 2px rgb(15 90 60 / .25), 0 6px 16px -8px rgb(15 90 60 / .55)",
+        "purpose": "Primary action at rest."
+      },
+      {
+        "name": "action-lift-hover",
+        "value": "0 2px 4px rgb(15 90 60 / .3), 0 10px 22px -10px rgb(15 90 60 / .6)",
+        "purpose": "Primary action on hover."
+      },
+      {
+        "name": "inset-lift",
+        "value": "0 1px 2px rgb(20 20 19 / .08), 0 10px 24px -14px rgb(20 20 19 / .35)",
+        "purpose": "The inset floating on the map at 1280px and wider; removed when panels stack."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-plate",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Easing of the single ink-in reveal."
+      },
+      {
+        "name": "ink-in",
+        "value": "1.1s, delayed by each country's west-to-east position",
+        "purpose": "Land goes from saturate(.15) brightness(1.08) to full colour, from an already-visible state. Only under prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "marker-pop",
+        "value": "0.7s, delay 300ms + 28ms per marker",
+        "purpose": "Markers scale up from .55 and fade up from .35 opacity after the land. Only under prefers-reduced-motion: no-preference."
+      },
+      {
+        "name": "state",
+        "value": "0.2s",
+        "purpose": "Hover and active transitions on the action and markers."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "760px"
+      },
+      {
+        "name": "stacked",
+        "value": "1279px"
+      },
+      {
+        "name": "plate",
+        "value": "1280px"
+      },
+      {
+        "name": "plate-short",
+        "value": "860px (max-height, at 1280px and wider)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single plate-green action, \"Open the interactive plate\"; used in the cartouche and the closing bar.",
+      "html": "<a class=\"ds-cta\" href=\"#\">Open the interactive plate <svg viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M4 10h11M11 5.5 15.5 10 11 14.5\"/></svg></a>",
+      "css": ".ds-cta { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; display: inline-flex; align-items: center; gap: 12px; padding: 14px 20px 14px 22px; background: var(--green, #0f5a3c); color: var(--paper, #ffffff); text-decoration: none; font-weight: 650; font-size: 17px; border-radius: 2px; box-shadow: 0 1px 2px rgb(15 90 60 / .25), 0 6px 16px -8px rgb(15 90 60 / .55); transition: background .2s, box-shadow .2s, transform .2s; } .ds-cta svg { flex: none; } .ds-cta:hover { background: var(--green-ink, #0b4a31); box-shadow: 0 2px 4px rgb(15 90 60 / .3), 0 10px 22px -10px rgb(15 90 60 / .6); } .ds-cta:active { transform: translateY(1px); } .ds-cta:focus-visible { outline: 2px solid var(--green, #0f5a3c); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Links",
+      "kind": "button",
+      "description": "Secondary actions and in-prose links: deep green, fine underline that thickens on hover.",
+      "html": "<p class=\"ds-also\"><a href=\"#\">How to try it</a><a href=\"#\">Function snapshots and install</a></p>",
+      "css": ".ds-also { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; margin: 0; } .ds-also a { color: var(--green-ink, #0b4a31); text-decoration-thickness: 1px; text-underline-offset: 3px; } .ds-also a:hover { text-decoration-thickness: 2px; } .ds-also a:focus-visible { outline: 2px solid var(--green, #0f5a3c); outline-offset: 3px; border-radius: 2px; }"
+    },
+    {
+      "name": "Margin Strip",
+      "kind": "nav",
+      "description": "Navigation above the plate: expanded-caps wordmark, plate title, plain links.",
+      "html": "<header class=\"ds-strip\"><div><a class=\"ds-mark\" href=\"#\">Bank_Data</a><span class=\"ds-plate-no\">Plate I: European bank figures, FY2025</span></div><nav><a href=\"#\">Dashboard</a><a href=\"#\">Notes</a><a href=\"#\">GitHub</a></nav></header>",
+      "css": ".ds-strip { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 16px 10px; font-size: 13px; color: var(--ink, #141413); } .ds-mark { font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--ink, #141413); text-decoration: none; } .ds-plate-no { color: var(--ink-2, #45453f); margin-left: 14px; } .ds-strip nav { display: flex; gap: 20px; } .ds-strip nav a { color: var(--ink, #141413); text-decoration: none; font-weight: 500; } .ds-strip nav a:hover { text-decoration: underline; } .ds-strip a:focus-visible { outline: 2px solid var(--green, #0f5a3c); outline-offset: 3px; }"
+    },
+    {
+      "name": "Neatline Plate",
+      "kind": "card",
+      "description": "The atlas frame: 1.5px ink rule, graduated plate-green tick band, inner 0.5px rule, ruled field.",
+      "html": "<div class=\"ds-plate\"><div class=\"ds-field\">Map field</div></div>",
+      "css": ".ds-plate { position: relative; border: 1.5px solid var(--ink, #141413); padding: 8px; background: repeating-linear-gradient(90deg, var(--green, #0f5a3c) 0 28px, var(--paper, #ffffff) 28px 56px) top / 100% 5px no-repeat, repeating-linear-gradient(90deg, var(--green, #0f5a3c) 0 28px, var(--paper, #ffffff) 28px 56px) bottom / 100% 5px no-repeat, repeating-linear-gradient(180deg, var(--green, #0f5a3c) 0 28px, var(--paper, #ffffff) 28px 56px) left / 5px 100% no-repeat, repeating-linear-gradient(180deg, var(--green, #0f5a3c) 0 28px, var(--paper, #ffffff) 28px 56px) right / 5px 100% no-repeat; } .ds-plate::before { content: \"\"; position: absolute; inset: 5px; border: .5px solid var(--ink, #141413); pointer-events: none; } .ds-field { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; position: relative; border: .5px solid var(--ink, #141413); min-height: 160px; background: var(--paper, #ffffff); font-size: 13px; color: var(--ink-2, #45453f); padding: 16px; }"
+    },
+    {
+      "name": "Key Entry",
+      "kind": "chip",
+      "refersTo": "key-entry",
+      "description": "Focusable label (not a link) in the key; highlights with its map marker and drives the status line.",
+      "html": "<div class=\"ds-kg\"><span class=\"ds-kc\">AT</span><ol><li><span class=\"ds-kl\" tabindex=\"0\"><span class=\"ds-kn\">1</span>Erste Group</span></li><li><span class=\"ds-kl ds-on\" tabindex=\"0\"><span class=\"ds-kn\">2</span>Raiffeisen Bank International</span></li></ol></div>",
+      "css": ".ds-kg { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; display: grid; grid-template-columns: 30px 1fr; border-top: .5px solid var(--hair, #d4d8d2); padding: 2px 0; font-size: 13.5px; line-height: 1.22; color: var(--ink, #141413); } .ds-kc { font-size: 11px; font-weight: 650; font-stretch: 125%; letter-spacing: .1em; color: var(--ink-2, #45453f); padding-top: 3px; } .ds-kg ol { list-style: none; margin: 0; padding: 0; } .ds-kl { display: flex; gap: 8px; align-items: baseline; padding: 1.5px 4px; border-radius: 2px; cursor: default; } .ds-kn { width: 18px; text-align: right; font-weight: 700; flex: none; } .ds-kl:hover, .ds-kl.ds-on { background: var(--t1, #cdeadd); } .ds-kl:focus-visible { outline: 2px solid var(--green, #0f5a3c); outline-offset: 1px; background: var(--t1, #cdeadd); }"
+    },
+    {
+      "name": "Map Markers",
+      "kind": "custom",
+      "description": "Numbered markers: at rest, active (plate green), and a disagreeing bank with its amber ring.",
+      "html": "<svg class=\"ds-mk\" viewBox=\"-26 -12 56 24\" width=\"168\" height=\"72\" aria-hidden=\"true\"><g class=\"ds-m\" transform=\"translate(-14 0)\"><circle class=\"ds-ring\" r=\"9.6\"/><circle class=\"ds-dot\" r=\"6.4\"/><text dy=\"2.5\">1</text></g><g class=\"ds-m\"><circle class=\"ds-dot\" r=\"6.4\"/><text dy=\"2.5\">4</text></g><g class=\"ds-m ds-on\" transform=\"translate(16 0)\"><circle class=\"ds-dot\" r=\"6.4\"/><text dy=\"2.5\">5</text></g></svg>",
+      "css": ".ds-mk .ds-dot { fill: var(--paper, #ffffff); stroke: var(--ink, #141413); stroke-width: 1.1; transition: fill .2s, stroke .2s; } .ds-mk text { font: 700 7.2px Archivo, sans-serif; text-anchor: middle; fill: var(--ink, #141413); } .ds-mk .ds-ring { fill: var(--amber-wash, #fff8ec); stroke: var(--amber-ring, #b07410); stroke-width: 1.8; } .ds-mk .ds-on .ds-dot, .ds-mk .ds-m:hover .ds-dot { fill: var(--green, #0f5a3c); stroke: var(--green, #0f5a3c); } .ds-mk .ds-on text, .ds-mk .ds-m:hover text { fill: var(--paper, #ffffff); }"
+    },
+    {
+      "name": "Disagreement Pair",
+      "kind": "card",
+      "refersTo": "disagreement-pair",
+      "description": "Two filings that disagree, kept as two amber figures with their template tags and the gap stated.",
+      "html": "<div class=\"ds-pair\"><h4>Erste Group Bank AG</h4><div class=\"ds-twin\"><div><span class=\"ds-big\">149.7</span><span class=\"ds-src\">EU OV1, &euro;bn</span></div><div><span class=\"ds-big\">147.5</span><span class=\"ds-src\">EU KM1, &euro;bn</span></div></div><p class=\"ds-gap\">1.5% apart.</p></div>",
+      "css": ".ds-pair { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; color: var(--ink, #141413); max-width: 420px; } .ds-pair h4 { margin: 0 0 10px; font-size: 15px; font-weight: 650; } .ds-twin { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--amber-rule, #d9a441); background: var(--amber-wash, #fff8ec); } .ds-twin div { padding: 14px 16px 12px; } .ds-twin div + div { border-left: 1px dashed var(--amber-rule, #d9a441); } .ds-big { display: block; font-size: 44px; line-height: 1; font-weight: 720; font-stretch: 90%; color: var(--amber, #8a5a00); } .ds-src { display: block; margin-top: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; } .ds-gap { margin: 8px 0 0; font-size: 14px; color: var(--ink-2, #45453f); }"
+    },
+    {
+      "name": "Legend",
+      "kind": "custom",
+      "refersTo": "legend-panel",
+      "description": "Expanded-caps title over the land-tint swatches.",
+      "html": "<aside class=\"ds-legend\"><h2>Legend</h2><ul><li><span class=\"ds-sw ds-t1\"></span>1 pilot bank</li><li><span class=\"ds-sw ds-t2\"></span>2 pilot banks</li><li><span class=\"ds-sw ds-t3\"></span>3 to 4 pilot banks</li><li><span class=\"ds-sw ds-t4\"></span>6 pilot banks</li><li><span class=\"ds-sw ds-t0\"></span>No pilot bank</li></ul></aside>",
+      "css": ".ds-legend { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; background: var(--paper, #ffffff); color: var(--ink, #141413); padding: 14px 28px 16px; font-size: 12.5px; line-height: 1.35; border-top: .5px solid var(--ink, #141413); } .ds-legend h2 { margin: 0 0 8px; font-size: 11px; font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; } .ds-legend ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; } .ds-legend li { display: flex; align-items: center; gap: 9px; } .ds-sw { width: 22px; height: 12px; flex: none; border: .5px solid rgb(0 0 0 / .18); } .ds-t1 { background: var(--t1, #cdeadd); } .ds-t2 { background: var(--t2, #9fd2b7); } .ds-t3 { background: var(--t3, #5ea883); } .ds-t4 { background: var(--t4, #2a7a55); } .ds-t0 { background: var(--land, #e9ece8); }"
+    },
+    {
+      "name": "Note to the Plate",
+      "kind": "card",
+      "description": "Numbered note: thin condensed green numeral, headline, secondary lede, separated by a full-width ink rule.",
+      "html": "<article class=\"ds-note\"><span class=\"ds-no\" aria-hidden=\"true\">2</span><div><h3>Where two filings disagree, both stay on the page.</h3><p class=\"ds-lede\">The package returns both, each tagged by its template: <span class=\"ds-tag\">EU KM1</span> and <span class=\"ds-tag\">EU OV1</span>.</p></div></article>",
+      "css": ".ds-note { font-family: Archivo, system-ui, sans-serif; font-variant-numeric: lining-nums tabular-nums; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 0 28px; padding: 36px 0 56px; border-top: 1px solid var(--ink, #141413); color: var(--ink, #141413); font-size: 17px; line-height: 1.55; } .ds-no { font-size: 44px; line-height: 1; font-weight: 300; font-stretch: 62%; color: var(--green, #0f5a3c); } .ds-note h3 { margin: 0 0 14px; font-size: 30px; line-height: 1.12; font-weight: 720; font-stretch: 110%; letter-spacing: -.01em; max-width: 26ch; } .ds-lede { margin: 0; color: var(--ink-2, #45453f); max-width: 66ch; } .ds-tag { font-family: ui-monospace, Consolas, monospace; font-size: 13px; color: var(--green-ink, #0b4a31); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Atlas Plate I",
+    "overview": "The site is a plate from a statistical atlas of European banking, printed on white paper in near-black ink. The map is the hero and the argument: land is shaded by how many pilot banks a country holds, each bank is a numbered marker, a key in the margin names them, a legend explains the shading, and an inset magnifies the one region where the story turns. Everything else is \"notes to the plate\", numbered and called from the hook with superscript references, the way an atlas annotates a plate.\n\nDensity is that of a reference plate: small, precise lettering inside a ruled frame, then generous, readable notes below. The voice is cartographic and documentary, not promotional. One colour family (plate green) carries structure and the single action; one amber is reserved for a single meaning, two sources that disagree, and it matches the amber the dashboard uses for the same meaning. Depth is printed, not lifted: rules, hairlines and tints do the work.\n\nThe world refuses the centred-headline-over-screenshot-and-three-cards project page. This system describes the promo surface `docs/index.html`; the existing dashboard (`docs/dashboard.html`) has its own older look and is not part of this system.",
+    "keyCharacteristics": [
+      "A double-rule neatline with a graduated green-and-white tick band frames the plate.",
+      "Land in a four-step green tint scale keyed to bank count; untinted land for \"no pilot bank\".",
+      "Numbered circular markers on the map, mirrored by a numbered key that highlights in step with them.",
+      "Archivo as one family across widths: expanded tracked caps for map lettering and labels, normal width for reading, condensed for big numerals; lining tabular figures throughout.",
+      "Amber means disagreement and nothing else.",
+      "One authored motion: the plate inks in, west to east, and respects reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The One Meaning Rule",
+        "body": "Amber marks a disagreement between two filings and nothing else: not warnings, not emphasis, not hover. It is never red, because a disagreement is not an error.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-and-Tint Rule",
+        "body": "Colour on the plate is either ink, a land tint, plate green or amber. A new hue needs a new meaning on the map first.",
+        "section": "colors"
+      },
+      {
+        "name": "The Width-Is-Voice Rule",
+        "body": "Width, not a second typeface, separates the voices: 125% expanded caps letter the plate, 100% reads, 90% and below states a figure.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number on the page sets in lining tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Printed Plate Rule",
+        "body": "Structure is drawn with rules (1.5px outer neatline, 0.5px inner rules, 1px note rules, 0.5px hairlines), never with cards or shadows. Only the action and the floating inset lift.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** frame a plate with the neatline: outer 1.5px ink rule, graduated plate-green tick band, inner 0.5px rule.",
+      "**Do** keep amber (dispute-amber text, dispute-wash ground, dispute-rule border, dispute-ring on the map) for source disagreement only, and show both figures with their templates.",
+      "**Do** letter the plate in expanded tracked Archivo caps and set reading text at normal width; set every number in lining tabular figures.",
+      "**Do** link marker and key both ways and announce the selection in a polite live status line.",
+      "**Do** make key entries focusable labels, not links.",
+      "**Do** keep the action label \"Open the interactive plate\" in solid plate green.",
+      "**Do** stack panels below 1280px, and at 760px and below reduce markers to plain dots and hide sea lettering.",
+      "**Do** keep motion to the single ink-in reveal, from a visible state, behind `prefers-reduced-motion: no-preference`.",
+      "**Do** keep every interactive element on the 2px plate-green focus outline."
+    ],
+    "donts": [
+      "**Don't** use red, or any colour other than this amber, to mark a disagreement; it is not an error.",
+      "**Don't** reconcile, average or rank two disagreeing figures into one.",
+      "**Don't** build the centred-headline-over-screenshot-and-three-cards project page.",
+      "**Don't** borrow the dashboard's (`docs/dashboard.html`) older look into this system, or restyle the dashboard from it.",
+      "**Don't** round panels, tables or pairs; the 2px hint is for the action, key entries and focus only.",
+      "**Don't** use shadows for structure; rules and hairlines draw the plate, and only the action and floating inset lift.",
+      "**Don't** add a second typeface for display; change Archivo's width instead.",
+      "**Don't** add further animated moments, scroll-triggered effects or looping motion."
+    ]
+  }
+}
