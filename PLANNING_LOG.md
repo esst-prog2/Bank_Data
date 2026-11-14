@@ -1451,3 +1451,7 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   variants): user accepted variant 3, an "Inset: Austria" that replaces the floating
   callout and shows both disagreeing banks (Erste 1.5%, RBI 0.3%). Agent decided the
   inset's placement rule (Norwegian Sea, right of the hook panel, clear of all markers).
+- 2026-11-14: `/impeccable critique` of the promo page: 22/32. Weakest part (agent's
+  synthesis of both assessments): the route into the dashboard (P0 mouse-blocked CTA at
+  >=1280px, P1 28 look-alike key links, P1 metaphor-named CTA). Which fixes to apply
+  before the push is the user's call.

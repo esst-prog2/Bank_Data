@@ -80,3 +80,17 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   phone styles flattened the inset's markers (scoped the rule). Verified at
   1920/1600/1440/1280/1100/390 px: no markers under the inset, no horizontal scroll, no
   script errors.
+- **Step 3f — `/impeccable critique` (2026-11-14)** — Run as Impeccable requires:
+  two isolated sub-agents (A: design review read as a classmate, a teacher and a
+  stranger, plus a mobile user; B: the detector, the detect.js overlay in headless
+  Chromium, contrast, tap targets, overflow), then merged. Score **22/32** (heuristics
+  7 and 10 n/a; "Acceptable", 69%). Found: **P0**: at ≥1280px the map SVG sits on top of
+  the hook panel, so "Open the interactive plate" and its links can't be clicked with a
+  mouse (keyboard works, which is why earlier checks missed it; caught by B). **P1**: the
+  28 key entries look like per-bank links but all open the same empty dashboard; the
+  main button is named in metaphor ("plate"). **P2**: cold handoff into the dashboard;
+  phone map loses marker numbers. Detector false positives confirmed: key-row "cramped
+  padding" (hairline separators) and the striped neatline (deliberate). Teacher-lens
+  catch: `PROMO_BRIEF.md` had the KM1/OV1 figures reversed (page itself correct).
+  **Single weakest part: the route from the first screen into the dashboard.**
+  Snapshot kept locally in `.impeccable/critique/` (git-ignored by Impeccable).
