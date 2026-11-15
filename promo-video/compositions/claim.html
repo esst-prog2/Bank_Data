@@ -1,0 +1,48 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Archivo";
+      src: url("assets/fonts/archivo.woff2") format("woff2");
+      font-weight: 100 900;
+      font-stretch: 62% 125%;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      font-family: "Archivo", sans-serif;
+    }
+    #cl-flood {
+      position: absolute;
+      inset: 0;
+      background: #0f5a3c;
+    }
+    #cl-line {
+      position: absolute;
+      left: 160px;
+      top: 300px;
+      width: 1500px;
+      margin: 0;
+      font-size: 112px;
+      line-height: 1.04;
+      font-weight: 760;
+      font-stretch: 112%;
+      letter-spacing: -0.012em;
+      color: #ffffff;
+    }
+    #cl-line span { display: inline-block; }
+  </style>
+  <div id="root" data-composition-id="claim" data-width="1920" data-height="1080">
+    <div id="cl-flood"></div>
+    <h2 id="cl-line"><span>28</span> <span>banks,</span> <span>every</span> <span>figure</span> <span>traced</span> <span>to</span> <span>its</span> <span>filing.</span></h2>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Colour flood from the amber cells the camera just pushed into (frame centre).
+      tl.fromTo("#cl-flood", { clipPath: "circle(0% at 50% 43.5%)" }, { clipPath: "circle(120% at 50% 43.5%)", duration: 0.5, ease: "power2.inOut" }, 0);
+      tl.fromTo("#cl-line span", { opacity: 0, color: "#9fd2b7" }, { opacity: 1, color: "#ffffff", duration: 0.1, stagger: 0.09, ease: "none" }, 0.45);
+      window.__timelines["claim"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,95 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Archivo";
+      src: url("assets/fonts/archivo.woff2") format("woff2");
+      font-weight: 100 900;
+      font-stretch: 62% 125%;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      font-family: "Archivo", sans-serif;
+      color: #141413;
+    }
+    #en-flood {
+      position: absolute;
+      inset: 0;
+      background: #0f5a3c;
+    }
+    #en-card {
+      position: absolute;
+      left: 0;
+      top: 170px;
+      width: 1920px;
+      text-align: center;
+    }
+    #en-mark {
+      display: inline-block;
+      margin: 0;
+      font-size: 150px;
+      line-height: 1;
+      font-weight: 760;
+      font-stretch: 112%;
+      letter-spacing: -0.012em;
+    }
+    #en-plate {
+      margin: 22px 0 0;
+      font-size: 36px;
+      font-weight: 500;
+      color: #45453f;
+    }
+    #en-btn-wrap { margin-top: 64px; }
+    #en-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 24px;
+      padding: 30px 44px 30px 48px;
+      background: #0f5a3c;
+      color: #ffffff;
+      font-size: 46px;
+      font-weight: 650;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(15, 90, 60, 0.25), 0 6px 16px -8px rgba(15, 90, 60, 0.55);
+    }
+    #en-btn svg { width: 40px; height: 40px; }
+    #en-url {
+      display: inline-block;
+      margin-top: 40px;
+      font-size: 40px;
+      font-weight: 600;
+      color: #0f5a3c;
+    }
+  </style>
+  <div id="root" data-composition-id="end" data-width="1920" data-height="1080">
+    <div id="en-card">
+      <h2 id="en-mark">Bank_Data</h2>
+      <p id="en-plate">Plate I: European bank figures, FY2025</p>
+      <div id="en-btn-wrap">
+        <span id="en-btn">Open the interactive plate
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg>
+        </span>
+      </div>
+      <div><span id="en-url">esst-prog2.github.io/Bank_Data</span></div>
+    </div>
+    <div id="en-flood"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // The green recedes upward, uncovering the paper.
+      tl.fromTo("#en-flood", { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 100% 0%)", duration: 0.55, ease: "power3.inOut" }, 0.1);
+      // The wordmark wipes in, left to right.
+      tl.fromTo("#en-mark", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(-10% -2% -20% 0%)", duration: 0.6, ease: "expo.out" }, 0.55);
+      tl.fromTo("#en-plate", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 1.0);
+      // The button lands, then is pressed once.
+      tl.fromTo("#en-btn", { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.4)" }, 1.25);
+      tl.to("#en-btn", { scale: 0.96, backgroundColor: "#0b4a31", duration: 0.09, ease: "power2.in" }, 2.15);
+      tl.to("#en-btn", { scale: 1, duration: 0.3, ease: "expo.out" }, 2.24);
+      // The address types in.
+      tl.fromTo("#en-url", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.8, ease: "steps(30)" }, 1.6);
+      window.__timelines["end"] = tl;
+    })();
+  </script>
+</template>

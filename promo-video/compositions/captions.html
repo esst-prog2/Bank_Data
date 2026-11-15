@@ -1,0 +1,64 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Archivo";
+      src: url("assets/fonts/archivo.woff2") format("woff2");
+      font-weight: 100 900;
+      font-stretch: 62% 125%;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-family: "Archivo", sans-serif;
+    }
+    .cap {
+      position: absolute;
+      left: 0;
+      bottom: 96px;
+      width: 1920px;
+      text-align: center;
+      overflow: visible;
+      opacity: 0;
+      visibility: hidden;
+    }
+    .cap span {
+      display: inline-block;
+      max-width: 1500px;
+      padding: 10px 24px 12px;
+      background: #141413;
+      color: #ffffff;
+      font-size: 42px;
+      line-height: 1.25;
+      font-weight: 560;
+      border-radius: 2px;
+    }
+  </style>
+  <!-- The film's narration, as captions. Times are absolute (this host starts at 0). -->
+  <div id="root" data-composition-id="captions" data-width="1920" data-height="1080">
+    <div class="cap" data-in="0.3" data-out="3.05"><span>Erste Group’s total risk exposure for 2025: €149.7bn.</span></div>
+    <div class="cap" data-in="3.1" data-out="4.95"><span>Or €147.5bn. Two of its own filings disagree.</span></div>
+    <div class="cap" data-in="5.0" data-out="7.95"><span>Raiffeisen’s disagree too: €101.3bn and €100.9bn.</span></div>
+    <div class="cap" data-in="8.4" data-out="11.65"><span>Bank_Data puts 28 European banks on one map.</span></div>
+    <div class="cap" data-in="11.7" data-out="15.3"><span>From annual filings, EBA Pillar 3 and the EBA stress test.</span></div>
+    <div class="cap" data-in="15.7" data-out="18.6"><span>Open the dashboard and pick up to six banks.</span></div>
+    <div class="cap" data-in="18.7" data-out="21.7"><span>Choose what to compare: capital, risk, profitability, asset quality.</span></div>
+    <div class="cap" data-in="21.8" data-out="25.9"><span>Where two filings disagree, the table shows both, in amber.</span></div>
+    <div class="cap" data-in="26.2" data-out="28.95"><span>It doesn’t pick one or average them.</span></div>
+    <div class="cap" data-in="29.4" data-out="33.3"><span>Try it in your browser. No install.</span></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      document.querySelectorAll("#root .cap").forEach((g) => {
+        const a = parseFloat(g.dataset.in);
+        const b = parseFloat(g.dataset.out);
+        tl.set(g, { visibility: "visible" }, a);
+        tl.fromTo(g, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "power2.out" }, a);
+        tl.to(g, { opacity: 0, duration: 0.12, ease: "power2.in" }, b - 0.12);
+        tl.set(g, { opacity: 0, visibility: "hidden" }, b);
+      });
+      window.__timelines["captions"] = tl;
+    })();
+  </script>
+</template>

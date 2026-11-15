@@ -188,6 +188,11 @@ sup a { text-decoration: none; font-weight: 700; color: var(--green-ink); paddin
   .map { width: min(100%, 820px); align-self: center; }
 }
 
+/* ---------- the plate as a film ---------- */
+.film { max-width: 1180px; margin: 0 auto; padding: clamp(64px, 9vw, 120px) var(--gap) 0; }
+.film > h2 { margin: 0 0 20px; font-size: 13px; }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--paper); }
+
 /* ---------- notes to the plate ---------- */
 .notes { max-width: 1180px; margin: 0 auto; padding: clamp(64px, 9vw, 120px) var(--gap) 40px; }
 .notes > h2 { margin: 0 0 clamp(40px, 6vw, 72px); font-size: 13px; }
@@ -220,9 +225,9 @@ ol.steps li::before { content: none; }
 ol.steps .st b { display: block; font-size: 19px; margin-bottom: 6px; }
 ol.steps .st b::before { content: counter(s) ". "; color: var(--green); }
 ol.steps .st p { color: var(--ink-2); }
-ol.steps figure { margin: 0; border: .5px solid var(--rule); background: var(--paper); }
+ol.steps figure, .film figure { margin: 0; border: .5px solid var(--rule); background: var(--paper); }
 ol.steps img { display: block; width: 100%; height: auto; }
-ol.steps figcaption { font-size: 12.5px; color: var(--ink-2); padding: 8px 10px; border-top: .5px solid var(--hair); }
+ol.steps figcaption, .film figcaption { font-size: 12.5px; color: var(--ink-2); padding: 8px 10px; border-top: .5px solid var(--hair); }
 
 pre { margin: 18px 0; padding: 18px 20px; background: #f3f6f3; border-left: 0; border-top: 1px solid var(--rule); border-bottom: .5px solid var(--hair); overflow-x: auto; font: 14px/1.6 var(--mono); max-width: 860px; }
 code { font-family: var(--mono); font-size: .9em; }
@@ -323,6 +328,17 @@ footer { max-width: 1180px; margin: 0 auto; padding: 18px var(--gap) 32px; font-
     <span>A course-term project. Not an official publication of any authority or bank.</span>
   </div>
 </div>
+
+<section class="film" id="film" aria-labelledby="film-h">
+  <h2 class="wide" id="film-h">The plate in 33 seconds</h2>
+  <figure>
+    <video controls preload="none" playsinline width="1920" height="1080" poster="video/bank-data-promo-poster.jpg" aria-describedby="film-cap">
+      <source src="video/bank-data-promo.mp4" type="video/mp4">
+      <a href="video/bank-data-promo.mp4">Download the 33-second tour (MP4)</a>
+    </video>
+    <figcaption id="film-cap">No sound: the captions are part of the picture. Erste Group's and Raiffeisen's two RWA filings, the 28-bank plate, then the dashboard: basket, concepts, and the amber row that shows both figures.</figcaption>
+  </figure>
+</section>
 
 <section class="notes" id="notes" aria-labelledby="notes-h">
   <h2 class="wide" id="notes-h">Notes to the plate</h2>

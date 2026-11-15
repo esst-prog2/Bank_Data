@@ -1,0 +1,106 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Archivo";
+      src: url("assets/fonts/archivo.woff2") format("woff2");
+      font-weight: 100 900;
+      font-stretch: 62% 125%;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: "Archivo", sans-serif;
+      color: #141413;
+    }
+    #plate-cam {
+      position: absolute;
+      left: 0;
+      top: 42px;
+      width: 1920px;
+      height: 996px;
+      transform-origin: 0 0;
+    }
+    #plate-svg { display: block; }
+    #plate-svg .land path, #plate-svg .land ellipse { fill: #e9ece8; stroke: #ffffff; stroke-width: .55; stroke-linejoin: round; }
+    #plate-svg .land [data-c="large_masses_of_water"] { fill: #ffffff; stroke: none; }
+    #plate-svg .land [data-c="at"] { fill: #9fd2b7; }
+    #plate-svg .land [data-c="be"] { fill: #cdeadd; }
+    #plate-svg .land [data-c="dk"] { fill: #cdeadd; }
+    #plate-svg .land [data-c="fi"] { fill: #9fd2b7; }
+    #plate-svg .land [data-c="fr"] { fill: #5ea883; }
+    #plate-svg .land [data-c="gr"] { fill: #cdeadd; }
+    #plate-svg .land [data-c="ie"] { fill: #9fd2b7; }
+    #plate-svg .land [data-c="it"] { fill: #9fd2b7; }
+    #plate-svg .land [data-c="nl"] { fill: #5ea883; }
+    #plate-svg .land [data-c="no"] { fill: #cdeadd; }
+    #plate-svg .land [data-c="pt"] { fill: #cdeadd; }
+    #plate-svg .land [data-c="es"] { fill: #2a7a55; }
+    #plate-svg .land [data-c="se"] { fill: #9fd2b7; }
+    #plate-svg .mk .dot { fill: #ffffff; stroke: #141413; stroke-width: 1.1; }
+    #plate-svg .mk text { font: 700 7.2px "Archivo", sans-serif; text-anchor: middle; fill: #141413; }
+    #plate-svg .mk .ring { fill: #fff8ec; stroke: #b07410; stroke-width: 1.8; }
+    #plate-head {
+      position: absolute;
+      left: 120px;
+      top: 452px;
+      width: 600px;
+      margin: 0;
+      font-size: 60px;
+      line-height: 1.04;
+      font-weight: 760;
+      font-stretch: 112%;
+      letter-spacing: -0.012em;
+    }
+    #plate-head span { display: inline-block; }
+    #plate-label {
+      position: absolute;
+      left: 120px;
+      top: 396px;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+      font-stretch: 125%;
+      letter-spacing: 0.14em;
+      color: #0f5a3c;
+    }
+  </style>
+  <div id="root" data-composition-id="plate" data-width="1920" data-height="1080">
+    <div id="plate-cam" data-layout-allow-overflow><!--MAP--></div>
+    <p id="plate-label">BANK_DATA · PLATE I</p>
+    <h1 id="plate-head"><span>European</span> <span>bank</span> <span>figures,</span> <span>each</span> <span>traced</span> <span>to</span> <span>the</span> <span>filing</span> <span>it</span> <span>came</span> <span>from.</span></h1>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      const cam = "#plate-cam";
+      const others = gsap.utils.toArray("#plate-svg .mk").filter((g) => !g.classList.contains("dis"));
+      const othersInner = others.map((g) => g.querySelectorAll("circle, text"));
+
+      // Frame 0 matches the hook's last frame: Austria's two amber-ringed markers, 4x, centred.
+      tl.set(cam, { x: -3767, y: -2217.6, scale: 4 }, 0);
+      tl.fromTo("#plate-svg .land", { opacity: 0 }, { opacity: 1, duration: 1.1, ease: "power2.inOut" }, 0.15);
+      // Camera pulls back from Austria to the whole plate, which settles above the caption band.
+      tl.to(cam, { x: 134, y: -32, scale: 0.86, duration: 1.8, ease: "power2.inOut" }, 0.25);
+      // The other 26 markers print in, the page's own 28 ms stagger.
+      tl.fromTo(others, { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.028, ease: "power2.out" }, 1.45);
+      othersInner.forEach((els, i) => {
+        tl.fromTo(els, { scale: 0.55, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.7, ease: "expo.out" }, 1.45 + i * 0.028);
+      });
+      // Headline: per word, blur to sharp, no translate.
+      tl.fromTo("#plate-label", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 2.4);
+      tl.fromTo("#plate-head span", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.13, stagger: 0.067, ease: "power2.out" }, 2.55);
+      // All 28 switch to the page's "on" state, west to east; Austria keeps its amber ring.
+      const byX = gsap.utils.toArray("#plate-svg .mk").sort(
+        (p, q) => p.transform.baseVal[0].matrix.e - q.transform.baseVal[0].matrix.e,
+      );
+      tl.to(byX.map((g) => g.querySelector(".dot")), { fill: "#0f5a3c", stroke: "#0f5a3c", duration: 0.2, stagger: 0.035, ease: "power2.out" }, 4.4);
+      tl.to(byX.map((g) => g.querySelector("text")), { fill: "#ffffff", duration: 0.2, stagger: 0.035, ease: "power2.out" }, 4.4);
+      // Blur swap out to the dashboard.
+      tl.to(["#plate-head", "#plate-label"], { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power3.in" }, 7.1);
+      tl.to(cam, { opacity: 0, duration: 0.2, ease: "power3.in" }, 7.15);
+      window.__timelines["plate"] = tl;
+    })();
+  </script>
+</template>

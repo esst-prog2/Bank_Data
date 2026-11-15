@@ -171,10 +171,16 @@ docs/
                        below) and served via GitHub Pages at
                        https://esst-prog2.github.io/Bank_Data/dashboard.html - open directly, no
                        server or live backend needed.
+    video/           - the ~30 s promo video (bank-data-promo.mp4 + poster), embedded on
+                       index.html; rendered from promo-video/, not edited by hand
     review.html      - static snapshot of the MVP's output for the pilot bank; served via GitHub
                        Pages at https://esst-prog2.github.io/Bank_Data/review.html (Pages source:
                        main branch, /docs) - regenerate by hand from reconcile.py's output, this
                        is a snapshot, not a live app
+promo-video/         - HyperFrames source of the promo video (index.html + compositions/, SPEC.md,
+                       STORYLINES.md, REVIEW.md); tools/build_plate.py lifts the map plate from
+                       docs/index.html. Render: npx hyperframes render --quality delivery
+                       -o renders/bank-data-promo.mp4, then copy into docs/video/
 PROCESS.md           - step-by-step log for the promo-page homework (the step, what the tool did,
                        what the user decided) - separate from PLANNING_LOG.md's one-line decisions
 PRODUCT.md           - Impeccable's own product-truth file for the promo page (users, lead claim,

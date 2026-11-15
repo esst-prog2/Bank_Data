@@ -184,3 +184,37 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   the skill list; FFmpeg also needs a shell restart to resolve on PATH (works today
   only via its absolute path). Decided: install now, finish composing the video in a
   fresh session once skills are live.
+- **Step 2 — compose, render and embed the promo video (2026-11-15)** — HyperFrames started
+  fine (CLI 0.9.52, FFmpeg now on PATH), so no screen-recording fallback. Its skills still
+  weren't in the session's skill list (the session started outside the repo), so Claude read
+  the `hyperframes`, `hyperframes-cli` and `media-use` skill files directly and followed them;
+  skipped their optional telemetry "usage beacon" and feedback calls. Per the skill's launch-film
+  workflow: wrote `promo-video/STORYLINES.md` (three storylines; since the user asked for the
+  finished file, built the recommended one, "The number that comes twice", without a pick
+  round) and `promo-video/SPEC.md` (DESIGN.md's tokens turned into numbers: Atlas Plate I
+  paper/ink/greens, Archivo, amber only on disagreement). Film, 33.5 s: Erste's two RWA filings
+  (149.7 vs 147.5bn, 1.5% apart) and Raiffeisen's (101.3 vs 100.9bn, 0.3%) land and turn
+  amber → the pair shrinks into Austria's amber ring → the camera pulls back to the page's own
+  28-bank map plate with its headline → the dashboard via the three real `docs/img/`
+  screenshots (map/basket, concept picker, results table) → a 1.9x punch-in on the amber RWA
+  row → "28 banks, every figure traced to its filing." on plate green → end card with the
+  green "Open the interactive plate →" button and the site URL. Captions: one burned-in
+  caption track (10 lines) carries the narration. Silent on purpose: it plays muted on the page,
+  and music/voice would need a HeyGen sign-in (the user's step) or local tools nobody asked for.
+  The map is the page's real SVG, lifted by `promo-video/tools/build_plate.py` (re-runnable),
+  not redrawn. `hyperframes check` caught and Claude fixed: captions covering the Greek/Spanish
+  markers (plate now settles at 0.86 scale), Raiffeisen's "0.3% apart" on screen too briefly,
+  a 3 s dead stretch (now the 28 markers switch to the page's green "on" state), and a
+  near-empty first frame/thumbnail (now opens on Erste's 149.7). Final check: 0 errors; kept
+  warnings (silent film, small map numerals, intentional punch-in) are explained in
+  `promo-video/REVIEW.md`. Rendered at delivery quality: H.264 1920x1080 30 fps, 4.7 MB,
+  ffprobe 33.500 s; decoded frames from the MP4 match the snapshots. Embedded on
+  `docs/index.html` as a new "The plate in 33 seconds" figure between the plate and the
+  notes (`docs/video/bank-data-promo.mp4` + poster frame): click-to-play with controls, no
+  autoplay (the brief limits motion to the one plate reveal), page's existing figure styles
+  extended rather than new ones. A "Watch the 33-second tour" link in the cartouche was tried
+  and reverted: at 1366x768 it wrapped the link row and clipped "Function snapshots and
+  install" behind the legend. Browser-checked at 1920/1366/1280/390: no horizontal scroll, the
+  main button still in the first screen, no script errors. `promo-video/` sources committed;
+  its `.hyperframes/` history, `renders/` and the generated AGENTS.md/CLAUDE.md gitignored.
+  Dashboard untouched.

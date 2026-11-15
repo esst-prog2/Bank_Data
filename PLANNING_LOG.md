@@ -1497,3 +1497,10 @@ Append only — never rewrite an earlier line. See `AGENTS.md` for the rule.
   prerequisite for the new promo-video homework's HyperFrames tool. See PROCESS.md's
   "New homework" section for the HyperFrames install itself. Decided by user, carried
   out by agent.
+- 2026-11-15: Promo video built as storyline "The number that comes twice" (Erste/Raiffeisen
+  RWA disagreement → map plate → dashboard → button), 33.5 s, 1920x1080, silent with burned-in
+  captions; picked without a pick round because the user asked for the finished file. Decided
+  by agent.
+- 2026-11-15: Video embedded on docs/index.html between the plate and the notes, click-to-play
+  (no autoplay, per the brief's one-reveal motion rule); no extra link in the first screen
+  (tried, broke the 1366x768 fit, reverted). Decided by agent.

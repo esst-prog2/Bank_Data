@@ -1,0 +1,68 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .ds-shot {
+      position: absolute;
+      inset: 0;
+    }
+    .ds-frame {
+      position: absolute;
+      border: 1px solid #d4d8d2;
+      border-radius: 2px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    .ds-frame img { display: block; width: 100%; height: 100%; }
+    /* Real dashboard screenshots (docs/img), shown at their real proportions. */
+    #ds-map-f { left: 438px; top: 40px; width: 1043px; height: 800px; }
+    #ds-con-f { left: 513px; top: 40px; width: 893px; height: 800px; box-shadow: 0 6px 24px -10px rgba(20, 20, 19, 0.35); }
+    #ds-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+    #ds-res-f { left: 160px; top: 191px; width: 1600px; height: 577px; }
+    /* Outline drawn round the two amber RWA cells (image px 635..1321 x 348..394). */
+    #ds-amber {
+      position: absolute;
+      left: 793px;
+      top: 537px;
+      width: 686px;
+      height: 49px;
+      border: 3px solid #b07410;
+      border-radius: 2px;
+    }
+  </style>
+  <div id="root" data-composition-id="dash" data-width="1920" data-height="1080">
+    <div id="ds-map" class="ds-shot clip" data-start="0" data-duration="6.3" data-track-index="1">
+      <div id="ds-map-f" class="ds-frame"><img src="assets/img/step-map.png" alt="" /></div>
+    </div>
+    <div id="ds-con" class="ds-shot clip" data-start="3.2" data-duration="3.1" data-track-index="2">
+      <div id="ds-con-f" class="ds-frame"><img src="assets/img/step-concepts.png" alt="" /></div>
+    </div>
+    <div id="ds-res" class="ds-shot clip" data-start="6.2" data-duration="4.3" data-track-index="3">
+      <div id="ds-cam">
+        <div id="ds-res-f" class="ds-frame"><img src="assets/img/step-results.png" alt="" /></div>
+        <div id="ds-amber"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // 1. The map with a basket (blur swap in from the plate; the paper never cuts).
+      tl.fromTo("#ds-map-f", { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.6, ease: "expo.out" }, 0.05);
+      // 2. Compare opens the concept picker over the map.
+      tl.to("#ds-map-f", { opacity: 0.3, duration: 0.3, ease: "power2.inOut" }, 3.2);
+      tl.fromTo("#ds-con-f", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 3.2);
+      // 3. See results: the table wipes in from its left edge.
+      tl.to("#ds-con-f", { opacity: 0, duration: 0.15, ease: "power3.in" }, 6.1);
+      tl.fromTo("#ds-res-f", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "expo.out" }, 6.2);
+      // Payoff: punch in on the RWA row, where both filings sit side by side in amber.
+      tl.fromTo("#ds-cam", { x: 0, y: 0, scale: 1 }, { x: -1202.2, y: -597.8, scale: 1.9, duration: 1.1, ease: "power2.inOut" }, 7.6);
+      tl.fromTo("#ds-amber", { opacity: 0, clipPath: "inset(0% 100% 0% 0%)" }, { opacity: 1, clipPath: "inset(0% 0% 0% 0%)", duration: 0.5, ease: "expo.out" }, 8.75);
+      window.__timelines["dash"] = tl;
+    })();
+  </script>
+</template>

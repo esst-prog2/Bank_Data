@@ -23,3 +23,9 @@ node_modules/
 .claude/skills/style-sampling/
 .claude/skills/figma/
 skills-lock.json
+# HyperFrames: local history/snapshots, render output (the delivered copy lives in docs/video/),
+# and the agent guidance files `hyperframes init` writes (tooling, not project content)
+promo-video/.hyperframes/
+promo-video/renders/
+promo-video/AGENTS.md
+promo-video/CLAUDE.md
