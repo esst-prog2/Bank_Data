@@ -218,3 +218,24 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   main button still in the first screen, no script errors. `promo-video/` sources committed;
   its `.hyperframes/` history, `renders/` and the generated AGENTS.md/CLAUDE.md gitignored.
   Dashboard untouched.
+- **Step 2, actually run (2026-11-16)** — Professor confirmed the Step 2 explanation above
+  but asked for the real step: install gstack and run `/office-hours` on the finished promo
+  page, since it doesn't yet say who Bank_Data is for. The npm package literally named
+  `gstack` turned out to be an unrelated, unconnected package (confirmed by inspecting it
+  before running anything); the real tool is Garry Tan's `github.com/garrytan/gstack`
+  toolkit. Installed Bun (`winget install Oven-sh.Bun`, missing prerequisite), cloned the
+  repo to `~/.claude/skills/gstack` (user-level, not project-local — the tool's own default,
+  unlike Impeccable), and ran `./setup`, which registers Claude Code hooks in the user's
+  global `~/.claude/settings.json`. Ran `/office-hours` in Builder/Learning mode on
+  `docs/index.html`. Asked directly who the page is shown to; first honest answer was "the
+  grader," which the tool pushed back on as conflating "who reads this submission" with
+  "who the page's copy claims to serve" — a real distinction, not a dodge. Confirmed the
+  honest on-page answer is PROMO_BRIEF.md's own stated primary users (analysts/researchers
+  reconciling bank data across sources), not an invented pitch and not the grader. Ran the
+  skill's premise-challenge and alternatives phases (design doc:
+  `docs/designs/promo-page-audience-statement.md`); chose the smallest option — one sentence
+  added to the existing hero lede — over a full lede rewrite or a new "for" label, to avoid
+  re-touching copy Impeccable's critique pass had already scored. Decided: change the page
+  only where the exercise actually convinced, nothing else; skipped the skill's full
+  adversarial reviewer-dispatch loop and its startup/YC relationship-closing content as
+  disproportionate to a one-sentence fix on a homework deadline.
