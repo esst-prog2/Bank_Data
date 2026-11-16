@@ -239,3 +239,15 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   only where the exercise actually convinced, nothing else; skipped the skill's full
   adversarial reviewer-dispatch loop and its startup/YC relationship-closing content as
   disproportionate to a one-sentence fix on a homework deadline.
+- **Step 2, revision — the actual pick round (2026-11-16)** — Re-checked the whole video
+  homework against its original instructions and found one real gap: the assignment's
+  "suggest three really different ideas... then stop and wait for my choice" step never
+  actually ran. The three storylines existed in `promo-video/STORYLINES.md` (A/B/C, each
+  with what the viewer sees, the first three seconds, and what it adds to the page), but
+  Step 2 above built A directly without presenting them and waiting, because the user had
+  asked for the finished file. Fixed properly this time: presented all three storylines to
+  the user via AskUserQuestion, with their full what-it-shows/first-3-seconds/what-it-adds
+  descriptions, and waited. User chose **A — "The number that comes twice"** — the one
+  already built and embedded. Decided: no re-render needed, since the shipped video is the
+  one actually chosen under the real pick round; this entry is the record that the step
+  ran for real, not a silent skip.
