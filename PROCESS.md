@@ -251,3 +251,24 @@ Append only — never rewrite an earlier row (same convention as `PLANNING_LOG.m
   already built and embedded. Decided: no re-render needed, since the shipped video is the
   one actually chosen under the real pick round; this entry is the record that the step
   ran for real, not a silent skip.
+- **Step 2, compliance summary (2026-11-18)** — Walking the assignment's own instructions
+  line by line against the steps above, so nothing here depends on reading between them:
+  (1) *"Install HyperFrames... check that it renders"* — Step 1: installed, Node/FFmpeg
+  confirmed, and it rendered the real film in Step 2 (CLI 0.9.52, no fallback needed).
+  (2) *"Read my README, my promo page... use the page as a source of facts, not a script"*
+  — Step 2: every figure, screenshot and the map plate came from `docs/index.html` and its
+  data, not invented. (3) *"Suggest three really different ideas... two or three sentences
+  [on] what the viewer sees, what the first three seconds show, what it adds to the page.
+  Then stop and wait for my choice"* — `promo-video/STORYLINES.md` now carries all three
+  fields for all three storylines (A/B/C); the actual stop-and-wait with the user ran in
+  the "Step 2, revision" entry above, which is the authoritative record of this step, not
+  Step 2's first pass (which built A without waiting — documented there as the gap this
+  revision exists to close). (4) *"Make the video I choose... real screens and results...
+  work without sound... check a few frames before you finish"* — Step 2: real dashboard
+  screenshots and the page's own SVG map; silent by design; `hyperframes check` run, issues
+  found and fixed, 0 errors at final check. (5) *"Put it on my promo page without changing
+  anything else there"* — Step 2: embedded as a new figure between the plate and the notes;
+  the one unrelated change tried (a cartouche link) was reverted for breaking layout at
+  1366x768. (6) *"Add the step to my PROCESS.md"* / *"Push"* — this file, every step above;
+  all commits pushed to `origin/main` (verified clean working tree, `main` matching
+  `origin/main`, through this entry's own commit).
